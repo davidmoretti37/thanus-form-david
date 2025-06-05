@@ -1,11 +1,11 @@
 export const siteConfig = {
-  name: 'Kortix Suna',
-  url: 'https://suna.so/',
-  description: 'Kortix AI',
+  name: 'InventuAI Thanus',
+  url: 'https://Thanus.so/',
+  description: 'InventuAI AI',
   links: {
-    twitter: 'https://x.com/kortixai',
-    github: 'https://github.com/kortix-ai/',
-    linkedin: 'https://www.linkedin.com/company/kortix/',
+    twitter: 'https://x.com/InventuAIai',
+    github: 'https://github.com/InventuAI-ai/',
+    linkedin: 'https://www.linkedin.com/company/InventuAI/',
   },
 };
 

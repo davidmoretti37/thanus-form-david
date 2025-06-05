@@ -11,7 +11,7 @@ import Image from 'next/image';
 import Cal, { getCalApi } from '@calcom/embed-react';
 import { useTheme } from 'next-themes';
 
-export function KortixProcessModal() {
+export function InventuAIProcessModal() {
   const [open, setOpen] = useState(false);
   const isDesktop = useMediaQuery('(min-width: 768px)');
   const { resolvedTheme } = useTheme();
@@ -42,9 +42,9 @@ export function KortixProcessModal() {
               <div className="mb-8 mt-0 flex-shrink-0">
                 <Image
                   src={
-                    isDarkMode ? '/kortix-logo-white.svg' : '/kortix-logo.svg'
+                    isDarkMode ? '/agent-circles-logo-new.png' : '/agent-circles-logo-new.png'
                   }
-                  alt="Kortix Logo"
+                  alt="InventuAI Logo"
                   width={60}
                   height={21}
                   className="h-6 w-auto"
@@ -141,7 +141,7 @@ export function KortixProcessModal() {
             <div className="h-full overflow-auto">
               <Cal
                 namespace="enterprise-demo"
-                calLink="team/kortix/enterprise-demo"
+                calLink="team/InventuAI/enterprise-demo"
                 style={{ width: '100%', height: '100%' }}
                 config={{
                   layout: 'month_view',

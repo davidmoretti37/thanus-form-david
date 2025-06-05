@@ -19,11 +19,7 @@ export function FooterSection() {
     setMounted(true);
   }, []);
 
-  const logoSrc = !mounted
-    ? '/kortix-logo.svg'
-    : resolvedTheme === 'dark'
-      ? '/kortix-logo-white.svg'
-      : '/kortix-logo.svg';
+  const logoSrc = !mounted ? '/agent-circles-logo-new.png' : '/agent-circles-logo-new.png';
 
   return (
     <footer id="footer" className="w-full pb-0">
@@ -32,7 +28,7 @@ export function FooterSection() {
           <Link href="/" className="flex items-center gap-2">
             <Image
               src={logoSrc}
-              alt="Kortix Logo"
+              alt="InventuAI Logo"
               width={122}
               height={22}
               priority
@@ -44,7 +40,7 @@ export function FooterSection() {
 
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/kortix-ai/suna"
+              href="https://github.com/InventuAI-ai/Thanus"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"
@@ -61,7 +57,7 @@ export function FooterSection() {
               </svg>
             </a>
             <a
-              href="https://x.com/kortixai"
+              href="https://x.com/InventuAIai"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="X (Twitter)"
@@ -78,7 +74,7 @@ export function FooterSection() {
               </svg>
             </a>
             <a
-              href="https://www.linkedin.com/company/kortix/"
+              href="https://www.linkedin.com/company/InventuAI/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="LinkedIn"

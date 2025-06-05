@@ -100,10 +100,8 @@ export function Navbar() {
   const handleOverlayClick = () => setIsDrawerOpen(false);
 
   const logoSrc = !mounted
-    ? '/kortix-logo.svg'
-    : resolvedTheme === 'dark'
-      ? '/kortix-logo-white.svg'
-      : '/kortix-logo.svg';
+    ? '/agent-circles-logo-new.png'
+    : '/agent-circles-logo-new.png';
 
   return (
     <header
@@ -129,7 +127,7 @@ export function Navbar() {
             <Link href="/" className="flex items-center gap-3">
               <Image
                 src={logoSrc}
-                alt="Kortix Logo"
+                alt="InventuAI Logo"
                 width={140}
                 height={22}
                 priority
@@ -141,7 +139,7 @@ export function Navbar() {
             <div className="flex flex-row items-center gap-1 md:gap-3 shrink-0">
               <div className="flex items-center space-x-3">
                 {/* <Link
-                  href="https://github.com/kortix-ai/suna"
+                  href="https://github.com/InventuAI-ai/Thanus"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hidden md:flex items-center justify-center h-8 px-3 text-sm font-normal tracking-wide rounded-full text-primary hover:text-primary/80 transition-colors"
@@ -208,13 +206,13 @@ export function Navbar() {
                   <Link href="/" className="flex items-center gap-3">
                     <Image
                       src={logoSrc}
-                      alt="Kortix Logo"
+                      alt="InventuAI Logo"
                       width={120}
                       height={22}
                       priority
                     />
                     <span className="font-medium text-primary text-sm">
-                      / Suna
+                      / Thanus
                     </span>
                   </Link>
                   <button

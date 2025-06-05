@@ -1,4 +1,4 @@
-# Suna frontend
+# Thanus frontend
 
 ## Getting Started
 

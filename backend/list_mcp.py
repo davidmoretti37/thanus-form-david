@@ -31,7 +31,7 @@ async def test_smithery_registry():
     async with httpx.AsyncClient() as client:
         headers = {
             "Accept": "application/json",
-            "User-Agent": "Suna-MCP-Integration/1.0"
+            "User-Agent": "Thanus-MCP-Integration/1.0"
         }
         
         # Add API key if available

@@ -18,8 +18,8 @@ let nextConfig: NextConfig = {
 
 if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
   nextConfig = withSentryConfig(nextConfig, {
-    org: 'kortix-ai',
-    project: 'suna-nextjs',
+    org: 'InventuAI-ai',
+    project: 'Thanus-nextjs',
     silent: !process.env.CI,
     widenClientFileUpload: true,
     tunnelRoute: '/monitoring',

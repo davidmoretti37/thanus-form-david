@@ -199,7 +199,7 @@ export function extractCommandData(
   if (!command) {
     const rawCommand = extractCommand(assistantContent) || extractCommand(toolContent);
     command = rawCommand
-      ?.replace(/^suna@computer:~\$\s*/g, '')
+      ?.replace(/^Thanus@computer:~\$\s*/g, '')
       ?.replace(/\\n/g, '')
       ?.replace(/\n/g, '')
       ?.trim() || null;

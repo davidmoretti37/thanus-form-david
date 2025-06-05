@@ -299,7 +299,7 @@ class UpdateAgentTool(Tool):
             async with httpx.AsyncClient() as client:
                 headers = {
                     "Accept": "application/json",
-                    "User-Agent": "Suna-MCP-Integration/1.0"
+                    "User-Agent": "Thanus-MCP-Integration/1.0"
                 }
                 
                 if self.smithery_api_key:
@@ -405,7 +405,7 @@ class UpdateAgentTool(Tool):
             async with httpx.AsyncClient() as client:
                 headers = {
                     "Accept": "application/json",
-                    "User-Agent": "Suna-MCP-Integration/1.0"
+                    "User-Agent": "Thanus-MCP-Integration/1.0"
                 }
                 
                 if self.smithery_api_key:
@@ -719,7 +719,7 @@ class UpdateAgentTool(Tool):
             async with httpx.AsyncClient() as client:
                 headers = {
                     "Accept": "application/json",
-                    "User-Agent": "Suna-MCP-Integration/1.0"
+                    "User-Agent": "Thanus-MCP-Integration/1.0"
                 }
                 
                 if self.smithery_api_key:

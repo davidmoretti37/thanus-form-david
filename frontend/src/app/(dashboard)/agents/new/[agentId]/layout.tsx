@@ -3,11 +3,11 @@ import { redirect } from 'next/navigation';
 import { isFlagEnabled } from '@/lib/feature-flags';
 
 export const metadata: Metadata = {
-  title: 'Create Agent | Kortix Suna',
-  description: 'Interactive agent playground powered by Kortix Suna',
+  title: 'Create Agent | InventuAI Thanus',
+  description: 'Interactive agent playground powered by InventuAI Thanus',
   openGraph: {
-    title: 'Agent Playground | Kortix Suna',
-    description: 'Interactive agent playground powered by Kortix Suna',
+    title: 'Agent Playground | InventuAI Thanus',
+    description: 'Interactive agent playground powered by InventuAI Thanus',
     type: 'website',
   },
 };

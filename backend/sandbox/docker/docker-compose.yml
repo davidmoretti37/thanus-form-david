@@ -1,5 +1,5 @@
 services:
-  kortix-suna:
+  InventuAI-Thanus:
     platform: linux/amd64
     build:
       context: .

@@ -79,7 +79,7 @@ async def generate_share_links(n: int) -> List[str]:
             logger.warning("No thread IDs found, returning empty list")
             return []
         
-        share_links = [f"suna.so/share/{thread_id}" for thread_id in thread_ids]
+        share_links = [f"Thanus.ai/share/{thread_id}" for thread_id in thread_ids]
         
         logger.info(f"Generated {len(share_links)} share links")
         return share_links

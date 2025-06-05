@@ -4,10 +4,10 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 
-interface KortixLogoProps {
+interface InventuAILogoProps {
   size?: number;
 }
-export function KortixLogo({ size = 24 }: KortixLogoProps) {
+export function InventuAILogo({ size = 24 }: InventuAILogoProps) {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -18,11 +18,11 @@ export function KortixLogo({ size = 24 }: KortixLogoProps) {
 
   return (
     <Image
-        src="/kortix-symbol.svg"
-        alt="Kortix"
+        src="/agent-circles-logo-new.png"
+        alt="InventuAI"
         width={size}
         height={size}
-        className={`${mounted && theme === 'dark' ? 'invert' : ''} flex-shrink-0`}
+        className="flex-shrink-0"
       />
   );
 }

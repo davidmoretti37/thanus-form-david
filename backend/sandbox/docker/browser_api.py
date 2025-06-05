@@ -1994,7 +1994,7 @@ async def test_browser_api_2():
 
         # Navigate to the chess test page
         print("\n--- Testing Navigation to Chess Page ---")
-        test_url = "https://dat-lequoc.github.io/chess-for-suna/chess.html"
+        test_url = "https://dat-lequoc.github.io/chess-for-Thanus/chess.html"
         result = await automation_service.navigate_to(GoToUrlAction(url=test_url))
         print(f"Navigation status: {'✅ Success' if result.success else '❌ Failed'}")
         if not result.success:
