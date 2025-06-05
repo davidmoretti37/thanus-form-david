@@ -17,17 +17,11 @@ jobs:
       branch: ${{ steps.set.outputs.branch }}
       environment: ${{ steps.set.outputs.environment }}
     steps:
-      - name: Get environment info
+      - name: Set environment info
         id: set
-        shell: bash
         run: |
-          if [[ "${GITHUB_REF#refs/heads/}" == "develop" ]]; then
-            echo "branch=develop" >> $GITHUB_OUTPUT
-            echo "environment=dev" >> $GITHUB_OUTPUT
-          else
-            echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
-            echo "environment=dev" >> $GITHUB_OUTPUT
-          fi
+          echo "branch=develop" >> $GITHUB_OUTPUT
+          echo "environment=staging" >> $GITHUB_OUTPUT
 
   build-backend:
     needs: get-env
@@ -59,8 +53,6 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/thanus-backend:${{ needs.get-env.outputs.branch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            BACKEND_ENV=${{ needs.get-env.outputs.environment }}
 
   build-frontend:
     needs: get-env
@@ -78,9 +70,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create .env for frontend
+      - name: Create .env.staging from secret
         run: |
-          echo "FRONTEND_ENV=${{ needs.get-env.outputs.environment }}" > ./frontend/.env
+          echo "${{ secrets.develop.FRONTEND_ENV }}" > ./frontend/.env.staging
 
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
@@ -92,43 +84,24 @@ jobs:
           tags: ghcr.io/${{ github.repository }}/thanus-frontend:${{ needs.get-env.outputs.branch }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          build-args: |
-            FRONTEND_ENV=${{ needs.get-env.outputs.environment }}
 
   deploy:
-    needs: [build-backend, build-frontend]
+    needs: [build-backend, build-frontend, get-env]
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy to development via SSH
-        if: needs.get-env.outputs.environment == 'dev'
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.DEVELOP_HOST }}
-          username: ${{ secrets.DEVELOP_USERNAME }}
-          key: ${{ secrets.DEVELOP_KEY }}
-          script: |
-            # Deploy backend
-            cd /root/thanus-ai/backend
-            git pull
-            docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
-
-            # Deploy frontend
-            cd /root/thanus-ai/frontend
-            git pull
-            docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
-
       - name: Deploy to staging via SSH
-        if: needs.get-env.outputs.environment == 'staging'
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_USERNAME }}
           key: ${{ secrets.STAGING_KEY }}
           script: |
+            # Backend
             cd /home/thanus/backend
             git pull
             docker compose up -d --build
 
+            # Frontend
             cd /home/thanus/frontend
             git pull
             docker compose up -d --build
