@@ -27,7 +27,8 @@ jobs:
     needs: get-env
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Deploy to staging via SSH
         uses: appleboy/ssh-action@v1
@@ -36,15 +37,22 @@ jobs:
           username: ${{ secrets.DEVELOP_USERNAME }}
           key: ${{ secrets.DEVELOP_KEY }}
           script: |
-            # Backend
-            cd /root/thanus-ai/backend
+            echo "📁 Acessando projeto"
+            cd /root/thanus-ai
+
+            echo "🔄 Atualizando código"
             git pull
-            echo "${{ secrets.BACKEND_ENV }}" > .env
+
+            echo "📝 Escrevendo arquivos .env"
+            echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
+            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.staging
+
+            echo "🧹 Parando containers antigos"
+            docker compose down
+
+            echo "🚀 Subindo aplicação com novo build"
             docker compose up -d --build
 
-            # Frontend
-            cd /root/thanus-ai/frontend
-            git pull
-            echo "${{ secrets.develop.FRONTEND_ENV }}" > .env.staging
-            echo "${{ secrets.develop.FRONTEND_ENV }}" > .env
-            docker compose up -d --build
+            echo "🧼 Limpando imagens e redes não utilizadas"
+            docker system prune -a -f
