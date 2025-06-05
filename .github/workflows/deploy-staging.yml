@@ -47,10 +47,10 @@ jobs:
             git pull origin develop
 
             echo "📝 Escrevendo arquivos .env"
-            echo "${{ secrets.BACKEND_ENV }}" > backend/.env
-            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
-            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.staging
-            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.local
+            echo "${{ secrets.develop.BACKEND_ENV }}" > backend/.env
+            echo "${{ secrets.develop.FRONTEND_ENV }}" > frontend/.env
+            echo "${{ secrets.develop.FRONTEND_ENV }}" > frontend/.env.staging
+            echo "${{ secrets.develop.FRONTEND_ENV }}" > frontend/.env.local
 
             echo "🚀 Subindo aplicação com novo build"
             docker compose up -d --build
