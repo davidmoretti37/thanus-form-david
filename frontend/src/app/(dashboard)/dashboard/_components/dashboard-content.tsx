@@ -10,6 +10,7 @@ import {
 } from '@/components/thread/chat-input/chat-input';
 import {
   BillingError,
+  checkPossibleMemoryInMessage,
 } from '@/lib/api';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useSidebar } from '@/components/ui/sidebar';
@@ -125,6 +126,13 @@ export function DashboardContent() {
       console.log('Agent initiated:', result);
 
       if (result.thread_id) {
+        ////////////////////////////////////////////////////////////////////////
+        // Check for possible memories in the message (non-blocking)
+        checkPossibleMemoryInMessage(result.thread_id, message)
+          .catch(memoryError => {
+            console.error('Error checking for memories:', memoryError);
+          });
+        ////////////////////////////////////////////////////////////////////////
         setInitiatedThreadId(result.thread_id);
       } else {
         throw new Error('Agent initiation did not return a thread_id.');

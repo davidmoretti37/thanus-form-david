@@ -499,7 +499,178 @@ export const addUserMessage = async (
     handleApiError(error, { operation: 'add message', resource: 'message' });
     throw new Error(`Error adding message: ${error.message}`);
   }
+
+  checkPossibleMemoryInMessage(threadId, content);
 };
+
+/////////////////////////////////////////////////////////
+export const checkPossibleMemoryInMessage = async (
+  threadId: string,
+  content: string,
+): Promise<void> => {
+  const supabase = createClient();
+
+
+  // Check if the message contains potential memories
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session?.access_token) {
+      const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
+      
+      // Call the memory check endpoint
+      const response = await fetch(`${API_URL}/memories/check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          thread_id: threadId,
+          message: content
+        })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.has_memories) {
+          console.log('Message contains potential memories:', result.memories);
+          // The UI will handle showing the memory approval modal through a separate component
+        }
+      } else {
+        console.warn('Failed to check for memories:', response.status, response.statusText);
+      }
+    }
+  } catch (memoryError) {
+    // Don't fail the message submission if memory check fails
+    console.error('Error checking for memories:', memoryError);
+  }
+};
+///////////////////////////////////////////////////////////
+// Memory APIs/////////////////////////////////////////////////////////////////
+export type Memory = {
+  id: string | number;
+  memoria: string;
+  created_at: string;
+  account_id: string;
+  tipo_memoria?: string;
+  aprovacao_usuario: boolean;
+  aprovado_em?: string;
+  user_triggered?: boolean;
+};
+
+export const getMemories = async (): Promise<Memory[]> => {
+  try {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("No access token available");
+    }
+
+    const response = await fetch(`${API_URL}/memories`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response
+        .text()
+        .catch(() => "No error details available");
+      console.error(
+        `Error getting memories: ${response.status} ${response.statusText}`,
+        errorText
+      );
+      throw new Error(
+        `Error getting memories: ${response.statusText} (${response.status})`
+      );
+    }
+
+    const data = await response.json();
+    return data.memories || [];
+  } catch (error) {
+    console.error("Failed to get memories:", error);
+    throw error;
+  }
+};
+
+export const approveMemory = async (memoryId: string | number): Promise<void> => {
+  try {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("No access token available");
+    }
+
+    const response = await fetch(`${API_URL}/memories/${memoryId}/approve`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response
+        .text()
+        .catch(() => "No error details available");
+      console.error(
+        `Error approving memory: ${response.status} ${response.statusText}`,
+        errorText
+      );
+      throw new Error(
+        `Error approving memory: ${response.statusText} (${response.status})`
+      );
+    }
+  } catch (error) {
+    console.error("Failed to approve memory:", error);
+    throw error;
+  }
+};
+
+export const deleteMemory = async (memoryId: string | number): Promise<void> => {
+  try {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error("No access token available");
+    }
+
+    const response = await fetch(`${API_URL}/memories/${memoryId}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response
+        .text()
+        .catch(() => "No error details available");
+      console.error(
+        `Error deleting memory: ${response.status} ${response.statusText}`,
+        errorText
+      );
+      throw new Error(
+        `Error deleting memory: ${response.statusText} (${response.status})`
+      );
+    }
+  } catch (error) {
+    console.error("Failed to delete memory:", error);
+    throw error;
+  }
+};
+// Memory APIs/////////////////////////////////////////////////////////////////
 
 export const getMessages = async (threadId: string): Promise<Message[]> => {
   const supabase = createClient();

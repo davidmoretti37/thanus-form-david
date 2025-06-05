@@ -1,3 +1,7 @@
+#############################################
+from typing import Optional
+from memory.memory_agent import get_user_memories
+###############################################
 import os
 import json
 import re
@@ -320,6 +324,31 @@ async def run_agent(
                 trace.event(name="last_message_from_assistant", level="DEFAULT", status_message=(f"Last message was from assistant, stopping execution"))
                 continue_execution = False
                 break
+
+################### Retrieve user memories when the message type is 'user'########################################
+            if message_type == 'user':
+                try:
+                    # Get user memories based on account_id
+                    user_memories = await get_user_memories(client, account_id, approved_only=True)
+                    if user_memories and len(user_memories) > 0:
+                        logger.info(f"Retrieved {len(user_memories)} user memories for account_id: {account_id}")
+                                
+                        # Format memories for inclusion in the system prompt with better contextAdd commentMore actions
+                        memory_text = "\n\nIMPORTANT USER INFORMATION:\nThe following information about the user has been collected from previous interactions. Use this to personalize your responses and provide better assistance:\n"
+                        for memory in user_memories:
+                            memory_content = memory.get('memoria', '')
+                            memory_text += f"- {memory_content}\n"
+                                
+                        # Append memories to the system prompt
+                        current_prompt = system_message.get('content', '')
+                        system_message['content'] = current_prompt + memory_text
+                        logger.info(f"Added {len(user_memories)} user memories to system prompt")
+                    else:
+                        logger.info(f"No user memories found for account_id: {account_id}")
+                except Exception as e:
+                    logger.error(f"Error retrieving user memories: {str(e)}")
+
+#############################################################################################################################
 
         # ---- Temporary Message Handling (Browser State & Image Context) ----
         temporary_message = None

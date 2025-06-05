@@ -1,5 +1,7 @@
 'use client';
 
+import { MemoryApprovalChecker } from "@/components/memory/memory-approval-checker"
+///////////////////////////////////////////
 import { useEffect, useState } from 'react';
 import { SidebarLeft } from '@/components/sidebar/sidebar-left';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
@@ -104,6 +106,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Status overlay for deletion operations */}
         <StatusOverlay />
+        <MemoryApprovalChecker />
       </SidebarProvider>
     </DeleteOperationProvider>
   );

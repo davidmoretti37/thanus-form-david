@@ -15,6 +15,7 @@ import {
   Settings,
   User,
   AudioWaveform,
+  Brain,
   Sun,
   Moon,
 } from 'lucide-react';
@@ -280,6 +281,12 @@ export function NavUserWithTeams({
 
               {/* User Settings Section */}
               <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                  <Link href="/memories">
+                    <Brain className="mr-2 h-4 w-4" />
+                    My Memories
+                  </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings/billing">
                     <CreditCard className="h-4 w-4" />

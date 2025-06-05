@@ -24,7 +24,7 @@ from services import transcription as transcription_api
 from services.mcp_custom import discover_custom_tools
 import sys
 from services import email_api
-
+from memory import api as memory_api
 
 load_dotenv()
 
@@ -51,6 +51,9 @@ async def lifespan(app: FastAPI):
         )
         
         sandbox_api.initialize(db)
+        
+        # Initialize memory API with database connection
+        memory_api.initialize(db)
         
         # Initialize Redis connection
         from services import redis
@@ -128,6 +131,8 @@ app.add_middleware(
 )
 
 app.include_router(agent_api.router, prefix="/api")
+
+app.include_router(memory_api.router, prefix="/api")
 
 app.include_router(sandbox_api.router, prefix="/api")
 
