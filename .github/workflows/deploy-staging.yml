@@ -37,13 +37,13 @@ jobs:
           key: ${{ secrets.DEVELOP_KEY }}
           script: |
             # Backend
-            cd /home/thanus/backend
+            cd /root/thanus-ai/backend
             git pull
             echo "${{ secrets.BACKEND_ENV }}" > .env
             docker compose up -d --build
 
             # Frontend
-            cd /home/thanus/frontend
+            cd /root/thanus-ai/frontend
             git pull
             echo "${{ secrets.develop.FRONTEND_ENV }}" > .env.staging
             echo "${{ secrets.develop.FRONTEND_ENV }}" > .env
