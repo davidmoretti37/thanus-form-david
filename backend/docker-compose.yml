@@ -1,6 +1,6 @@
 services:
   api:
-    image: ghcr.io/Thanus-ai/Thanus-backend:latest
+    image: ghcr.io/thanus-ai/thanus-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
