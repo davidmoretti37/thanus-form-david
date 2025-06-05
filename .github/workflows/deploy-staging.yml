@@ -1,0 +1,175 @@
+name: Build, push and deploy to Staging
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get tag name
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF#refs/heads/}" == "develop" ]]; then
+            echo "branch=develop" >> $GITHUB_OUTPUT
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          else
+            echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+            echo "environment=dev" >> $GITHUB_OUTPUT
+          fi
+        id: get_tag_namename: Build, push and deploy to Staging
+        
+        on:
+          push:
+            branches:
+              - develop
+          workflow_dispatch:
+        
+        permissions:
+          contents: read
+          packages: write
+        
+        jobs:
+          build-and-push:
+            runs-on: ubuntu-latest
+            steps:
+              - uses: actions/checkout@v4
+        
+              - name: Get tag name
+                shell: bash
+                run: |
+                  if [[ "${GITHUB_REF#refs/heads/}" == "develop" ]]; then
+                    echo "branch=develop" >> $GITHUB_OUTPUT
+                    echo "environment=dev" >> $GITHUB_OUTPUT
+                  else
+                    echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+                    echo "environment=dev" >> $GITHUB_OUTPUT
+                  fi
+                id: get_tag_name
+        
+              # Setup Docker Buildx
+              - name: Set up Docker Buildx
+                uses: docker/setup-buildx-action@v3
+        
+              - name: Log in to GitHub Container Registry
+                uses: docker/login-action@v3
+                with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+        
+              # Backend build and push
+              - name: Build and push Backend image
+                uses: docker/build-push-action@v5
+                with:
+                  context: ./backend
+                  file: ./backend/Dockerfile
+                  push: true
+                  platforms: linux/arm64, linux/amd64
+                  tags: ghcr.io/${{ github.repository }}/thanus-backend:${{ steps.get_tag_name.outputs.branch }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+        
+              # Frontend build and push
+              - name: Build and push Frontend image
+                uses: docker/build-push-action@v5
+                with:
+                  context: ./frontend
+                  file: ./frontend/Dockerfile
+                  push: true
+                  platforms: linux/amd64
+                  tags: ghcr.io/${{ github.repository }}/thanus-frontend:${{ steps.get_tag_name.outputs.branch }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+        
+              # Deploy to development
+              - name: Deploy to development
+                if: steps.get_tag_name.outputs.environment == 'dev'
+                uses: appleboy/ssh-action@v1
+                with:
+                  host: ${{ secrets.DEVELOP_HOST }}
+                  username: ${{ secrets.DEVELOP_USERNAME }}
+                  key: ${{ secrets.DEVELOP_KEY }}
+                  script: |
+                    # Deploy backend
+                    cd /root/thanus-ai/backend
+                    git pull
+                    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+                    
+                    # Deploy frontend
+                    cd /root/thanus-ai/frontend
+                    git pull
+                    docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+        
+              # Deploy to staging
+              - name: Deploy to staging
+                if: steps.get_tag_name.outputs.environment == 'staging'
+                uses: appleboy/ssh-action@v1
+                with:
+                  host: ${{ secrets.STAGING_HOST }}
+                  username: ${{ secrets.STAGING_USERNAME }}
+                  key: ${{ secrets.STAGING_KEY }}
+                  script: |
+                    # Deploy backend
+                    cd /home/thanus/backend
+                    git pull
+                    docker compose up -d --build
+                    
+                    # Deploy frontend
+                    cd /home/thanus/frontend
+                    git pull
+                    docker compose up -d --build
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          platforms: linux/arm64, linux/amd64
+          tags: ghcr.io/${{ github.repository }}/thanus-backend:${{ steps.get_tag_name.outputs.branch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to development
+        if: steps.get_tag_name.outputs.environment == 'dev'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEVELOP_HOST }}
+          username: ${{ secrets.DEVELOP_USERNAME }}
+          key: ${{ secrets.DEVELOP_KEY }}
+          script: |
+            cd /root/thanus-ai/backend
+            git pull
+            docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
+      - name: Deploy to staging
+        if: steps.get_tag_name.outputs.environment == 'staging'
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_USERNAME }}
+          key: ${{ secrets.STAGING_KEY }}
+          script: |
+            cd /home/thanus/backend
+            git pull
+            docker compose up -d --build
