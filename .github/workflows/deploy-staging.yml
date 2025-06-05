@@ -40,16 +40,17 @@ jobs:
             echo "📁 Acessando projeto"
             cd /root/thanus-ai
 
-            echo "🔄 Atualizando código"
-            git pull
+            echo "🔀 Garantindo que estamos na branch develop"
+            git fetch origin
+            git checkout develop || git checkout -b develop
+            git reset --hard origin/develop
+            git pull origin develop
 
             echo "📝 Escrevendo arquivos .env"
             echo "${{ secrets.BACKEND_ENV }}" > backend/.env
             echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
             echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.staging
-
-            echo "🧹 Parando containers antigos"
-            docker compose down
+            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.local
 
             echo "🚀 Subindo aplicação com novo build"
             docker compose up -d --build
