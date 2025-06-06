@@ -4,7 +4,7 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Bot, Menu, Store } from 'lucide-react';
 
-import { NavAgents } from '@/components/sidebar/nav-agents';
+import { NavAgentsEnhanced } from '@/components/sidebar/nav-agents-enhanced';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
 import { InventuAILogo } from '@/components/sidebar/inventu-logo';
 import { CTACard } from '@/components/sidebar/cta';
@@ -138,41 +138,24 @@ export function SidebarLeft({
         </div>
       </SidebarHeader>
       <SidebarContent className="[&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-        {!flagsLoading && (customAgentsEnabled || marketplaceEnabled) && (
+        {!flagsLoading && customAgentsEnabled && (
           <SidebarGroup>
-            {customAgentsEnabled && (
-              <Link href="/agents">
-                <SidebarMenuButton className={cn({
-                  'bg-primary/10 font-medium': pathname === '/agents',
-                })}>
-                  <Bot className="h-4 w-4 mr-2" />
-                  <span className="flex items-center justify-between w-full">
-                    Agent Playground
-                    <Badge variant="new">
-                      New
-                    </Badge>
-                  </span>
-                </SidebarMenuButton>
-              </Link>
-            )}
-            {marketplaceEnabled && (
-              <Link href="/marketplace">
-                <SidebarMenuButton className={cn({
-                  'bg-primary/10 font-medium': pathname === '/marketplace',
-                })}>
-                  <Store className="h-4 w-4 mr-2" />
-                  <span className="flex items-center justify-between w-full">
-                    Marketplace
-                    <Badge variant="new">
-                      New
-                    </Badge>
-                  </span>
-                </SidebarMenuButton>
-              </Link>
-            )}
+            <Link href="/agents">
+              <SidebarMenuButton className={cn({
+                'bg-primary/10 font-medium': pathname === '/agents',
+              })}>
+                <div className="h-2 w-2 mr-2 rounded-full bg-purple-600" />
+                <span className="flex items-center justify-between w-full">
+                  Playground
+                  <Badge variant="new">
+                    New
+                  </Badge>
+                </span>
+              </SidebarMenuButton>
+            </Link>
           </SidebarGroup>
         )}
-        <NavAgents />
+        <NavAgentsEnhanced />
       </SidebarContent>
       {state !== 'collapsed' && (
         <div className="px-3 py-2">

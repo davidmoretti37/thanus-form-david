@@ -26,7 +26,8 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 INFLUENCER_USER_IDS = [
    "f910490b-5a25-4491-9caf-1870a029024c",
    "8ce67198-53f1-466f-9d8a-c0da5de1690b",
-   "8e7f7c8f-0f6a-4483-98f1-a8bbad87d66d"
+   "8e7f7c8f-0f6a-4483-98f1-a8bbad87d66d",
+   "6692d91b-96e0-4f36-a08e-a8443f239ca8"
 ]
 
 SUBSCRIPTION_TIERS = {
