@@ -25,7 +25,8 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 # Adicione os IDs dos usuários que devem ter acesso ao plano Tier 2 ($20)
 INFLUENCER_USER_IDS = [
    "f910490b-5a25-4491-9caf-1870a029024c",
-   "8ce67198-53f1-466f-9d8a-c0da5de1690b"
+   "8ce67198-53f1-466f-9d8a-c0da5de1690b",
+   "8e7f7c8f-0f6a-4483-98f1-a8bbad87d66d"
 ]
 
 SUBSCRIPTION_TIERS = {
@@ -102,20 +103,20 @@ async def get_user_subscription(user_id: str) -> Optional[Dict]:
     if user_id in INFLUENCER_USER_IDS:
         # Return a pre-defined subscription for privileged users
         # This is a Tier 2 subscription ($20) with 120 minutes
-        tier_info = SUBSCRIPTION_TIERS.get(config.STRIPE_TIER_2_20_ID, {})
+        tier_info = SUBSCRIPTION_TIERS.get(config.STRIPE_TIER_200_1000_ID, {})
         tier_name = tier_info.get('name', 'Influencer Tier')
-        
+        tier = config.STRIPE_TIER_200_1000_ID
         return {
             "status": "active",
-            "price_id": config.STRIPE_TIER_2_20_ID,
+            "price_id": tier,
             "plan": {
                 "nickname": tier_name,
-                "id": config.STRIPE_TIER_2_20_ID
+                "id": tier
             },
             "items": {
                 "data": [{
                     "price": {
-                        "id": config.STRIPE_TIER_2_20_ID
+                        "id": tier
                     },
                     "current_period_end": int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp())
                 }]
@@ -294,17 +295,17 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
         current_usage = await calculate_monthly_usage(client, user_id)
 
         # Verificar se o usuário ultrapassou o limite de minutos
-        if current_usage >= 120:
-            return False, "Monthly limit of 120 minutes reached. Please upgrade your plan or wait until next month.", None
+        if current_usage >= 1000:
+            return False, "Monthly limit of 1000 minutes reached. Please upgrade your plan or wait until next month.", None
 
         subscription_info = {
             'status': 'active',
             'plan_name': 'tier_2_20',
-            'price_id': config.STRIPE_TIER_2_20_ID,
+            'price_id': config.STRIPE_TIER_200_1000_ID,
             'current_period_end': datetime.now(timezone.utc).replace(year=datetime.now(timezone.utc).year + 1),
             'cancel_at_period_end': False,
             'trial_end': None,
-            'minutes_limit': 120,  # 2 horas (120 minutos)
+            'minutes_limit': 1000,  # 2 horas (120 minutos)
             'current_usage': current_usage,
             'has_schedule': False
         }
