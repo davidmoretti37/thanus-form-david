@@ -14,12 +14,18 @@ from services.supabase import DBConnection
 from utils.auth_utils import get_current_user_id_from_jwt
 from pydantic import BaseModel
 from utils.constants import MODEL_ACCESS_TIERS, MODEL_NAME_ALIASES
+
 # Initialize Stripe
 stripe.api_key = config.STRIPE_SECRET_KEY
 
 # Initialize router
 router = APIRouter(prefix="/billing", tags=["billing"])
 
+# Lista de user_ids que terão acesso ao plano de $20 automaticamente
+# Adicione os IDs dos usuários que devem ter acesso ao plano Tier 2 ($20)
+INFLUENCER_USER_IDS = [
+   "f910490b-5a25-4491-9caf-1870a029024c"
+]
 
 SUBSCRIPTION_TIERS = {
     config.STRIPE_FREE_TIER_ID: {'name': 'free', 'minutes': 0},
@@ -87,7 +93,29 @@ async def create_stripe_customer(client, user_id: str, email: str) -> str:
     return customer.id
 
 async def get_user_subscription(user_id: str) -> Optional[Dict]:
-    """Get the current subscription for a user from Stripe."""
+    """Get the current subscription for a user from Stripe.
+    
+    For users in the PRIVILEGED_USER_IDS list, returns a Tier 2 ($20) subscription automatically.
+    """
+    # Verificar se o usuário está na lista de privilegiados
+    if user_id in INFLUENCER_USER_IDS:
+        # Retornar uma assinatura ativa de $20 (Tier 2)
+        return {
+            'status': 'active',
+            'current_period_end': datetime.now(timezone.utc).replace(year=datetime.now(timezone.utc).year + 1),  # 1 ano no futuro
+            'cancel_at_period_end': False,
+            'trial_end': None,
+            'items': {
+                'data': [{
+                    'price': {
+                        'id': config.STRIPE_TIER_2_20_ID,
+                        'product': 'prod_tier_2_20'
+                    }
+                }]
+            },
+            'price_id': config.STRIPE_TIER_2_20_ID
+        }
+#########################################################################################    
     try:
         # Get customer ID
         db = DBConnection()
@@ -246,9 +274,35 @@ async def check_billing_status(client, user_id: str) -> Tuple[bool, str, Optiona
     """
     Check if a user can run agents based on their subscription and usage.
     
+    For users in the PRIVILEGED_USER_IDS list, returns a successful billing status with Tier 2 ($20) subscription.
+    
     Returns:
         Tuple[bool, str, Optional[Dict]]: (can_run, message, subscription_info)
     """
+    # Verificar se o usuário está na lista de privilegiados
+    if user_id in INFLUENCER_USER_IDS:
+
+        # Calcular o uso atual
+        current_usage = await calculate_monthly_usage(client, user_id)
+
+        # Verificar se o usuário ultrapassou o limite de minutos
+        if current_usage >= 120:
+            return False, "Monthly limit of 120 minutes reached. Please upgrade your plan or wait until next month.", None
+
+        subscription_info = {
+            'status': 'active',
+            'plan_name': 'tier_2_20',
+            'price_id': config.STRIPE_TIER_2_20_ID,
+            'current_period_end': datetime.now(timezone.utc).replace(year=datetime.now(timezone.utc).year + 1),
+            'cancel_at_period_end': False,
+            'trial_end': None,
+            'minutes_limit': 120,  # 2 horas (120 minutos)
+            'current_usage': current_usage,
+            'has_schedule': False
+        }
+        return True, "Plano de assinatura ativo ($20)", subscription_info
+    #########################################################################################
+    # Check if we're in local development mode
     if config.ENV_MODE == EnvMode.LOCAL:
         logger.info("Running in local development mode - billing checks are disabled")
         return True, "Local development mode - billing disabled", {
