@@ -1418,7 +1418,7 @@ export const listSandboxFiles = async (
     return data.files || [];
   } catch (error) {
     console.error('Failed to list sandbox files:', error);
-    handleApiError(error, { operation: 'list files', resource: `directory ${path}` });
+    // handleApiError(error, { operation: 'list files', resource: `directory ${path}` });
     throw error;
   }
 };
@@ -1646,8 +1646,6 @@ export const checkApiHealth = async (): Promise<HealthCheckResponse> => {
 
     return response.json();
   } catch (error) {
-    console.error('API health check failed:', error);
-    handleApiError(error, { operation: 'check system health', resource: 'system status' });
     throw error;
   }
 };
@@ -1954,7 +1952,6 @@ export const checkBillingStatus = async (): Promise<BillingStatusResponse> => {
     return response.json();
   } catch (error) {
     console.error('Failed to check billing status:', error);
-    handleApiError(error, { operation: 'check billing status', resource: 'account status' });
     throw error;
   }
 };
