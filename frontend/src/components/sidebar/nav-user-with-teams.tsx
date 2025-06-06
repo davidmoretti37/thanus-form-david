@@ -17,6 +17,7 @@ import {
   AudioWaveform,
   Sun,
   Moon,
+  Brain,
   Sparkles,
   ChevronRight,
   ShoppingBag,
@@ -191,6 +192,12 @@ export function NavUserWithTeams({
               align="start"
               sideOffset={4}
             >
+              <DropdownMenuItem asChild>
+                  <Link href="/memories">
+                    <Brain className="mr-2 h-4 w-4" />
+                    My Memories
+                  </Link>
+                </DropdownMenuItem>
               <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                   <Avatar className="h-8 w-8 rounded-lg">
