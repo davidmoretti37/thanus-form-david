@@ -5,7 +5,6 @@ import { memo, useId, useMemo } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock, CodeBlockCode } from '@/components/ui/code-block';
-import { LinkButton } from '@/components/ui/link-button';
 
 export type MarkdownProps = {
   children: string;
@@ -114,9 +113,15 @@ const INITIAL_COMPONENTS: Partial<Components> = {
   },
   a: function Anchor({ children, href, ...props }: any) {
     return (
-      <LinkButton href={href} {...props}>
+      <a
+        href={href}
+        className="text-primary hover:underline dark:text-blue-400"
+        target="_blank"
+        rel="noopener noreferrer"
+        {...props}
+      >
         {children}
-      </LinkButton>
+      </a>
     );
   },
   table: function Table({ children, ...props }: any) {
