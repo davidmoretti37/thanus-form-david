@@ -74,3 +74,6 @@ jobs:
 
             echo "🧼 Limpando imagens e redes não utilizadas"
             docker system prune -a -f
+
+            python backend/flags/setup.py enable custom_agents
+            python backend/flags/setup.py enable agent_marketplace
