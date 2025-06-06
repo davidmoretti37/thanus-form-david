@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AnimatedShinyText } from '@/components/ui/animated-shiny-text';
+import { ThinkingAnimation } from '@/components/ui/thinking-animation';
 
 const items = [
     { id: 1, content: "Initializing neural pathways..." },
@@ -35,7 +36,9 @@ export const AgentLoader = () => {
 
   return (
     <div className="flex py-2 items-center w-full">
-      <div>✨</div>
+      <div className="mr-2">
+        <ThinkingAnimation size={16} />
+      </div>
             <AnimatePresence>
             <motion.div
                 key={items[index].id}
@@ -44,7 +47,7 @@ export const AgentLoader = () => {
                 exit={{ y: -20, opacity: 0, filter: "blur(8px)" }}
                 transition={{ ease: "easeInOut" }}
                 style={{ position: "absolute" }}
-                className='ml-7'
+                className='ml-5'
             >
                 <AnimatedShinyText>{items[index].content}</AnimatedShinyText>
             </motion.div>
