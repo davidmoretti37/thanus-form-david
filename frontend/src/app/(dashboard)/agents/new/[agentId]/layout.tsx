@@ -1,25 +1,35 @@
-import { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-import { isFlagEnabled } from '@/lib/feature-flags';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Create Agent | InventuAI Thanus',
-  description: 'Interactive agent playground powered by InventuAI Thanus',
-  openGraph: {
-    title: 'Agent Playground | InventuAI Thanus',
-    description: 'Interactive agent playground powered by InventuAI Thanus',
-    type: 'website',
-  },
-};
+import { useFeatureFlag } from '@/lib/feature-flags';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
-export default async function NewAgentLayout({
+export default function NewAgentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const agentPlaygroundEnabled = await isFlagEnabled('custom_agents');
-  if (!agentPlaygroundEnabled) {
-    redirect('/dashboard');
+  const { enabled: agentPlaygroundEnabled, loading } = useFeatureFlag('custom_agents');
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !agentPlaygroundEnabled) {
+      router.push('/dashboard');
+    }
+  }, [loading, agentPlaygroundEnabled, router]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
+
+  if (!agentPlaygroundEnabled) {
+    return null;
+  }
+
   return <>{children}</>;
 }

@@ -15,9 +15,11 @@ import {
   Settings,
   User,
   AudioWaveform,
-  Brain,
   Sun,
   Moon,
+  Sparkles,
+  ChevronRight,
+  ShoppingBag,
 } from 'lucide-react';
 import { useAccounts } from '@/hooks/use-accounts';
 import NewTeamForm from '@/components/basejump/new-team-form';
@@ -63,6 +65,7 @@ export function NavUserWithTeams({
   const { isMobile } = useSidebar();
   const { data: accounts } = useAccounts();
   const [showNewTeamDialog, setShowNewTeamDialog] = React.useState(false);
+  const [showMemorySeeds, setShowMemorySeeds] = React.useState(false);
   const { theme, setTheme } = useTheme();
 
   // Prepare personal account and team accounts
@@ -281,18 +284,71 @@ export function NavUserWithTeams({
 
               {/* User Settings Section */}
               <DropdownMenuGroup>
-              <DropdownMenuItem asChild>
-                  <Link href="/memories">
-                    <Brain className="mr-2 h-4 w-4" />
-                    My Memories
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/settings/billing">
                     <CreditCard className="h-4 w-4" />
                     Billing
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/marketplace">
+                    <ShoppingBag className="h-4 w-4" />
+                    Marketplace
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowMemorySeeds(!showMemorySeeds);
+                  }}
+                  onSelect={(e) => {
+                    e.preventDefault();
+                  }}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Sementes de Memoria</span>
+                  <ChevronRight className={`ml-auto h-4 w-4 transition-transform ${showMemorySeeds ? 'rotate-90' : ''}`} />
+                </DropdownMenuItem>
+                
+                {/* Memory Seeds Submenu */}
+                {showMemorySeeds && (
+                  <div className="px-2 py-2">
+                    <div 
+                      className="bg-gray-900/50 border border-gray-700/50 rounded-lg p-3 cursor-pointer hover:bg-gray-800/50 transition-colors"
+                      onClick={() => router.push('/memory-seeds')}
+                    >
+                      {/* Mini Seeds Grid */}
+                      <div className="space-y-0.5">
+                        {Array.from({ length: 7 }, (_, dayIndex) => (
+                          <div key={dayIndex} className="flex gap-0.5">
+                            {Array.from({ length: 24 }, (_, weekIndex) => {
+                              const activity = Math.random();
+                              const level = activity < 0.3 ? 0 : activity < 0.5 ? 1 : activity < 0.7 ? 2 : activity < 0.9 ? 3 : 4;
+                              const getSeedColor = (level: number) => {
+                                switch (level) {
+                                  case 0: return 'bg-gray-800/30';
+                                  case 1: return 'bg-fuchsia-900/40';
+                                  case 2: return 'bg-fuchsia-700/60';
+                                  case 3: return 'bg-fuchsia-500/80';
+                                  case 4: return 'bg-fuchsia-400';
+                                  default: return 'bg-gray-800/30';
+                                }
+                              };
+                              
+                              return (
+                                <div
+                                  key={`${weekIndex}-${dayIndex}`}
+                                  className={`w-1.5 h-1.5 rounded-sm ${getSeedColor(level)}`}
+                                />
+                              );
+                            })}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {/* <DropdownMenuItem asChild>
                   <Link href="/settings">
                     <Settings className="mr-2 h-4 w-4" />
