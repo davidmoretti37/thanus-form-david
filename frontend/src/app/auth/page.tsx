@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { SubmitButton } from '@/components/ui/submit-button';
 import { Input } from '@/components/ui/input';
 import GoogleSignIn from '@/components/GoogleSignIn';
-import { FlickeringGrid } from '@/components/home/ui/flickering-grid';
+import { CosmicBackground } from '@/components/auth/cosmic-background';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useScroll } from 'motion/react';
@@ -231,6 +231,8 @@ function LoginContent() {
   if (registrationSuccess) {
     return (
       <main className="flex flex-col items-center justify-center min-h-screen w-full">
+        {/* Cosmic Background */}
+        <CosmicBackground />
         <div className="w-full divide-y divide-border">
           <section className="w-full relative overflow-hidden">
             <div className="relative flex flex-col items-center w-full px-6">
@@ -300,75 +302,28 @@ function LoginContent() {
 
   return (
     <main className="flex flex-col items-center justify-center min-h-screen w-full">
-      <div className="w-full divide-y divide-border">
-        {/* Hero-like header with flickering grid */}
+      {/* Cosmic Background */}
+      <CosmicBackground />
+      <div className="w-full">
+        {/* Simplified header and form */}
         <section className="w-full relative overflow-hidden">
           <div className="relative flex flex-col items-center w-full px-6">
-            {/* Left side flickering grid with gradient fades */}
-            <div className="absolute left-0 top-0 h-[600px] md:h-[800px] w-1/3 -z-10 overflow-hidden">
-              {/* Horizontal fade from left to right */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background z-10" />
-
-              {/* Vertical fade from top */}
-              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
-
-              {/* Vertical fade to bottom */}
-              <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
-
-              <div className="h-full w-full">
-                <FlickeringGrid
-                  className="h-full w-full"
-                  squareSize={mounted && tablet ? 2 : 2.5}
-                  gridGap={mounted && tablet ? 2 : 2.5}
-                  color="var(--secondary)"
-                  maxOpacity={0.4}
-                  flickerChance={isScrolling ? 0.01 : 0.03}
-                />
-              </div>
-            </div>
-
-            {/* Right side flickering grid with gradient fades */}
-            <div className="absolute right-0 top-0 h-[600px] md:h-[800px] w-1/3 -z-10 overflow-hidden">
-              {/* Horizontal fade from right to left */}
-              <div className="absolute inset-0 bg-gradient-to-l from-transparent via-transparent to-background z-10" />
-
-              {/* Vertical fade from top */}
-              <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-background via-background/90 to-transparent z-10" />
-
-              {/* Vertical fade to bottom */}
-              <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-background via-background/90 to-transparent z-10" />
-
-              <div className="h-full w-full">
-                <FlickeringGrid
-                  className="h-full w-full"
-                  squareSize={mounted && tablet ? 2 : 2.5}
-                  gridGap={mounted && tablet ? 2 : 2.5}
-                  color="var(--secondary)"
-                  maxOpacity={0.4}
-                  flickerChance={isScrolling ? 0.01 : 0.03}
-                />
-              </div>
-            </div>
-
-            {/* Center content background with rounded bottom */}
-            <div className="absolute inset-x-1/4 top-0 h-[600px] md:h-[800px] -z-20 bg-background rounded-b-xl"></div>
-
             {/* Header content */}
             <div className="relative z-10 pt-24 pb-8 max-w-md mx-auto h-full w-full flex flex-col gap-2 items-center justify-center">
               <Link
                 href="/"
-                className="group border border-border/50 bg-background hover:bg-accent/20 rounded-full text-sm h-8 px-3 flex items-center gap-2 transition-all duration-200 shadow-sm mb-6"
+                className="group border border-white/20 bg-white/10 hover:bg-white/20 rounded-full text-sm h-8 px-3 flex items-center gap-2 transition-all duration-200 shadow-sm mb-6 backdrop-blur-sm"
               >
-                <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-muted-foreground text-xs tracking-wide">
+                <ArrowLeft className="h-4 w-4 text-white/70" />
+                <span className="font-medium text-white/70 text-xs tracking-wide">
                   Back to home
                 </span>
               </Link>
 
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter text-center text-balance text-primary">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-medium tracking-tighter text-center text-balance text-white">
                 {isSignUp ? 'Join Thanus' : 'Welcome back'}
               </h1>
-              <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight mt-2 mb-6">
+              <p className="text-base md:text-lg text-center text-white/70 font-medium text-balance leading-relaxed tracking-tight mt-2 mb-6">
                 {isSignUp
                   ? 'Create your account and start building with AI'
                   : 'Sign in to your account to continue'}
