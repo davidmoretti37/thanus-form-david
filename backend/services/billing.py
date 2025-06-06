@@ -24,7 +24,8 @@ router = APIRouter(prefix="/billing", tags=["billing"])
 # Lista de user_ids que terão acesso ao plano de $20 automaticamente
 # Adicione os IDs dos usuários que devem ter acesso ao plano Tier 2 ($20)
 INFLUENCER_USER_IDS = [
-   "f910490b-5a25-4491-9caf-1870a029024c"
+   "f910490b-5a25-4491-9caf-1870a029024c",
+   "8ce67198-53f1-466f-9d8a-c0da5de1690b"
 ]
 
 SUBSCRIPTION_TIERS = {
