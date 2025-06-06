@@ -1,7 +1,8 @@
 import { isLocalMode } from './lib/config';
 
-export const agentPlaygroundFlagFrontend = isLocalMode();
-export const marketplaceFlagFrontend = isLocalMode();
+// Sempre habilitar estas flags, independente do ambiente
+export const agentPlaygroundFlagFrontend = true;
+export const marketplaceFlagFrontend = true;
 
-export const agentPlaygroundEnabled = isLocalMode();
-export const marketplaceEnabled = isLocalMode();
+export const agentPlaygroundEnabled = true;
+export const marketplaceEnabled = true;
