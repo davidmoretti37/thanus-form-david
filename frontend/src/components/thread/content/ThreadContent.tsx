@@ -13,7 +13,7 @@ import {
     getUserFriendlyToolName,
     safeJsonParse,
 } from '@/components/thread/utils';
-import { InventuAILogo } from '@/components/sidebar/kortix-logo';
+import { InventuAILogo } from '@/components/sidebar/inventu-logo';
 import { AgentLoader } from './loader';
 import { parseXmlToolCalls, isNewXmlFormat, extractToolNameFromStream } from '@/components/thread/tool-views/xml-parser';
 import { parseToolResult } from '@/components/thread/tool-views/tool-result-parser';

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Briefcase, ExternalLink } from 'lucide-react';
-import { InventuAIProcessModal } from '@/components/sidebar/kortix-enterprise-modal';
+import { InventuAIProcessModal } from '@/components/sidebar/inventu-enterprise-modal';
 
 export function CTACard() {
   return (

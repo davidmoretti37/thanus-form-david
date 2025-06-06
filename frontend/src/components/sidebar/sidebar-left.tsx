@@ -6,7 +6,7 @@ import { Bot, Menu, Store } from 'lucide-react';
 
 import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
-import { InventuAILogo } from '@/components/sidebar/kortix-logo';
+import { InventuAILogo } from '@/components/sidebar/inventu-logo';
 import { CTACard } from '@/components/sidebar/cta';
 import {
   Sidebar,
