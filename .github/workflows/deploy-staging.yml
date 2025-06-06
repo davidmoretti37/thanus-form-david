@@ -26,7 +26,7 @@ jobs:
   deploy:
     needs: get-env
     runs-on: ubuntu-latest
-    environment: develop  # Carrega os segredos do ambiente (BACKEND_ENV, FRONTEND_ENV)
+    environment: develop  # Carrega os secrets BACKEND_ENV, FRONTEND_ENV, ENV_MODE
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -47,11 +47,16 @@ jobs:
             git reset --hard origin/develop
             git pull origin develop
 
-            echo "📝 Escrevendo arquivos .env"
+            echo "📝 Escrevendo arquivos .env com ENV_MODE=${{ secrets.ENV_MODE }}"
             echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+            echo "ENV_MODE=${{ secrets.ENV_MODE }}" >> backend/.env
+
             echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env
             echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.staging
             echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.local
+            echo "NEXT_PUBLIC_ENV_MODE=${{ secrets.ENV_MODE }}" >> frontend/.env
+            echo "NEXT_PUBLIC_ENV_MODE=${{ secrets.ENV_MODE }}" >> frontend/.env.staging
+            echo "NEXT_PUBLIC_ENV_MODE=${{ secrets.ENV_MODE }}" >> frontend/.env.local
 
             echo "🚀 Subindo aplicação com novo build"
             docker compose up -d --build

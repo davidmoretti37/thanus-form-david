@@ -333,7 +333,7 @@ async def create_checkout_session(
                 subscription_item = existing_subscription['items']['data'][0]
                 current_price_id = subscription_item['price']['id']
                 
-                # Skip if already on this plan
+                # Skip if already on this plan\
                 if current_price_id == request.price_id:
                     return {
                         "subscription_id": subscription_id,
