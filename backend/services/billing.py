@@ -7,7 +7,7 @@ stripe listen --forward-to localhost:8000/api/billing/webhook
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import Optional, Dict, Tuple
 import stripe
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from utils.logger import logger
 from utils.config import config, EnvMode
 from services.supabase import DBConnection
@@ -97,23 +97,30 @@ async def get_user_subscription(user_id: str) -> Optional[Dict]:
     
     For users in the PRIVILEGED_USER_IDS list, returns a Tier 2 ($20) subscription automatically.
     """
-    # Verificar se o usuário está na lista de privilegiados
+    # Check if user is in the privileged list (influencers)
     if user_id in INFLUENCER_USER_IDS:
-        # Retornar uma assinatura ativa de $20 (Tier 2)
+        # Return a pre-defined subscription for privileged users
+        # This is a Tier 2 subscription ($20) with 120 minutes
+        tier_info = SUBSCRIPTION_TIERS.get(config.STRIPE_TIER_2_20_ID, {})
+        tier_name = tier_info.get('name', 'Influencer Tier')
+        
         return {
-            'status': 'active',
-            'current_period_end': datetime.now(timezone.utc).replace(year=datetime.now(timezone.utc).year + 1),  # 1 ano no futuro
-            'cancel_at_period_end': False,
-            'trial_end': None,
-            'items': {
-                'data': [{
-                    'price': {
-                        'id': config.STRIPE_TIER_2_20_ID,
-                        'product': 'prod_tier_2_20'
-                    }
+            "status": "active",
+            "price_id": config.STRIPE_TIER_2_20_ID,
+            "plan": {
+                "nickname": tier_name,
+                "id": config.STRIPE_TIER_2_20_ID
+            },
+            "items": {
+                "data": [{
+                    "price": {
+                        "id": config.STRIPE_TIER_2_20_ID
+                    },
+                    "current_period_end": int((datetime.now(timezone.utc) + timedelta(days=30)).timestamp())
                 }]
             },
-            'price_id': config.STRIPE_TIER_2_20_ID
+            "cancel_at_period_end": False,
+            "trial_end": None
         }
 #########################################################################################    
     try:
