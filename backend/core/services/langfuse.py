@@ -108,7 +108,16 @@ if enabled:
                 def auth_check(self): return False
             
             class MockTrace:
-                def __init__(self): self.id = "mock-trace-id"
+                def __init__(self): 
+                    self.id = "mock-trace-id"
+                def update(self, **kwargs): 
+                    return self
+                def span(self, **kwargs):
+                    return MockSpan()
+                def generation(self, **kwargs):
+                    return MockGeneration()
+                def event(self, **kwargs):
+                    return self
             class MockGeneration:
                 def __init__(self): self.id = "mock-generation-id"
                 def update(self, **kwargs): pass
@@ -134,7 +143,16 @@ else:
         def auth_check(self): return False
     
     class MockTrace:
-        def __init__(self): self.id = "mock-trace-id"
+        def __init__(self): 
+            self.id = "mock-trace-id"
+        def update(self, **kwargs): 
+            return self
+        def span(self, **kwargs):
+            return MockSpan()
+        def generation(self, **kwargs):
+            return MockGeneration()
+        def event(self, **kwargs):
+            return self
     class MockGeneration:
         def __init__(self): self.id = "mock-generation-id"
         def update(self, **kwargs): pass

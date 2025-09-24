@@ -1,23 +1,23 @@
 BEGIN;
 
 -- Add source type and file metadata to agent knowledge base entries
-ALTER TABLE agent_knowledge_base_entries 
-ADD COLUMN source_type VARCHAR(50) DEFAULT 'manual' CHECK (source_type IN ('manual', 'file', 'git_repo', 'zip_extracted'));
+-- ALTER TABLE agent_knowledge_base_entries 
+-- ADD COLUMN source_type VARCHAR(50) DEFAULT 'manual' CHECK (source_type IN ('manual', 'file', 'git_repo', 'zip_extracted'));
 
-ALTER TABLE agent_knowledge_base_entries 
-ADD COLUMN source_metadata JSONB DEFAULT '{}';
+-- ALTER TABLE agent_knowledge_base_entries 
+-- ADD COLUMN source_metadata JSONB DEFAULT '{}';
 
-ALTER TABLE agent_knowledge_base_entries 
-ADD COLUMN file_path TEXT;
+-- ALTER TABLE agent_knowledge_base_entries 
+-- ADD COLUMN file_path TEXT;
 
-ALTER TABLE agent_knowledge_base_entries 
-ADD COLUMN file_size BIGINT;
+-- ALTER TABLE agent_knowledge_base_entries 
+-- ADD COLUMN file_size BIGINT;
 
-ALTER TABLE agent_knowledge_base_entries 
-ADD COLUMN file_mime_type VARCHAR(255);
+-- ALTER TABLE agent_knowledge_base_entries 
+-- ADD COLUMN file_mime_type VARCHAR(255);
 
-ALTER TABLE agent_knowledge_base_entries 
-ADD COLUMN extracted_from_zip_id UUID REFERENCES agent_knowledge_base_entries(entry_id) ON DELETE CASCADE;
+-- ALTER TABLE agent_knowledge_base_entries 
+-- ADD COLUMN extracted_from_zip_id UUID REFERENCES agent_knowledge_base_entries(entry_id) ON DELETE CASCADE;
 
 -- Create indexes for new columns
 CREATE INDEX IF NOT EXISTS idx_agent_kb_entries_source_type ON agent_knowledge_base_entries(source_type);
@@ -54,15 +54,15 @@ CREATE INDEX IF NOT EXISTS idx_agent_kb_jobs_created_at ON agent_kb_file_process
 ALTER TABLE agent_kb_file_processing_jobs ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policy for file processing jobs
-CREATE POLICY agent_kb_jobs_user_access ON agent_kb_file_processing_jobs
-    FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM agents a
-            WHERE a.agent_id = agent_kb_file_processing_jobs.agent_id
-            AND basejump.has_role_on_account(a.account_id) = true
-        )
-    );
+-- CREATE POLICY agent_kb_jobs_user_access ON agent_kb_file_processing_jobs
+--     FOR ALL
+--     USING (
+--         EXISTS (
+--             SELECT 1 FROM agents a
+--             WHERE a.agent_id = agent_kb_file_processing_jobs.agent_id
+--             AND basejump.has_role_on_account(a.account_id) = true
+--         )
+--     );
 
 -- Function to get file processing jobs for an agent
 CREATE OR REPLACE FUNCTION get_agent_kb_processing_jobs(

@@ -114,18 +114,18 @@ alter table
   * This is where we define access to tables in the basejump schema
  */
 
-create policy "Can only view own billing customer data." on basejump.billing_customers for
-    select
-    using (
-    basejump.has_role_on_account(account_id) = true
-    );
+-- create policy "Can only view own billing customer data." on basejump.billing_customers for
+--     select
+--     using (
+--     basejump.has_role_on_account(account_id) = true
+--     );
 
 
-create policy "Can only view own billing subscription data." on basejump.billing_subscriptions for
-    select
-    using (
-    basejump.has_role_on_account(account_id) = true
-    );
+-- create policy "Can only view own billing subscription data." on basejump.billing_subscriptions for
+--     select
+--     using (
+--     basejump.has_role_on_account(account_id) = true
+--     );
 
 /**
   * -------------------------------------------------------

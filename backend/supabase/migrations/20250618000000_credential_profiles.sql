@@ -1,6 +1,6 @@
 BEGIN;
 
-CREATE TABLE user_mcp_credential_profiles (
+CREATE TABLE IF NOT EXISTS user_mcp_credential_profiles (
     profile_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id UUID NOT NULL,
     mcp_qualified_name TEXT NOT NULL,
@@ -21,23 +21,23 @@ CREATE TABLE user_mcp_credential_profiles (
         ON DELETE CASCADE
 );
 
-CREATE INDEX idx_credential_profiles_account_mcp 
-    ON user_mcp_credential_profiles(account_id, mcp_qualified_name);
+-- CREATE INDEX idx_credential_profiles_account_mcp 
+--     ON user_mcp_credential_profiles(account_id, mcp_qualified_name);
 
-CREATE INDEX idx_credential_profiles_account_active 
-    ON user_mcp_credential_profiles(account_id, is_active) 
-    WHERE is_active = true;
+-- CREATE INDEX idx_credential_profiles_account_active 
+--     ON user_mcp_credential_profiles(account_id, is_active) 
+--     WHERE is_active = true;
 
-CREATE INDEX idx_credential_profiles_default 
-    ON user_mcp_credential_profiles(account_id, mcp_qualified_name, is_default) 
-    WHERE is_default = true;
+-- CREATE INDEX idx_credential_profiles_default 
+--     ON user_mcp_credential_profiles(account_id, mcp_qualified_name, is_default) 
+--     WHERE is_default = true;
 
 ALTER TABLE user_mcp_credential_profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY credential_profiles_user_access 
-    ON user_mcp_credential_profiles 
-    FOR ALL 
-    USING (auth.uid() = account_id);
+-- CREATE POLICY credential_profiles_user_access 
+--     ON user_mcp_credential_profiles 
+--     FOR ALL 
+--     USING (auth.uid() = account_id);
 
 ALTER TABLE workflows 
 ADD COLUMN mcp_credential_mappings JSONB DEFAULT '{}';
@@ -95,10 +95,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_ensure_single_default_profile
-    BEFORE INSERT OR UPDATE ON user_mcp_credential_profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION ensure_single_default_profile();
+-- CREATE TRIGGER trigger_ensure_single_default_profile
+--     BEFORE INSERT OR UPDATE ON user_mcp_credential_profiles
+--     FOR EACH ROW
+--     EXECUTE FUNCTION ensure_single_default_profile();
 
 CREATE OR REPLACE FUNCTION update_credential_profile_timestamp()
 RETURNS TRIGGER AS $$
@@ -108,9 +108,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_update_credential_profile_timestamp
-    BEFORE UPDATE ON user_mcp_credential_profiles
-    FOR EACH ROW
-    EXECUTE FUNCTION update_credential_profile_timestamp();
+-- CREATE TRIGGER trigger_update_credential_profile_timestamp
+--     BEFORE UPDATE ON user_mcp_credential_profiles
+--     FOR EACH ROW
+--     EXECUTE FUNCTION update_credential_profile_timestamp();
 
 COMMIT; 

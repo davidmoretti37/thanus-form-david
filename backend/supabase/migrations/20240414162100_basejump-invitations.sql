@@ -35,11 +35,11 @@ create table if not exists basejump.invitations
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE basejump.invitations TO authenticated, service_role;
 
 -- manage timestamps
-CREATE TRIGGER basejump_set_invitations_timestamp
-    BEFORE INSERT OR UPDATE
-    ON basejump.invitations
-    FOR EACH ROW
-EXECUTE FUNCTION basejump.trigger_set_timestamps();
+-- CREATE TRIGGER basejump_set_invitations_timestamp
+--     BEFORE INSERT OR UPDATE
+--     ON basejump.invitations
+--     FOR EACH ROW
+-- EXECUTE FUNCTION basejump.trigger_set_timestamps();
 
 /**
   * This funciton fills in account info and inviting user email
@@ -56,11 +56,11 @@ BEGIN
 END
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER basejump_trigger_set_invitation_details
-    BEFORE INSERT
-    ON basejump.invitations
-    FOR EACH ROW
-EXECUTE FUNCTION basejump.trigger_set_invitation_details();
+-- CREATE TRIGGER basejump_trigger_set_invitation_details
+--     BEFORE INSERT
+--     ON basejump.invitations
+--     FOR EACH ROW
+-- EXECUTE FUNCTION basejump.trigger_set_invitation_details();
 
 -- enable RLS on invitations
 alter table basejump.invitations
@@ -73,37 +73,37 @@ alter table basejump.invitations
   * This is where we define access to tables in the basejump schema
  */
 
- create policy "Invitations viewable by account owners" on basejump.invitations
-    for select
-    to authenticated
-    using (
-            created_at > (now() - interval '24 hours')
-        and
-            basejump.has_role_on_account(account_id, 'owner') = true
-    );
+--  create policy "Invitations viewable by account owners" on basejump.invitations
+--     for select
+--     to authenticated
+--     using (
+--             created_at > (now() - interval '24 hours')
+--         and
+--             basejump.has_role_on_account(account_id, 'owner') = true
+--     );
 
 
-create policy "Invitations can be created by account owners" on basejump.invitations
-    for insert
-    to authenticated
-    with check (
-    -- team accounts should be enabled
-            basejump.is_set('enable_team_accounts') = true
-        -- this should not be a personal account
-        and (SELECT personal_account
-             FROM basejump.accounts
-             WHERE id = account_id) = false
-        -- the inserting user should be an owner of the account
-        and
-            (basejump.has_role_on_account(account_id, 'owner') = true)
-    );
+-- create policy "Invitations can be created by account owners" on basejump.invitations
+--     for insert
+--     to authenticated
+--     with check (
+--     -- team accounts should be enabled
+--             basejump.is_set('enable_team_accounts') = true
+--         -- this should not be a personal account
+--         and (SELECT personal_account
+--              FROM basejump.accounts
+--              WHERE id = account_id) = false
+--         -- the inserting user should be an owner of the account
+--         and
+--             (basejump.has_role_on_account(account_id, 'owner') = true)
+--     );
 
-create policy "Invitations can be deleted by account owners" on basejump.invitations
-    for delete
-    to authenticated
-    using (
-    basejump.has_role_on_account(account_id, 'owner') = true
-    );
+-- create policy "Invitations can be deleted by account owners" on basejump.invitations
+--     for delete
+--     to authenticated
+--     using (
+--     basejump.has_role_on_account(account_id, 'owner') = true
+--     );
 
 
 

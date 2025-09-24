@@ -12,10 +12,10 @@ class ModelRegistry:
     
     def _initialize_models(self):
         self.register(Model(
-            id="anthropic/claude-sonnet-4-20250514",
+            id="openrouter/deepseek/deepseek-chat-v3.1",
             name="Claude Sonnet 4",
-            provider=ModelProvider.ANTHROPIC,
-            aliases=["claude-sonnet-4", "anthropic/claude-sonnet-4", "Claude Sonnet 4", "claude-sonnet-4-20250514"],
+            provider=ModelProvider.OPENROUTER,
+            aliases=["claude-sonnet-4", "anthropic/claude-sonnet-4", "Claude Sonnet 4", "claude-sonnet-4-20250514", "anthropic/claude-sonnet-4-20250514", "openrouter/anthropic/claude-sonnet-4-20250514"],
             context_window=1_000_000,
             capabilities=[
                 ModelCapability.CHAT,

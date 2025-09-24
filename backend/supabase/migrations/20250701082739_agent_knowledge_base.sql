@@ -57,26 +57,26 @@ ALTER TABLE agent_knowledge_base_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_knowledge_base_usage_log ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for agent knowledge base entries
-CREATE POLICY agent_kb_entries_user_access ON agent_knowledge_base_entries
-    FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM agents a
-            WHERE a.agent_id = agent_knowledge_base_entries.agent_id
-            AND basejump.has_role_on_account(a.account_id) = true
-        )
-    );
+-- CREATE POLICY agent_kb_entries_user_access ON agent_knowledge_base_entries
+--     FOR ALL
+--     USING (
+--         EXISTS (
+--             SELECT 1 FROM agents a
+--             WHERE a.agent_id = agent_knowledge_base_entries.agent_id
+--             AND basejump.has_role_on_account(a.account_id) = true
+--         )
+--     );
 
--- Create RLS policies for agent knowledge base usage log
-CREATE POLICY agent_kb_usage_log_user_access ON agent_knowledge_base_usage_log
-    FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM agents a
-            WHERE a.agent_id = agent_knowledge_base_usage_log.agent_id
-            AND basejump.has_role_on_account(a.account_id) = true
-        )
-    );
+-- -- Create RLS policies for agent knowledge base usage log
+-- CREATE POLICY agent_kb_usage_log_user_access ON agent_knowledge_base_usage_log
+--     FOR ALL
+--     USING (
+--         EXISTS (
+--             SELECT 1 FROM agents a
+--             WHERE a.agent_id = agent_knowledge_base_usage_log.agent_id
+--             AND basejump.has_role_on_account(a.account_id) = true
+--         )
+--     );
 
 -- Function to get agent knowledge base entries
 CREATE OR REPLACE FUNCTION get_agent_knowledge_base(
@@ -235,10 +235,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_agent_kb_entries_updated_at
-    BEFORE UPDATE ON agent_knowledge_base_entries
-    FOR EACH ROW
-    EXECUTE FUNCTION update_agent_kb_entry_timestamp();
+-- CREATE TRIGGER trigger_agent_kb_entries_updated_at
+--     BEFORE UPDATE ON agent_knowledge_base_entries
+--     FOR EACH ROW
+--     EXECUTE FUNCTION update_agent_kb_entry_timestamp();
 
 CREATE OR REPLACE FUNCTION calculate_agent_kb_entry_tokens()
 RETURNS TRIGGER AS $$
@@ -248,10 +248,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_agent_kb_entries_calculate_tokens
-    BEFORE INSERT ON agent_knowledge_base_entries
-    FOR EACH ROW
-    EXECUTE FUNCTION calculate_agent_kb_entry_tokens();
+-- CREATE TRIGGER trigger_agent_kb_entries_calculate_tokens
+--     BEFORE INSERT ON agent_knowledge_base_entries
+--     FOR EACH ROW
+--     EXECUTE FUNCTION calculate_agent_kb_entry_tokens();
 
 -- Grant permissions
 GRANT ALL PRIVILEGES ON TABLE agent_knowledge_base_entries TO authenticated, service_role;

@@ -2,7 +2,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Create devices table first
-CREATE TABLE public.devices (
+CREATE TABLE IF NOT EXISTS public.devices (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     account_id UUID NOT NULL,
     name TEXT,
@@ -14,7 +14,7 @@ CREATE TABLE public.devices (
 );
 
 -- Create recordings table
-CREATE TABLE public.recordings (
+CREATE TABLE IF NOT EXISTS public.recordings (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     account_id UUID NOT NULL,
     device_id UUID NOT NULL,
@@ -35,55 +35,55 @@ CREATE TABLE public.recordings (
 );
 
 -- Create indexes for foreign keys
-CREATE INDEX idx_recordings_account_id ON public.recordings(account_id);
-CREATE INDEX idx_recordings_device_id ON public.recordings(device_id);
-CREATE INDEX idx_devices_account_id ON public.devices(account_id);
+CREATE INDEX IF NOT EXISTS idx_recordings_account_id ON public.recordings(account_id);
+CREATE INDEX IF NOT EXISTS idx_recordings_device_id ON public.recordings(device_id);
+CREATE INDEX IF NOT EXISTS idx_devices_account_id ON public.devices(account_id);
 
 -- Add RLS policies (optional, can be customized as needed)
 ALTER TABLE public.recordings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.devices ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies for devices
-CREATE POLICY "Account members can delete their own devices"
-    ON public.devices FOR DELETE
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can delete their own devices"
+--     ON public.devices FOR DELETE
+--     USING (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can insert their own devices"
-    ON public.devices FOR INSERT
-    WITH CHECK (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can insert their own devices"
+--     ON public.devices FOR INSERT
+--     WITH CHECK (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can only access their own devices"
-    ON public.devices FOR ALL
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can only access their own devices"
+--     ON public.devices FOR ALL
+--     USING (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can update their own devices"
-    ON public.devices FOR UPDATE
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can update their own devices"
+--     ON public.devices FOR UPDATE
+--     USING (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can view their own devices"
-    ON public.devices FOR SELECT
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can view their own devices"
+--     ON public.devices FOR SELECT
+--     USING (basejump.has_role_on_account(account_id));
 
--- Create RLS policies for recordings
-CREATE POLICY "Account members can delete their own recordings"
-    ON public.recordings FOR DELETE
-    USING (basejump.has_role_on_account(account_id));
+-- -- Create RLS policies for recordings
+-- CREATE POLICY "Account members can delete their own recordings"
+--     ON public.recordings FOR DELETE
+--     USING (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can insert their own recordings"
-    ON public.recordings FOR INSERT
-    WITH CHECK (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can insert their own recordings"
+--     ON public.recordings FOR INSERT
+--     WITH CHECK (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can only access their own recordings"
-    ON public.recordings FOR ALL
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can only access their own recordings"
+--     ON public.recordings FOR ALL
+--     USING (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can update their own recordings"
-    ON public.recordings FOR UPDATE
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can update their own recordings"
+--     ON public.recordings FOR UPDATE
+--     USING (basejump.has_role_on_account(account_id));
 
-CREATE POLICY "Account members can view their own recordings"
-    ON public.recordings FOR SELECT
-    USING (basejump.has_role_on_account(account_id));
+-- CREATE POLICY "Account members can view their own recordings"
+--     ON public.recordings FOR SELECT
+--     USING (basejump.has_role_on_account(account_id));
 
 -- Note: For threads and messages, you might want different RLS policies
 -- depending on your application's requirements
@@ -149,41 +149,41 @@ VALUES ('recordings', 'recordings', false, null, null) -- Set file size limit an
 ON CONFLICT (id) DO NOTHING; -- Avoid error if bucket already exists
 
 
--- RLS policies for the 'recordings' bucket
--- Allow members to view files in accounts they belong to
-CREATE POLICY "Account members can select recording files"
-    ON storage.objects FOR SELECT
-    TO authenticated
-    USING (
-        bucket_id = 'recordings' AND
-        (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
-    );
+-- -- RLS policies for the 'recordings' bucket
+-- -- Allow members to view files in accounts they belong to
+-- CREATE POLICY "Account members can select recording files"
+--     ON storage.objects FOR SELECT
+--     TO authenticated
+--     USING (
+--         bucket_id = 'recordings' AND
+--         (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
+--     );
 
--- Allow members to insert files into accounts they belong to
-CREATE POLICY "Account members can insert recording files"
-    ON storage.objects FOR INSERT
-    TO authenticated
-    WITH CHECK (
-        bucket_id = 'recordings' AND
-        (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
-    );
+-- -- Allow members to insert files into accounts they belong to
+-- CREATE POLICY "Account members can insert recording files"
+--     ON storage.objects FOR INSERT
+--     TO authenticated
+--     WITH CHECK (
+--         bucket_id = 'recordings' AND
+--         (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
+--     );
 
--- Allow members to update files in accounts they belong to
-CREATE POLICY "Account members can update recording files"
-    ON storage.objects FOR UPDATE
-    TO authenticated
-    USING (
-        bucket_id = 'recordings' AND
-        (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
-    );
+-- -- Allow members to update files in accounts they belong to
+-- CREATE POLICY "Account members can update recording files"
+--     ON storage.objects FOR UPDATE
+--     TO authenticated
+--     USING (
+--         bucket_id = 'recordings' AND
+--         (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
+--     );
 
--- Allow members to delete files from accounts they belong to
--- Consider restricting this further, e.g., to 'owner' role if needed:
--- (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role('owner'))
-CREATE POLICY "Account members can delete recording files"
-    ON storage.objects FOR DELETE
-    TO authenticated
-    USING (
-        bucket_id = 'recordings' AND
-        (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
-    );
+-- -- Allow members to delete files from accounts they belong to
+-- -- Consider restricting this further, e.g., to 'owner' role if needed:
+-- -- (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role('owner'))
+-- CREATE POLICY "Account members can delete recording files"
+--     ON storage.objects FOR DELETE
+--     TO authenticated
+--     USING (
+--         bucket_id = 'recordings' AND
+--         (storage.foldername(name))[1]::uuid IN (SELECT basejump.get_accounts_with_role())
+--     );
