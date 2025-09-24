@@ -1,5 +1,5 @@
 // toolParser.ts
-// A robust, agnostic parser to extract success flag, tool name, and JSON output from a ToolResult-like string.
+// A robust parser to extract success flag, tool name, and JSON output from a ToolResult-like string.
 
 interface ParseResult {
     success: boolean | null;

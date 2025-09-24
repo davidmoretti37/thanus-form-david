@@ -57,9 +57,9 @@ export default function IntroductionPage() {
           Kortix is an open source platform where you can build AI agents that handle real work. Think of it as the infrastructure and tools you need to create agents that can browse the web, manage files, analyze data, and automate workflows.
         </p>
         
-        <h3 id="meet-suna">Suna - Our Flagship Agent</h3>
+        <h3 id="meet-suna">Tars - Our Flagship Agent</h3>
         <p className="mb-4">
-          Suna is our showcase agent that demonstrates what's possible with Kortix. It's a generalist AI worker that can:
+          Tars is our showcase agent that demonstrates what's possible with Kortix. It's a generalist AI worker that can:
         </p>
         <ul className="list-disc pl-6 mb-6 space-y-1">
           <li>Research topics and gather information from across the web</li>
@@ -69,7 +69,7 @@ export default function IntroductionPage() {
           <li>Execute complex multi-step workflows</li>
         </ul>
         <p className="mb-6">
-          Suna is completely open source and shows you what you can build with the Kortix platform.
+          Tars is completely open source and shows you what you can build with the Kortix platform.
         </p>
   
         <h3 id="build-your-own" className="mb-4">Build Your Own Agents</h3>

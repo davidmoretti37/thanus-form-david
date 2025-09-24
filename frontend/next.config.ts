@@ -2,7 +2,11 @@ import type { NextConfig } from 'next';
 
 const nextConfig = (): NextConfig => ({
   output: (process.env.NEXT_OUTPUT as 'standalone') || undefined,
-  
+
+  // Ensure ESM packages like mermaid and @iconify/utils are transpiled for Next/Turbopack
+  // This fixes resolution issues like "Can't resolve '../customisations/defaults.mjs'"
+  transpilePackages: ['mermaid', '@iconify/utils', '@iconify/types'],
+
   async rewrites() {
     return [
       {

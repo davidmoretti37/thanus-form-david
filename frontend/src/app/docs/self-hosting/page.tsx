@@ -348,7 +348,7 @@ docker compose down`
           </p>
         </div>
 
-        <p className="mb-4">You should see the Kortix dashboard where you can start chatting with Suna or create your own agents.</p>
+        <p className="mb-4">You should see the Kortix dashboard where you can start chatting with Tars or create your own agents.</p>
 
         <Alert className="mb-6">
           <CheckCircle2 className="h-4 w-4" />

@@ -379,7 +379,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
     project,
     debugMode = false,
     isPreviewMode = false,
-    agentName = 'Suna',
+    agentName = 'Tars',
     agentAvatar = <KortixLogo size={16} />,
     emptyStateComponent,
     threadMetadata,
@@ -406,15 +406,15 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
     // Helper function to get agent info robustly
     const getAgentInfo = useCallback(() => {
 
-        // Check if this is a Suna default agent from metadata
-        const isSunaDefaultAgent = agentMetadata?.is_suna_default || false;
+        // Check if this is a Tars default agent from metadata
+        const isTarsDefaultAgent = agentMetadata?.is_suna_default || false;
 
         // Then check recent messages for agent info
         const recentAssistantWithAgent = [...displayMessages].reverse().find(msg =>
             msg.type === 'assistant' && msg.agents?.name
         );
 
-        if (agentData && !isSunaDefaultAgent) {
+        if (agentData && !isTarsDefaultAgent) {
             const profileUrl = agentData.profile_image_url;
             const avatar = profileUrl ? (
                 <img src={profileUrl} alt={agentData.name || agentName} className="h-5 w-5 rounded object-cover" />
@@ -434,14 +434,14 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
         }
 
         if (recentAssistantWithAgent?.agents?.name) {
-            const isSunaAgent = recentAssistantWithAgent.agents.name === 'Suna' || isSunaDefaultAgent;
+            const isTarsAgent = recentAssistantWithAgent.agents.name === 'Tars' || isTarsDefaultAgent;
             // Prefer profile image if available on the agent payload
             const profileUrl = (recentAssistantWithAgent as any)?.agents?.profile_image_url;
-            const avatar = profileUrl && !isSunaDefaultAgent ? (
+            const avatar = profileUrl && !isTarsDefaultAgent ? (
                 <img src={profileUrl} alt={recentAssistantWithAgent.agents.name} className="h-5 w-5 rounded object-cover" />
-            ) : !isSunaDefaultAgent ? (
+            ) : !isTarsDefaultAgent ? (
                 <>
-                    {isSunaAgent ? (
+                    {isTarsAgent ? (
                         <div className="h-5 w-5 flex items-center justify-center rounded text-xs">
                             <KortixLogo size={16} />
                         </div>
@@ -462,10 +462,10 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
             };
         }
 
-        // Fallback: if this is a Suna default agent, always show KortixLogo
-        if (isSunaDefaultAgent) {
+        // Fallback: if this is a Tars default agent, always show KortixLogo
+        if (isTarsDefaultAgent) {
             return {
-                name: agentName || 'Suna',
+                name: agentName || 'Tars',
                 avatar: (
                     <div className="h-5 w-5 flex items-center justify-center rounded text-xs">
                         <KortixLogo size={16} />
@@ -475,7 +475,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
         }
 
         return {
-            name: agentName || 'Suna',
+            name: agentName || 'Tars',
             avatar: agentAvatar
         };
     }, [threadMetadata, displayMessages, agentName, agentAvatar, agentMetadata, agentData]);

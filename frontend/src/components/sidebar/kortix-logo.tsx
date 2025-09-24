@@ -1,33 +1,25 @@
 'use client';
 
 import Image from 'next/image';
-import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
 
 interface KortixLogoProps {
   size?: number;
 }
+
+/**
+ * KortixLogo
+ * Always renders the blue gradient symbol without any color inversion,
+ * ensuring it matches the Home header gradient exactly in all themes.
+ */
 export function KortixLogo({ size = 24 }: KortixLogoProps) {
-  const { theme, systemTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // After mount, we can access the theme
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const shouldInvert = mounted && (
-    theme === 'dark' || (theme === 'system' && systemTheme === 'dark')
-  );
-
   return (
     <Image
-        src="/kortix-symbol.svg"
-        alt="Kortix"
-        width={size}
-        height={size}
-        className={`${shouldInvert ? 'invert' : ''} flex-shrink-0`}
-        style={{ width: size, height: size, minWidth: size, minHeight: size }}
-      />
+      src="/kortix-symbol.svg"
+      alt="Kortix"
+      width={size}
+      height={size}
+      className="flex-shrink-0"
+      style={{ width: size, height: size, minWidth: size, minHeight: size }}
+    />
   );
 }

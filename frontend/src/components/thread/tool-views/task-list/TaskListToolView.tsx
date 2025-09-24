@@ -7,6 +7,7 @@ import type { ToolViewProps } from "../types"
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { AgentPlan, type AgentPlanTask } from "@/components/ui/agent-plan"
 
 const TaskItem: React.FC<{ task: Task; index: number }> = ({ task, index }) => {
   const isCompleted = task.status === "completed"
@@ -100,6 +101,42 @@ export const TaskListToolView: React.FC<ToolViewProps> = ({
   const completedTasks = allTasks.filter((t) => t.status === "completed").length
   const hasData = taskData?.total_tasks && taskData?.total_tasks > 0
 
+  // Map real sections/tasks into AgentPlan's data model (no mocks)
+  const agentPlanTasks: AgentPlanTask[] = sections.map((section) => {
+    const total = section.tasks.length
+    const completed = section.tasks.filter((t) => t.status === "completed").length
+    const cancelled = section.tasks.filter((t) => t.status === "cancelled").length
+
+    let sectionStatus: AgentPlanTask["status"] = "pending"
+    if (total > 0 && completed === total) {
+      sectionStatus = "completed"
+    } else if (total > 0 && cancelled === total) {
+      sectionStatus = "failed"
+    } else if (completed > 0 || (total > 0 && completed < total && cancelled < total)) {
+      sectionStatus = "in-progress"
+    } else {
+      sectionStatus = "pending"
+    }
+
+    return {
+      id: section.id,
+      title: section.title,
+      description: "",
+      status: sectionStatus,
+      priority: "medium",
+      level: 0,
+      dependencies: [],
+      subtasks: section.tasks.map((t) => ({
+        id: t.id,
+        title: t.content,
+        description: "",
+        status: t.status === "completed" ? "completed" : t.status === "cancelled" ? "failed" : "pending",
+        priority: "medium",
+        tools: [],
+      })),
+    }
+  })
+
   return (
     <Card className="gap-0 flex border shadow-none border-t border-b-0 border-x-0 p-0 rounded-none flex-col h-full overflow-hidden bg-card">
       <CardHeader className="h-14 bg-zinc-50/80 dark:bg-zinc-900/80 backdrop-blur-sm border-b p-2 px-4 space-y-2">
@@ -154,11 +191,9 @@ export const TaskListToolView: React.FC<ToolViewProps> = ({
             </p>
           </div>
         ) : hasData ? (
-          <ScrollArea className="h-full w-full">
-            <div className="py-0">
-              {sections.map((section) => <SectionView key={section.id} section={section} />)}
-            </div>
-          </ScrollArea>
+          <div className="h-full w-full">
+            <AgentPlan tasks={agentPlanTasks} interactive={false} />
+          </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full py-12 px-6 bg-gradient-to-b from-white to-zinc-50 dark:from-zinc-950 dark:to-zinc-900">
             <div className="w-20 h-20 rounded-full flex items-center justify-center mb-6 bg-gradient-to-b from-zinc-100 to-zinc-50 shadow-inner dark:from-zinc-800/40 dark:to-zinc-900/60">

@@ -9,10 +9,12 @@ else:
     default_level = "DEBUG" 
     # default_level = "INFO"
 
-LOGGING_LEVEL = logging.getLevelNamesMapping().get(
-    os.getenv("LOGGING_LEVEL", default_level).upper(), 
-    logging.DEBUG  
-)
+level_name = os.getenv("LOGGING_LEVEL", default_level).upper()
+if hasattr(logging, "getLevelNamesMapping"):
+    LOGGING_LEVEL = logging.getLevelNamesMapping().get(level_name, logging.DEBUG)
+else:
+    # Fallback compatible with Python < 3.11
+    LOGGING_LEVEL = getattr(logging, level_name, logging.DEBUG)
 
 renderer = [structlog.processors.JSONRenderer()]
 if ENV_MODE.lower() == "local".lower() or ENV_MODE.lower() == "staging".lower():

@@ -309,46 +309,59 @@ export function extractSeeImageData(
 } 
 
 
-export function constructImageUrl(filePath: string, project?: { sandbox?: { sandbox_url?: string; workspace_path?: string; id?: string } }): string {
+export function constructImageUrl(
+  filePath: string,
+  project?: { sandbox?: { sandbox_url?: string; workspace_path?: string; id?: string } }
+): string {
   if (!filePath || filePath === 'STREAMING') {
     console.error('Invalid image path:', filePath);
     return '';
   }
 
-  const cleanPath = filePath.replace(/^['"](.*)['"]$/, '$1');
-  
-  // Check if it's a URL first, before trying to construct sandbox paths
-  if (cleanPath.startsWith('http')) {
+  // Unwrap quotes that sometimes come from tool output
+  const cleanPath = filePath.replace(/^['"](.*)['"]$/, '$1').trim();
+
+  // Passthrough for already resolved URLs or blob/data URIs
+  if (
+    cleanPath.startsWith('http://') ||
+    cleanPath.startsWith('https://') ||
+    cleanPath.startsWith('blob:') ||
+    cleanPath.startsWith('data:')
+  ) {
     return cleanPath;
   }
-  
-  // PREFER backend API (requires authentication but more reliable)
-  const sandboxId = typeof project?.sandbox === 'string' 
-    ? project.sandbox 
-    : project?.sandbox?.id;
-  
-  if (sandboxId) {
-    let normalizedPath = cleanPath;
-    if (!normalizedPath.startsWith('/workspace')) {
-      normalizedPath = `/workspace/${normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath}`;
-    }
-    
-    const apiEndpoint = `${process.env.NEXT_PUBLIC_BACKEND_URL}/sandboxes/${sandboxId}/files/content?path=${encodeURIComponent(normalizedPath)}`;
-    return apiEndpoint;
+
+  // Resolve path against sandbox workspace when available.
+  const workspaceBase =
+    project?.sandbox?.workspace_path && project.sandbox.workspace_path.startsWith('/')
+      ? project.sandbox.workspace_path
+      : '/workspace';
+
+  // If the path is already absolute (starts with '/'), keep it as-is.
+  // Otherwise, join with the workspace base.
+  const normalizedPath = cleanPath.startsWith('/')
+    ? cleanPath
+    : `${workspaceBase.replace(/\/$/, '')}/${cleanPath.replace(/^\/+/, '')}`;
+
+  // Prefer backend API (requires auth) when sandbox id is present
+  const sandboxId =
+    typeof project?.sandbox === 'string' ? project.sandbox : project?.sandbox?.id;
+
+  const apiBase = (process.env.NEXT_PUBLIC_BACKEND_URL || '').replace(/\/$/, '');
+
+  if (sandboxId && apiBase) {
+    return `${apiBase}/sandboxes/${sandboxId}/files/content?path=${encodeURIComponent(
+      normalizedPath
+    )}`;
   }
-  
-  // Fallback to sandbox_url for direct access
+
+  // Fallback to direct sandbox file serving if sandbox_url is known
   if (project?.sandbox?.sandbox_url) {
     const sandboxUrl = project.sandbox.sandbox_url.replace(/\/$/, '');
-    let normalizedPath = cleanPath;
-    if (!normalizedPath.startsWith('/workspace')) {
-      normalizedPath = `/workspace/${normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath}`;
-    }
-    
-    const fullUrl = `${sandboxUrl}${normalizedPath}`;
-    return fullUrl;
+    return `${sandboxUrl}${normalizedPath}`;
   }
-  
-  console.warn('No sandbox URL or ID available, using path as-is:', cleanPath);
-  return cleanPath;
+
+  // Last resort: return the normalized local path
+  console.warn('No sandbox URL or ID available, using normalized path as-is:', normalizedPath);
+  return normalizedPath;
 }

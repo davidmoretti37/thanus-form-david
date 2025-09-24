@@ -23,6 +23,7 @@ import { NewAgentDialog } from '@/components/agents/new-agent-dialog';
 import { MarketplaceAgentPreviewDialog } from '@/components/agents/marketplace-agent-preview-dialog';
 import { AgentCountLimitDialog } from '@/components/agents/agent-count-limit-dialog';
 import { AgentCountLimitError } from '@/lib/api';
+import MultiAgentWorkspace from '@/components/agents/multi/workspace/MultiAgentWorkspace';
 
 type ViewMode = 'grid' | 'list';
 type AgentSortOption = 'name' | 'created_at' | 'updated_at' | 'tools_count';
@@ -626,6 +627,10 @@ export default function AgentsPage() {
               marketplacePagination={marketplaceTemplates?.pagination}
             />
           )} */}
+
+          {activeTab === "multi-agents" && (
+            <MultiAgentWorkspace />
+          )}
         </div>
 
         <PublishDialog

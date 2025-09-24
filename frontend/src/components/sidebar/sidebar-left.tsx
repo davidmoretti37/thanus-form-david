@@ -90,6 +90,8 @@ export function SidebarLeft({
 
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const teamSlugMatch = pathname.match(/^\/dashboard\/([^/]+)/);
+  const currentTeamSlug = teamSlugMatch ? teamSlugMatch[1] : null;
   const [showNewAgentDialog, setShowNewAgentDialog] = useState(false);
   const { isOpen: isDocumentModalOpen } = useDocumentModalStore();
 
@@ -224,6 +226,23 @@ export function SidebarLeft({
               </span>
             </SidebarMenuButton>
           </Link>
+          {currentTeamSlug && (
+            <Link href={`/dashboard/${currentTeamSlug}/chathuman`}>
+              <SidebarMenuButton 
+                className={cn('touch-manipulation mt-1', {
+                  'bg-accent text-accent-foreground font-medium': pathname.startsWith(`/dashboard/${currentTeamSlug}/chathuman`),
+                })} 
+                onClick={() => {
+                  if (isMobile) setOpenMobile(false);
+                }}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                <span className="flex items-center justify-between w-full">
+                  Chat
+                </span>
+              </SidebarMenuButton>
+            </Link>
+          )}
           {(
             <SidebarMenu>
               <Collapsible

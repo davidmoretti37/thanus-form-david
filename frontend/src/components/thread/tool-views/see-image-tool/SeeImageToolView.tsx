@@ -27,36 +27,60 @@ function SafeImage({ src, alt, filePath, className }: { src: string; alt: string
   const { session } = useAuth();
 
   useEffect(() => {
-    const setupAuthenticatedImage = async () => {
-      if (src.includes('/sandboxes/') && src.includes('/files/content')) {
-        try {
+    let revoked = false;
+
+    const setupImage = async () => {
+      try {
+        // Prefer authenticated fetch to handle protected endpoints and CORS reliably.
+        const hasToken = !!session?.access_token;
+        const looksProtected =
+          typeof src === 'string' &&
+          (
+            src.startsWith('http') ||
+            src.includes('/sandboxes/') ||
+            src.includes('/files/content') ||
+            src.includes('/workspace/')
+          );
+
+        if (hasToken && looksProtected) {
           const response = await fetch(src, {
             headers: {
-              'Authorization': `Bearer ${session?.access_token}`
-            }
+              Authorization: `Bearer ${session?.access_token}`,
+            },
+            // Let the server handle CORS for Authorization header
+            mode: 'cors',
           });
 
-          if (!response.ok) {
-            throw new Error(`Failed to load image: ${response.status} ${response.statusText}`);
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            if (!revoked) setImgSrc(url);
+          } else {
+            // Fall back to direct URL if auth fetch fails (e.g., non-protected resource)
+            if (!revoked) setImgSrc(src);
           }
-
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setImgSrc(url);
-        } catch (err) {
-          console.error('Error loading authenticated image:', err);
-          setError(true);
+        } else {
+          // No token or clearly public URL: use direct URL
+          if (!revoked) setImgSrc(src);
         }
-      } else {
-        setImgSrc(src);
+
+        setError(false);
+        setAttempts(0);
+      } catch (err) {
+        console.error('Error loading image:', err);
+        // Fall back to direct URL as last resort
+        if (!revoked) {
+          setImgSrc(src);
+          setError(false);
+          setAttempts(0);
+        }
       }
     };
 
-    setupAuthenticatedImage();
-    setError(false);
-    setAttempts(0);
+    setupImage();
 
     return () => {
+      revoked = true;
       if (imgSrc && imgSrc.startsWith('blob:')) {
         URL.revokeObjectURL(imgSrc);
       }
@@ -425,4 +449,4 @@ export function SeeImageToolView({
       </div>
     </Card>
   );
-} 
+}

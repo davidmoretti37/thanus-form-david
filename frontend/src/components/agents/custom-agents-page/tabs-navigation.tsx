@@ -16,6 +16,11 @@ const agentTabs: TabConfig[] = [
     icon: Bot,
     label: 'My Agents',
   },
+  {
+    value: 'multi-agents',
+    icon: FileText, // using an existing import; swap icon if you prefer another
+    label: 'Multi Agents',
+  },
 ]; 
 
 export const TabsNavigation = ({ activeTab, onTabChange, onCreateAgent }: TabsNavigationProps) => {

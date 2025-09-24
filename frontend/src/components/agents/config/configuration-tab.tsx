@@ -66,18 +66,18 @@ export function ConfigurationTab({
   isLoading = false,
 }: ConfigurationTabProps) {
 
-  const isSunaAgent = agentMetadata?.is_suna_default || false;
+  const isTarsAgent = agentMetadata?.is_suna_default || false;
 
   const mapAccordion = (val?: string) => {
-    if (val === 'instructions') return isSunaAgent ? 'integrations' : 'system';
+    if (val === 'instructions') return isTarsAgent ? 'integrations' : 'system';
     if (val === 'workflows') return 'playbooks';
-    if (isSunaAgent && (val === 'system' || val === 'tools')) {
+    if (isTarsAgent && (val === 'system' || val === 'tools')) {
       return 'integrations';
     }
     if (['system', 'tools', 'integrations', 'knowledge', 'playbooks', 'triggers'].includes(val || '')) {
       return val!;
     }
-    return isSunaAgent ? 'integrations' : 'system';
+    return isTarsAgent ? 'integrations' : 'system';
   };
 
   const [openAccordion, setOpenAccordion] = React.useState<string>(mapAccordion(initialAccordion));
@@ -92,9 +92,9 @@ export function ConfigurationTab({
   const areToolsEditable = !isViewingOldVersion && (restrictions.tools_editable !== false);
 
   const handleSystemPromptChange = (value: string) => {
-    if (!isSystemPromptEditable && isSunaAgent) {
+    if (!isSystemPromptEditable && isTarsAgent) {
       toast.error("System prompt cannot be edited", {
-        description: "Suna's system prompt is managed centrally and cannot be changed.",
+        description: "Tars's system prompt is managed centrally and cannot be changed.",
       });
       return;
     }
@@ -106,9 +106,9 @@ export function ConfigurationTab({
   };
 
   const handleToolsChange = (tools: Record<string, boolean | { enabled: boolean; description: string }>) => {
-    if (!areToolsEditable && isSunaAgent) {
+    if (!areToolsEditable && isTarsAgent) {
       toast.error("Tools cannot be modified", {
-        description: "Suna's default tools are managed centrally and cannot be changed.",
+        description: "Tars's default tools are managed centrally and cannot be changed.",
       });
       return;
     }
@@ -124,23 +124,23 @@ export function ConfigurationTab({
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-0 space-y-3">
-          {isSunaAgent && (
+          {isTarsAgent && (
             <div className="p-4 bg-primary/10 border border-primary-200 rounded-xl">
               <div className="flex items-center gap-3 mb-2">
                 <div className="text-primary-600">
                   <KortixLogo size={20} />
                 </div>
-                <span className="font-semibold text-primary-800">Suna Default Agent</span>
+                <span className="font-semibold text-primary-800">Tars Default Agent</span>
               </div>
               <p className="text-sm text-primary-700">
-                This is Suna's default agent with centrally managed system prompt and tools.
+                This is Tars's default agent with centrally managed system prompt and tools.
                 You can customize integrations, knowledge base, playbooks, and triggers to personalize your experience.
               </p>
             </div>
           )}
 
           <div className="space-y-3">
-            {!isSunaAgent && (
+            {!isTarsAgent && (
               <>
                 <div className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/10" data-tour="model-section">
                   <button
@@ -241,7 +241,7 @@ export function ConfigurationTab({
                       tools={displayData.agentpress_tools}
                       onToolsChange={areToolsEditable ? handleToolsChange : () => { }}
                       disabled={!areToolsEditable}
-                      isSunaAgent={isSunaAgent}
+                      isTarsAgent={isTarsAgent}
                       isLoading={isLoading}
                     />
                   </div>

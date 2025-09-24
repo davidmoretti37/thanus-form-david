@@ -26,12 +26,17 @@ import {
   ChevronDown,
   PlugZap,
   Webhook,
-  Repeat
+  Repeat,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TriggerCreationDialog } from './trigger-creation-dialog';
 import { SimplifiedTriggerDetailPanel } from './simplified-trigger-detail-panel';
-import { TriggersPageHeader } from './triggers-page-header';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useProjects, useThreads, processThreadsWithProjects, groupThreadsByDate } from '@/hooks/react-query/sidebar/use-sidebar';
+import type { ThreadWithProject, GroupedThreads } from '@/hooks/react-query/sidebar/use-sidebar';
 
 const getTriggerIcon = (triggerType: string) => {
   switch (triggerType.toLowerCase()) {
@@ -171,6 +176,17 @@ const LoadingSkeleton = () => (
 export function TriggersPage() {
   const { data: triggers = [], isLoading, error } = useAllTriggers();
   const [selectedTrigger, setSelectedTrigger] = useState<TriggerWithAgent | null>(null);
+  const router = useRouter();
+
+  // Histórico (lista de threads, mesmo conteúdo do menu lateral)
+  const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
+  const { data: threads = [], isLoading: isThreadsLoading } = useThreads();
+  const combinedThreads: ThreadWithProject[] =
+    !isProjectsLoading && !isThreadsLoading
+      ? processThreadsWithProjects(threads, projects)
+      : [];
+  const groupedThreads: GroupedThreads = groupThreadsByDate(combinedThreads);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [triggerDialogType, setTriggerDialogType] = useState<'schedule' | 'event' | null>(null);
   const [pendingTriggerId, setPendingTriggerId] = useState<string | null>(null);
 
@@ -229,47 +245,49 @@ export function TriggersPage() {
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto max-w-7xl px-4 py-8">
-        <TriggersPageHeader />
-      </div>
-      <div className="h-screen flex overflow-hidden">
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex justify-center">
-            <div className={cn(
-              "w-full px-4 transition-all duration-300 ease-in-out",
-              selectedTrigger ? "max-w-2xl" : "max-w-4xl"
-            )}>
-              <div className="flex items-center justify-between py-10">
-                <h1 className="text-xl font-semibold">Triggers</h1>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Plus className="h-4 w-4" />
-                    New trigger
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72">
-                  <DropdownMenuItem onClick={() => setTriggerDialogType('schedule')} className='rounded-lg'>
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span>Scheduled Trigger</span>
-                      <span className="text-xs text-muted-foreground">
-                        Schedule a trigger to run at a specific time
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTriggerDialogType('event')} className='rounded-lg'>
-                    <PlugZap className="h-4 w-4 text-muted-foreground" />
-                    <div className="flex flex-col">
-                      <span>Event-based Trigger</span>
-                      <span className="text-xs text-muted-foreground">
-                        Make a trigger to run when an event occurs
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+    <div className="h-screen flex overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex justify-center">
+          <div className={cn(
+            "w-full px-4 transition-all duration-300 ease-in-out",
+            selectedTrigger ? "max-w-2xl" : "max-w-4xl"
+          )}>
+            <div className="flex items-center justify-between py-10">
+              <h1 className="text-xl font-semibold">Tasks</h1>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
+                  <History className="h-4 w-4 mr-1" />
+                  Histórico
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Plus className="h-4 w-4" />
+                      New task
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-72">
+                    <DropdownMenuItem onClick={() => setTriggerDialogType('schedule')} className='rounded-lg'>
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span>Scheduled Task</span>
+                        <span className="text-xs text-muted-foreground">
+                          Schedule a task to run at a specific time
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTriggerDialogType('event')} className='rounded-lg'>
+                      <PlugZap className="h-4 w-4 text-muted-foreground" />
+                      <div className="flex flex-col">
+                        <span>Event-based Task</span>
+                        <span className="text-xs text-muted-foreground">
+                          Make a task to run when an event occurs
+                        </span>
+                      </div>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </div>
@@ -318,20 +336,56 @@ export function TriggersPage() {
           />
         )}
       </div>
-        {/* Trigger Creation Dialog */}
-        {triggerDialogType && (
-          <TriggerCreationDialog
-            open={!!triggerDialogType}
-            onOpenChange={(open) => {
-              if (!open) {
-                setTriggerDialogType(null);
-              }
-            }}
-            type={triggerDialogType}
-            onTriggerCreated={handleTriggerCreated}
-          />
-        )}
-      </div>
+      {/* Histórico de Tasks (threads) */}
+      <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Histórico</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-y-auto space-y-4">
+            {combinedThreads.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                Nenhuma task no histórico.
+              </div>
+            ) : (
+              Object.entries(groupedThreads).map(([dateGroup, threadsInGroup]) => (
+                <div key={dateGroup}>
+                  <div className="text-xs font-medium text-muted-foreground/80 uppercase tracking-wider mb-2">
+                    {dateGroup} ({threadsInGroup.length})
+                  </div>
+                  <div className="space-y-1">
+                    {threadsInGroup.map((t) => (
+                      <Link
+                        key={t.threadId}
+                        href={t.url}
+                        prefetch={false}
+                        onClick={() => setHistoryOpen(false)}
+                        className="block px-3 py-2 rounded-lg hover:bg-accent text-sm"
+                      >
+                        {t.projectName}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trigger Creation Dialog */}
+      {triggerDialogType && (
+        <TriggerCreationDialog
+          open={!!triggerDialogType}
+          onOpenChange={(open) => {
+            if (!open) {
+              setTriggerDialogType(null);
+            }
+          }}
+          type={triggerDialogType}
+          onTriggerCreated={handleTriggerCreated}
+        />
+      )}
     </div>
   );
-} 
+}

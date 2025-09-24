@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { SidebarLeft, FloatingMobileMenuButton } from '@/components/sidebar/sidebar-left';
+/* Sidebar removed in favor of FloatingSidebar injected globally */
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { useAccounts } from '@/hooks/use-accounts';
 import { useAuth } from '@/components/AuthProvider';
@@ -107,31 +107,14 @@ export default function DashboardLayoutContent({
     <DeleteOperationProvider>
       <SubscriptionProvider>
         <SidebarProvider>
-          <SidebarLeft />
           <SidebarInset>
             {mantenanceBanner}
-            <div className="bg-background">{children}</div>
+            <div className="bg-background min-h-screen">{children}</div>
           </SidebarInset>
-
-          {/* <PricingAlert 
-          open={showPricingAlert} 
-          onOpenChange={setShowPricingAlert}
-          closeable={false}
-          accountId={personalAccount?.account_id}
-          /> */}
-
-          {/* <MaintenanceAlert
-            open={showMaintenanceAlert}
-            onOpenChange={setShowMaintenanceAlert}
-            closeable={true}
-          /> */}
-
-          {/* Status overlay for deletion operations */}
-          <StatusOverlay />
-          
-          {/* Floating mobile menu button */}
-          <FloatingMobileMenuButton />
         </SidebarProvider>
+
+        {/* Status overlay for deletion operations */}
+        <StatusOverlay />
       </SubscriptionProvider>
     </DeleteOperationProvider>
   );

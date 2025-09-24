@@ -11,6 +11,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import Script from 'next/script';
 import { PostHogIdentify } from '@/components/posthog-identify';
 import '@/lib/polyfills'; // Load polyfills early
+import FloatingSidebar from '@/components/floating-sidebar/FloatingSidebar';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -51,7 +52,7 @@ export const metadata: Metadata = {
   publisher:
     'Kortix Team',
   category: 'Technology',
-  applicationName: 'Suna',
+  applicationName: 'Tars',
   formatDetection: {
     telephone: false,
     email: false,
@@ -66,17 +67,17 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: 'Suna - Open Source Generalist AI Worker',
+    title: 'Tars - Open Source Generalist AI Worker',
     description:
-      'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+      'Tars is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
     url: siteConfig.url,
-    siteName: 'Suna',
+    siteName: 'Tars',
     images: [
       {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Suna - Open Source Generalist AI Worker',
+        alt: 'Tars - Open Source Generalist AI Worker',
         type: 'image/png',
       },
     ],
@@ -85,9 +86,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Suna - Open Source Generalist AI Worker',
+    title: 'Tars - Open Source Generalist AI Worker',
     description:
-      'Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+      'Tars is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
     creator: '@kortixai',
     site: '@kortixai',
     images: [
@@ -95,13 +96,14 @@ export const metadata: Metadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Suna - Open Source Generalist AI Worker',
+        alt: 'Tars - Open Source Generalist AI Worker',
       },
     ],
   },
   icons: {
-    icon: [{ url: '/favicon.png', sizes: 'any' }],
-    shortcut: '/favicon.png',
+    icon: [{ url: '/kortix-symbol.svg', sizes: 'any' }],
+    shortcut: '/kortix-symbol.svg',
+    apple: '/kortix-symbol.svg',
   },
   // manifest: "/manifest.json",
   alternates: {
@@ -148,6 +150,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
+            <FloatingSidebar />
             {children}
             <Toaster />
           </Providers>

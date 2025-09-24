@@ -19,8 +19,8 @@ export default function ContributingPage() {
   return (
     <>
       <DocsHeader
-        title="Contributing to Suna"
-        description="Help make Suna better for everyone! We welcome contributions from the community"
+        title="Contributing to Tars"
+        description="Help make Tars better for everyone! We welcome contributions from the community"
         breadcrumbs={breadcrumbs}
         lastUpdated="August 2025"
         showSeparator

@@ -11,6 +11,7 @@ const PUBLIC_ROUTES = [
   '/auth/forgot-password',
   '/auth/reset-password',
   '/legal',
+  '/home',
   '/api/auth',
   '/share', // Shared content should be public
 ];
@@ -183,4 +184,4 @@ export const config = {
      */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
-}; 
+};

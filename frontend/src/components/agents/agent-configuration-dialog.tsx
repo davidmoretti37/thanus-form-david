@@ -144,11 +144,11 @@ export function AgentConfigurationDialog({
     setEditName(configSource.name || '');
   }, [agent, versionData]);
 
-  const isSunaAgent = agent?.metadata?.is_suna_default || false;
+  const isTarsAgent = agent?.metadata?.is_suna_default || false;
   const restrictions = agent?.metadata?.restrictions || {};
-  const isNameEditable = !isViewingOldVersion && (restrictions.name_editable !== false) && !isSunaAgent;
-  const isSystemPromptEditable = !isViewingOldVersion && (restrictions.system_prompt_editable !== false) && !isSunaAgent;
-  const areToolsEditable = !isViewingOldVersion && (restrictions.tools_editable !== false) && !isSunaAgent;
+  const isNameEditable = !isViewingOldVersion && (restrictions.name_editable !== false) && !isTarsAgent;
+  const isSystemPromptEditable = !isViewingOldVersion && (restrictions.system_prompt_editable !== false) && !isTarsAgent;
+  const areToolsEditable = !isViewingOldVersion && (restrictions.tools_editable !== false) && !isTarsAgent;
 
   const hasChanges = useMemo(() => {
     return JSON.stringify(formData) !== JSON.stringify(originalFormData);
@@ -217,9 +217,9 @@ export function AgentConfigurationDialog({
     }
 
     if (!isNameEditable) {
-      if (isSunaAgent) {
+      if (isTarsAgent) {
         toast.error("Name cannot be edited", {
-          description: "Suna's name is managed centrally and cannot be changed.",
+          description: "Tars's name is managed centrally and cannot be changed.",
         });
       }
       setEditName(formData.name);
@@ -233,9 +233,9 @@ export function AgentConfigurationDialog({
 
   const handleSystemPromptChange = (value: string) => {
     if (!isSystemPromptEditable) {
-      if (isSunaAgent) {
+      if (isTarsAgent) {
         toast.error("System prompt cannot be edited", {
-          description: "Suna's system prompt is managed centrally.",
+          description: "Tars's system prompt is managed centrally.",
         });
       }
       return;
@@ -250,9 +250,9 @@ export function AgentConfigurationDialog({
 
   const handleToolsChange = (tools: Record<string, boolean | { enabled: boolean; description: string }>) => {
     if (!areToolsEditable) {
-      if (isSunaAgent) {
+      if (isTarsAgent) {
         toast.error("Tools cannot be edited", {
-          description: "Suna's tools are managed centrally.",
+          description: "Tars's tools are managed centrally.",
         });
       }
       return;
@@ -301,8 +301,8 @@ export function AgentConfigurationDialog({
 
   const tabItems = [
     { id: 'general', label: 'General', icon: Settings, disabled: false },
-    { id: 'instructions', label: 'Instructions', icon: Brain, disabled: isSunaAgent },
-    { id: 'tools', label: 'Tools', icon: Wrench, disabled: isSunaAgent },
+    { id: 'instructions', label: 'Instructions', icon: Brain, disabled: isTarsAgent },
+    { id: 'tools', label: 'Tools', icon: Wrench, disabled: isTarsAgent },
     { id: 'integrations', label: 'Integrations', icon: Server, disabled: false },
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen, disabled: false },
     { id: 'playbooks', label: 'Playbooks', icon: Workflow, disabled: false },
@@ -319,13 +319,13 @@ export function AgentConfigurationDialog({
                 <button
                   className={cn(
                     "cursor-pointer transition-opacity hover:opacity-80",
-                    isSunaAgent && "cursor-default hover:opacity-100"
+                    isTarsAgent && "cursor-default hover:opacity-100"
                   )}
-                  onClick={() => !isSunaAgent && setIsProfileDialogOpen(true)}
+                  onClick={() => !isTarsAgent && setIsProfileDialogOpen(true)}
                   type="button"
-                  disabled={isSunaAgent}
+                  disabled={isTarsAgent}
                 >
-                  {isSunaAgent ? (
+                  {isTarsAgent ? (
                     <div className="h-10 w-10 rounded-lg bg-muted border flex items-center justify-center">
                       <KortixLogo size={18} />
                     </div>

@@ -14,7 +14,7 @@ interface AgentIconAvatarProps {
   agentName?: string;
   size?: number;
   className?: string;
-  isSunaDefault?: boolean;
+  isTarsDefault?: boolean;
 }
 
 export function AgentIconAvatar({
@@ -25,9 +25,9 @@ export function AgentIconAvatar({
   agentName = 'Agent',
   size = 40,
   className,
-  isSunaDefault = false
+  isTarsDefault = false
 }: AgentIconAvatarProps) {
-  if (isSunaDefault) {
+  if (isTarsDefault) {
     return (
       <div 
         className={cn(
