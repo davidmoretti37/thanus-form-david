@@ -210,7 +210,9 @@ export const PipedreamConnector: React.FC<PipedreamConnectorProps> = ({
         await updatePipedreamTools.mutateAsync({
           agentId,
           profileId: selectedProfileId,
-          enabledTools: Array.from(selectedTools)
+          enabledTools: Array.from(selectedTools),
+          appName: app.name,
+          appSlug: app.name_slug
         });
         toast.success(`Added ${selectedTools.size} tools from ${app.name}!`);
         onOpenChange(false);

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+import { usePipedreamToolsData, useUpdatePipedreamToolsForAgent } from '@/hooks/react-query/agents/use-pipedream-tools';
 import { useCustomMCPToolsData } from '@/hooks/react-query/agents/use-custom-mcp-tools';
 import { ToolsLoader } from './tools-loader';
 
@@ -44,30 +45,60 @@ interface BaseToolsManagerProps {
   initialEnabledTools?: string[];
 }
 
+interface PipedreamToolsManagerProps extends BaseToolsManagerProps {
+  mode: 'pipedream';
+  profileId: string;
+  appName: string;
+  profileName?: string;
+}
+
 interface CustomToolsManagerProps extends BaseToolsManagerProps {
   mode: 'custom';
   mcpConfig: any;
   mcpName: string;
 }
 
-type ToolsManagerProps = CustomToolsManagerProps;
+type ToolsManagerProps = PipedreamToolsManagerProps | CustomToolsManagerProps;
 
 export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
   const { agentId, open, onOpenChange, onToolsUpdate, mode, versionData, saveMode = 'direct', versionId, initialEnabledTools } = props;
   
+  const updatePipedreamTools = useUpdatePipedreamToolsForAgent();
+  
+  // Hook para buscar dados dependendo do modo
+  const pipedreamResult = usePipedreamToolsData(
+    mode === 'pipedream' ? agentId : '',
+    mode === 'pipedream' ? (props as PipedreamToolsManagerProps).profileId : '',
+    versionId
+  );
+  
   const customResult = useCustomMCPToolsData(
-    agentId,
-    (props as CustomToolsManagerProps).mcpConfig
+    mode === 'custom' ? agentId : '',
+    mode === 'custom' ? (props as CustomToolsManagerProps).mcpConfig : undefined
   );
 
-  const { data, isLoading, error, updateMutation, isUpdating, refetch } = customResult;
+  const result = mode === 'pipedream' ? pipedreamResult : customResult;
+  const { data, isLoading, error, updateMutation, isUpdating, refetch } = result;
   
   const [localTools, setLocalTools] = useState<Record<string, boolean>>({});
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleUpdateTools = async (enabledTools: string[]) => {
-    const customMutation = updateMutation as any;
-    return customMutation.mutateAsync(enabledTools);
+    if (mode === 'pipedream') {
+      const { agentId, profileId, appName } = props as PipedreamToolsManagerProps;
+      // Use appName as appSlug if not available in props
+      const appSlug = (props as PipedreamToolsManagerProps).appName || appName;
+      return updatePipedreamTools.mutateAsync({ 
+        agentId, 
+        profileId, 
+        enabledTools,
+        appName,
+        appSlug
+      });
+    } else {
+      const customMutation = updateMutation as any;
+      return customMutation.mutateAsync(enabledTools);
+    }
   };
 
   React.useEffect(() => {
@@ -88,8 +119,8 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
 
   const totalCount = data?.tools?.length || 0;
   
-  const displayName = (props as CustomToolsManagerProps).mcpName;
-  const contextName = 'Server';
+  const displayName = mode === 'pipedream' ? (props as PipedreamToolsManagerProps).appName : (props as CustomToolsManagerProps).mcpName;
+  const contextName = mode === 'pipedream' ? (props as PipedreamToolsManagerProps).profileName || 'Profile' : 'Server';
 
   const handleToolToggle = (toolName: string) => {
     setLocalTools(prev => {
@@ -225,7 +256,7 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
               <div className="text-center">
                 <Info className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  No tools available for this {displayName} server
+                  No tools available for this {displayName} {mode === 'pipedream' ? 'profile' : 'server'}
                 </p>
               </div>
             </div>
@@ -245,7 +276,7 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {contextName}: {displayName}
+                      {contextName}: {mode === 'pipedream' ? (props as PipedreamToolsManagerProps).profileName : displayName}
                     </p>
                   </div>
                 </div>
@@ -302,7 +333,7 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
                 <Alert className="p-2">
                   <Info className="h-3 w-3" />
                   <AlertDescription className="text-xs">
-                    This will update the MCP configuration for your agent
+                    This will {mode === 'pipedream' ? 'create a new' : 'update the'} MCP configuration for your agent
                   </AlertDescription>
                 </Alert>
               )}
@@ -345,4 +376,4 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
       </DialogContent>
     </Dialog>
   );
-}; 
+};

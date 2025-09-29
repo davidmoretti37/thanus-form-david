@@ -298,6 +298,8 @@ class MCPService:
             return await self._discover_http_tools(config)
         elif request_type == "sse":
             return await self._discover_sse_tools(config)
+        elif request_type == "pipedream":
+            return await self._discover_pipedream_tools(config)
         else:
             raise CustomMCPError(f"Unsupported request type: {request_type}")
     
@@ -340,6 +342,62 @@ class MCPService:
                 config=config,
                 url=url,
                 message=f"Failed to connect: {str(e)}"
+            )
+            
+    async def _discover_pipedream_tools(self, config: Dict[str, Any]) -> CustomMCPConnectionResult:
+        """Discover tools from a Pipedream MCP server.
+        
+        Args:
+            config: Configuration dict containing Pipedream MCP connection details
+                - url: The MCP server URL (default: https://remote.mcp.pipedream.net)
+                - headers: Headers to include in the request
+                - profile_id: The Pipedream profile ID
+                
+        Returns:
+            CustomMCPConnectionResult containing the discovered tools and connection status
+        """
+        url = config.get("url", "https://remote.mcp.pipedream.net")
+        headers = config.get("headers", {})
+        profile_id = config.get("profile_id")
+        
+        if not profile_id:
+            raise CustomMCPError("profile_id is required for Pipedream MCP connections")
+            
+        try:
+            # Use the same connection logic as HTTP tools since Pipedream MCP uses HTTP
+            async with streamablehttp_client(url, headers=headers) as (read_stream, write_stream, _):
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    tool_result = await session.list_tools()
+                    
+                    tools_info = []
+                    for tool in tool_result.tools:
+                        tools_info.append({
+                            "name": tool.name,
+                            "description": tool.description,
+                            "inputSchema": tool.inputSchema
+                        })
+                    
+                    return CustomMCPConnectionResult(
+                        success=True,
+                        qualified_name=f"pipedream_{profile_id}",
+                        display_name=f"Pipedream MCP ({profile_id[:8]}...)",
+                        tools=tools_info,
+                        config=config,
+                        url=url,
+                        message=f"Connected to Pipedream MCP ({len(tools_info)} tools available)"
+                    )
+                    
+        except Exception as e:
+            self._logger.error(f"Error connecting to Pipedream MCP server: {str(e)}")
+            return CustomMCPConnectionResult(
+                success=False,
+                qualified_name="",
+                display_name="",
+                tools=[],
+                config=config,
+                url=url,
+                message=f"Failed to connect to Pipedream MCP: {str(e)}"
             )
     
     async def _discover_sse_tools(self, config: Dict[str, Any]) -> CustomMCPConnectionResult:

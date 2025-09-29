@@ -12,6 +12,7 @@ export interface PipedreamTool {
 export interface PipedreamToolsResponse {
   profile_id: string;
   app_name: string;
+  app_slug: string;
   profile_name: string;
   tools: PipedreamTool[];
   has_mcp_config: boolean;
@@ -19,6 +20,15 @@ export interface PipedreamToolsResponse {
 
 export interface UpdatePipedreamToolsRequest {
   enabled_tools: string[];
+  name?: string;
+  config?: {
+    url?: string;
+    headers?: {
+      'x-pd-app-slug'?: string;
+      [key: string]: any;
+    };
+    [key: string]: any;
+  };
 }
 
 export const usePipedreamToolsForAgent = (agentId: string, profileId: string, versionId?: string) => {
@@ -56,14 +66,32 @@ export const useUpdatePipedreamToolsForAgent = () => {
       agentId,
       profileId,
       enabledTools,
+      appName,
+      appSlug,
     }: {
       agentId: string;
       profileId: string;
       enabledTools: string[];
+      appName?: string;
+      appSlug?: string;
     }) => {
+      const requestBody: UpdatePipedreamToolsRequest = {
+        enabled_tools: enabledTools,
+      };
+
+      // Add name and config if appName and appSlug are provided
+      if (appName && appSlug) {
+        requestBody.name = appName;
+        requestBody.config = {
+          headers: {
+            'x-pd-app-slug': appSlug
+          }
+        };
+      }
+
       const response = await backendApi.put(
         `/agents/${agentId}/pipedream-tools/${profileId}`,
-        { enabled_tools: enabledTools }
+        requestBody
       );
       console.log('response', JSON.stringify(response.data, null, 2));
       return response.data;

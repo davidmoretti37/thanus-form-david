@@ -1061,7 +1061,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
           app={selectedPipedreamApp}
           open={showPipedreamConnector}
           onOpenChange={setShowPipedreamConnector}
-          onComplete={(profileId: string, selectedTools: string[], appName: string, appSlug: string) => handlePipedreamConnectionComplete(profileId, selectedTools, appName, appSlug)}
+          onComplete={handlePipedreamConnectionComplete}
           mode={mode === 'profile-only' ? 'profile-only' : 'full'}
           agentId={currentAgentId}
           saveMode="direct"
@@ -1070,13 +1070,10 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
 
       {selectedToolsProfile && currentAgentId && (
         <ToolsManager
-          mode="custom"
-          mcpConfig={{
-            profileId: selectedToolsProfile.profileId,
-            appName: selectedToolsProfile.appName,
-            profileName: selectedToolsProfile.profileName
-          }}
-          mcpName={selectedToolsProfile.appName}
+          mode="pipedream"
+          profileId={selectedToolsProfile.profileId}
+          appName={selectedToolsProfile.appName}
+          profileName={selectedToolsProfile.profileName}
           agentId={currentAgentId}
           open={showToolsManager}
           onOpenChange={(open) => {
@@ -1092,7 +1089,6 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
           versionId={undefined}
         />
       )}
-
       {selectedConnectedApp && currentAgentId && (
         <ComposioToolsManager
           agentId={currentAgentId}
