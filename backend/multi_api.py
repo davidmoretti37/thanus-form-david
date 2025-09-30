@@ -14,5 +14,5 @@ async def health():
 # Mount multi-agents API under /api
 app.include_router(agent_multi_router, prefix="/api")
 
-# Mount api_cliente routes under /api
-app.include_router(api_cliente_router, prefix="/user-api")
+# Mount api_cliente routes under /api/user-api
+app.include_router(api_cliente_router, prefix="/api/user-api")
