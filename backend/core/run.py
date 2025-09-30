@@ -21,6 +21,7 @@ from core.tools.sb_files_tool import SandboxFilesTool
 from core.tools.sb_kb_tool import SandboxKbTool
 from core.tools.data_providers_tool import DataProvidersTool
 from core.tools.expand_msg_tool import ExpandMessageTool
+from core.tools.whatsapp_tool import WhatsAppTool
 from core.prompts.prompt import get_system_prompt
 
 from core.utils.logger import logger
@@ -124,6 +125,7 @@ class ToolManager:
             # ('sb_web_dev_tool', SandboxWebDevTool, {'project_id': self.project_id, 'thread_id': self.thread_id, 'thread_manager': self.thread_manager}),  # DEACTIVATED
             ('sb_upload_file_tool', SandboxUploadFileTool, {'project_id': self.project_id, 'thread_manager': self.thread_manager}),
             ('sb_docs_tool', SandboxDocsTool, {'project_id': self.project_id, 'thread_manager': self.thread_manager}),
+            ('whatsapp_tool', WhatsAppTool, {'project_id': self.project_id, 'thread_manager': self.thread_manager}),
         ]
         
         for tool_name, tool_class, kwargs in sandbox_tools:

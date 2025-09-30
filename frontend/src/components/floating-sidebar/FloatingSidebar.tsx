@@ -12,7 +12,8 @@ import {
   ListTodo,
   Bot,
   Flower2,
-  Monitor
+  Monitor,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BlueRingIcon from '@/components/ui/blue-ring-icon';
@@ -52,6 +53,8 @@ export default function FloatingSidebar() {
     // Knowledge (pastas) - abaixo de Agents
     { href: '/knowledge', icon: Flower2, label: 'Jardim do conhecimento' },
     { href: '/multi-computer', icon: Monitor, label: 'Multi Computer' },
+    // WhatsApp
+    { href: '/settings/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
     // Integrations
     { href: '/settings/credentials', icon: Plug, label: 'Integrations' },
     // Settings (last)
