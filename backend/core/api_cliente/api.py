@@ -728,12 +728,9 @@ async def execute_agent(
             reasoning_effort=execute_request.reasoning_effort,
             stream=execute_request.stream,
             enable_context_manager=execute_request.enable_context_manager,
-            agent_config=agent_config,
-            is_agent_builder=False,
-            target_agent_id=None,
-            request_id=str(uuid.uuid4()),
             enable_prompt_caching=False,
-            is_continuation=False
+            agent_config=agent_config,
+            request_id=str(uuid.uuid4())
         )
         
         logger.info(f"Successfully initiated agent execution via API for account {account_id}")
@@ -910,10 +907,9 @@ async def send_message_to_thread(
             reasoning_effort=reasoning_effort,
             stream=send_request.stream,
             enable_context_manager=enable_context_manager,
+            enable_prompt_caching=False,
             agent_config=agent_config,
-            is_agent_builder=False,
-            target_agent_id=None,
-            request_id=str(uuid.uuid4()),
+            request_id=str(uuid.uuid4())
         )
         
         logger.info(f"Successfully sent message to agent run via API for account {account_id}")
