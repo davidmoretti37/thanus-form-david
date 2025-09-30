@@ -570,9 +570,9 @@ async def execute_agent(
     """Execute an agent with the given prompt (requires valid API key)"""
     try:
         # Import agent API functions
-        from agent.api import initiate_agent_with_files
-        from utils.config import config
-        from utils.constants import MODEL_NAME_ALIASES
+        from core.agent_runs import initiate_agent_with_files
+        from core.utils.config import config
+        from core.ai_models.registry import registry
         
         client = await db.client
         
@@ -581,9 +581,8 @@ async def execute_agent(
         if model_name is None:
             model_name = config.MODEL_TO_USE
         
-        # Resolve model aliases
-        resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
-        model_name = resolved_model
+        # Resolve model aliases using the model registry
+        model_name = registry.resolve_model_id(model_name) or model_name
         
         logger.info(f"Executing agent via API for account {account_id} with model {model_name}")
         
@@ -834,7 +833,6 @@ async def send_message_to_thread(
     """Send a new message to an existing thread to continue the conversation (requires valid API key)"""
     try:
         from utils.config import config
-        from utils.constants import MODEL_NAME_ALIASES
         
         client = await db.client
         
@@ -867,9 +865,8 @@ async def send_message_to_thread(
         reasoning_effort = send_request.reasoning_effort or previous_metadata.get('reasoning_effort', 'low')
         enable_context_manager = send_request.enable_context_manager if send_request.enable_context_manager is not None else previous_metadata.get('enable_context_manager', False)
         
-        # Resolve model aliases
-        resolved_model = MODEL_NAME_ALIASES.get(model_name, model_name)
-        model_name = resolved_model
+        # Resolve model aliases using the model registry
+        model_name = registry.resolve_model_id(model_name) or model_name
         
         logger.info(f"Sending message to thread {thread_id} via API for account {account_id} with model {model_name}")
         
