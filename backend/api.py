@@ -30,7 +30,7 @@ import sys
 from core.services import email_api
 from core.triggers import api as triggers_api
 from core.services import api_keys_api
-
+from api_cliente.api import router as api_cliente_router
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -225,6 +225,7 @@ async def health_check():
 
 
 app.include_router(api_router, prefix="/api")
+app.include_router(api_cliente_router, prefix="/api/user-api")
 app.include_router(billing_router)
 app.include_router(transcription_api.router)
 
