@@ -1,0 +1,132 @@
+name: Deploy to Staging (local build)
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+# Configuração de concorrência para garantir que apenas uma execução do workflow seja executada por vez
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: false # Não cancela execuções em andamento, mas aguarda sua conclusão
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  get-env:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.set.outputs.branch }}
+      environment: ${{ steps.set.outputs.environment }}
+    steps:
+      - name: Set environment info
+        id: set
+        run: |
+          echo "branch=develop" >> $GITHUB_OUTPUT
+          echo "environment=staging" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: get-env
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # Aumentando o timeout para 2 horas
+    environment: develop  # Carrega os secrets BACKEND_ENV, FRONTEND_ENV, ENV_MODE
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to staging via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEVELOP_HOST }}           # ← segredo global
+          username: ${{ secrets.DEVELOP_USERNAME }}   # ← segredo global
+          key: ${{ secrets.DEVELOP_KEY }}             # ← segredo global
+          command_timeout: 90m                        # Timeout de 90 minutos para o comando SSH
+          script: |
+            echo "📁 Acessando projeto"
+            cd /root/thanus-ai
+
+            echo "🔀 Garantindo que estamos na branch develop"
+            git fetch origin
+            git checkout develop || git checkout -b develop
+            git reset --hard origin/develop
+            git pull origin develop
+
+            echo "📝 Escrevendo arquivos .env com ENV_MODE=${{ secrets.ENV_MODE }}"
+            rm backend/.env
+            echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+            # Remover qualquer linha ENV_MODE existente e adicionar a nova
+            sed -i '/ENV_MODE=/d' backend/.env
+            echo "ENV_MODE=${{ secrets.ENV_MODE }}" >> backend/.env
+
+            rm backend/.env.local
+            echo "${{ secrets.FRONTEND_ENV }}" > backend/.env.local
+            # Remover qualquer linha ENV_MODE existente e adicionar a nova
+            sed -i '/NEXT_PUBLIC_ENV_MODE=/d' backend/.env.local
+            echo "NEXT_PUBLIC_ENV_MODE=${{ secrets.ENV_MODE }}" >> backend/.env.local
+            
+            #
+            rm .env
+            echo "${{ secrets.BACKEND_ENV }}" > .env
+            # Remover qualquer linha ENV_MODE existente e adicionar a nova
+            sed -i '/ENV_MODE=/d' .env
+            echo "ENV_MODE=${{ secrets.ENV_MODE }}" >> .env
+            #
+
+            rm backend_whats/.env
+            echo "${{ secrets.BACKEND_WHATS_ENV }}" > backend_whats/.env
+
+            rm frontend/.env.local
+            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.local
+            # Remover qualquer linha NEXT_PUBLIC_ENV_MODE existente e adicionar a nova
+            sed -i '/NEXT_PUBLIC_ENV_MODE=/d' frontend/.env.local
+            echo "NEXT_PUBLIC_ENV_MODE=${{ secrets.ENV_MODE }}" >> frontend/.env.local
+
+            echo "🚀 Subindo aplicação principal com novo build (modo verbose)"
+            set -e  # Faz o script falhar se qualquer comando falhar
+            docker compose --verbose up -d --build
+            
+            # Verifica se o build foi bem-sucedido
+            if [ $? -ne 0 ]; then
+              echo "❌ Falha no build do Docker principal. Abortando deploy."
+              exit 1
+            fi
+            
+            echo "✅ Build principal concluído com sucesso!"
+
+      - name: Build Admin Frontend
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEVELOP_HOST }}
+          username: ${{ secrets.DEVELOP_USERNAME }}
+          key: ${{ secrets.DEVELOP_KEY }}
+          command_timeout: 30m
+          script: |
+            echo "🔧 Buildando Admin Frontend"
+            cd /root/thanus-ai/backend/admin_api/admin-frontend
+            docker compose --verbose up -d --build
+            
+            # Verifica se o build do admin frontend foi bem-sucedido
+            if [ $? -ne 0 ]; then
+              echo "❌ Falha no build do Admin Frontend."
+              exit 1
+            fi
+            
+            echo "✅ Admin Frontend buildado com sucesso!"
+
+      - name: Cleanup
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEVELOP_HOST }}
+          username: ${{ secrets.DEVELOP_USERNAME }}
+          key: ${{ secrets.DEVELOP_KEY }}
+          command_timeout: 10m
+          script: |
+            echo "🧼 Limpando imagens e redes não utilizadas"
+            docker container prune -f
+            docker image prune -af
+            #docker system prune -a -f
+            
+            echo "✅ Deploy completo concluído com sucesso!"

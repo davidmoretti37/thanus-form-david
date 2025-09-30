@@ -1,0 +1,96 @@
+name: Deploy to production (local build)
+
+on:
+  push:
+    branches:
+      - PRODUCTION
+  workflow_dispatch:
+
+# Configuração de concorrência para garantir que apenas uma execução do workflow seja executada por vez
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false # Não cancela execuções em andamento, mas aguarda sua conclusão
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  get-env:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.set.outputs.branch }}
+      environment: ${{ steps.set.outputs.environment }}
+    steps:
+      - name: Set environment info
+        id: set
+        run: |
+          echo "branch=PRODUCTION" >> $GITHUB_OUTPUT
+          echo "environment=production" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: get-env
+    runs-on: ubuntu-latest
+    environment: production  # Carrega os secrets BACKEND_ENV, FRONTEND_ENV, ENV_MODE
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to production via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.PROD_HOST }}           # ← segredo global
+          username: ${{ secrets.PROD_USERNAME }}   # ← segredo global
+          key: ${{ secrets.PROD_KEY }}             # ← segredo global
+          script: |
+            echo "📁 Acessando projeto"
+            cd /root/thanus-ai
+
+            echo "🔀 Garantindo que estamos na branch PRODUCTION"
+            git fetch origin
+            git checkout PRODUCTION || git checkout -b PRODUCTION
+            git reset --hard origin/PRODUCTION
+            git pull origin PRODUCTION
+
+            echo "📝 Escrevendo arquivos .env com ENV_MODE=${{ secrets.ENV_MODE }}"
+            rm backend/.env
+            echo "${{ secrets.BACKEND_ENV }}" > backend/.env
+            # Remover qualquer linha ENV_MODE existente e adicionar a nova
+            sed -i '/ENV_MODE=/d' backend/.env
+            echo "ENV_MODE=${{ secrets.ENV_MODE }}" >> backend/.env
+            
+            rm .env
+            echo "${{ secrets.BACKEND_ENV }}" > .env
+            # Remover qualquer linha ENV_MODE existente e adicionar a nova
+            sed -i '/ENV_MODE=/d' .env
+            echo "ENV_MODE=${{ secrets.ENV_MODE }}" >> .env
+
+            rm backend_whats/.env
+            echo "${{ secrets.BACKEND_WHATS_ENV }}" > backend_whats/.env
+
+            rm frontend/.env.local
+            echo "${{ secrets.FRONTEND_ENV }}" > frontend/.env.local
+            # Remover qualquer linha NEXT_PUBLIC_ENV_MODE existente e adicionar a nova
+            sed -i '/NEXT_PUBLIC_ENV_MODE=/d' frontend/.env.local
+            echo "NEXT_PUBLIC_ENV_MODE=${{ secrets.ENV_MODE }}" >> frontend/.env.local
+
+            echo "🚀 Subindo aplicação com novo build (modo verbose)"
+            set -e  # Faz o script falhar se qualquer comando falhar
+            docker compose --verbose up -d --build
+            
+            # Verifica se o build foi bem-sucedido
+            if [ $? -ne 0 ]; then
+              echo "❌ Falha no build do Docker. Abortando deploy."
+              exit 1
+            fi
+            
+            echo "✅ Deploy concluído com sucesso!"
+
+            echo "🧼 Limpando imagens e redes não utilizadas"
+            docker container prune -f
+            docker image prune -af
+            #docker system prune -a -f
+
+            # source backend/venv/bin/activate
+            # python3.11 backend/flags/setup.py enable custom_agents
+            # python3.11 backend/flags/setup.py enable agent_marketplace
