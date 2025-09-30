@@ -611,7 +611,7 @@ async def execute_agent(
         logger.info(f"Created new project: {project_id}")
         
         # Create sandbox
-        from sandbox.sandbox import create_sandbox
+        from core.sandbox.sandbox import create_sandbox, delete_sandbox
         try:
             sandbox_pass = str(uuid.uuid4())
             sandbox = await create_sandbox(sandbox_pass, project_id)
@@ -1011,7 +1011,7 @@ async def init_and_list_sandbox(
         sandbox_meta = project.data.get('sandbox') or {}
         sandbox_id = sandbox_meta.get('id')
 
-        from sandbox.sandbox import create_sandbox, get_or_start_sandbox
+        from core.sandbox.sandbox import create_sandbox, get_or_start_sandbox, delete_sandbox
 
         sandbox = None
         created_new = False
@@ -1160,7 +1160,7 @@ async def list_sandbox_files_api(
             raise HTTPException(status_code=404, detail="No sandbox found for this project")
 
         # Ensure sandbox is active
-        from sandbox.sandbox import get_or_start_sandbox
+        from core.sandbox.sandbox import get_or_start_sandbox
         sandbox = await get_or_start_sandbox(sandbox_id)
 
         # List files non-recursively under given path
@@ -1230,7 +1230,7 @@ async def download_sandbox_file_api(
             raise HTTPException(status_code=404, detail="No sandbox found for this project")
 
         # Ensure sandbox is active
-        from sandbox.sandbox import get_or_start_sandbox
+        from core.sandbox.sandbox import get_or_start_sandbox
         sandbox = await get_or_start_sandbox(sandbox_id)
 
         # Download file content
