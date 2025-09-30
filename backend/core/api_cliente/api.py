@@ -309,7 +309,6 @@ class ModelInfo(BaseModel):
 class ModelsListResponse(BaseModel):
     models: List[ModelInfo]
     total: int
-    default_model: str
 
 # Project models
 class ProjectInfo(BaseModel):
@@ -381,113 +380,33 @@ async def list_available_models(
 ):
     """List all available models for the current user (requires valid API key)"""
     try:
-        from utils.config import config
-        from services.billing import can_use_model
+        from core.utils.config import config
+        from core.ai_models.registry import registry
+        from core.billing.billing_integration import billing_integration
+        from core.ai_models.manager import model_manager
         
         client = await db.client
         
-        # Get available models from system configuration
-        from utils.constants import MODELS, get_model_display_name
+        # Get all available models from the model manager
+        model_infos = model_manager.list_available_models()
         
-        def get_model_info(model_name: str, model_config: dict) -> dict:
-            """Extract model information from system configuration"""
-            # Extract provider from model name
-            if model_name.startswith("anthropic/"):
-                provider = "Anthropic"
-                display_name = get_model_display_name(model_name) or model_name.replace("anthropic/", "").replace("-", " ").title()
-            elif model_name.startswith("openai/"):
-                provider = "OpenAI"
-                display_name = get_model_display_name(model_name) or model_name.replace("openai/", "").upper()
-            elif model_name.startswith("gemini/") or model_name.startswith("google/"):
-                provider = "Google"
-                display_name = get_model_display_name(model_name) or model_name.replace("gemini/", "").replace("google/", "").replace("-", " ").title()
-            elif model_name.startswith("xai/"):
-                provider = "xAI"
-                display_name = get_model_display_name(model_name) or model_name.replace("xai/", "").upper()
-            elif model_name.startswith("openrouter/"):
-                # Extract provider from OpenRouter path
-                parts = model_name.split("/")
-                if len(parts) >= 3:
-                    provider = parts[1].title()
-                    display_name = get_model_display_name(model_name) or parts[2].replace("-", " ").title()
-                else:
-                    provider = "OpenRouter"
-                    display_name = get_model_display_name(model_name) or model_name
-            else:
-                provider = "Unknown"
-                display_name = get_model_display_name(model_name) or model_name
-            
-            # Determine capabilities based on model name
-            supports_thinking = "sonnet-4" in model_name or "o1" in model_name or "grok" in model_name
-            supports_vision = not ("o1" in model_name or "kimi" in model_name)
-            
-            # Estimate max tokens based on model
-            max_tokens = None
-            if "gemini" in model_name:
-                if "pro" in model_name:
-                    max_tokens = 2000000
-                else:
-                    max_tokens = 1000000
-            elif "gpt-4" in model_name or "claude" in model_name:
-                max_tokens = 200000
-            elif "kimi" in model_name:
-                max_tokens = 200000
-            elif "grok" in model_name:
-                max_tokens = 128000
-            
-            # Generate description
-            if "thanus" in display_name.lower():
-                description = "Advanced AI model optimized for complex reasoning and analysis"
-            elif "sonnet" in model_name:
-                description = "High-performance model for complex reasoning and creative tasks"
-            elif "haiku" in model_name:
-                description = "Fast and efficient model for everyday tasks"
-            elif "gpt-4o" in model_name:
-                description = "Advanced multimodal model with vision capabilities"
-            elif "o1" in model_name:
-                description = "Reasoning-focused model with enhanced problem-solving capabilities"
-            elif "gemini" in model_name:
-                if "pro" in model_name:
-                    description = "Large context window model for complex tasks"
-                else:
-                    description = "Fast and efficient model with large context"
-            elif "grok" in model_name:
-                description = "Advanced reasoning model with real-time information access"
-            elif "kimi" in model_name:
-                description = "Long-context model optimized for document analysis"
-            else:
-                description = f"AI model provided by {provider}"
-            
-            return {
-                "name": model_name,
-                "display_name": display_name,
-                "provider": provider,
-                "description": description,
-                "max_tokens": max_tokens,
-                "supports_thinking": supports_thinking,
-                "supports_vision": supports_vision
-            }
-        
-        # Generate model list from system configuration
-        available_models = [
-            get_model_info(model_name, model_config) 
-            for model_name, model_config in MODELS.items()
-        ]
-        
-        # Sort by provider and then by name
-        available_models.sort(key=lambda x: (x["provider"], x["display_name"]))
-        
-        # Return all available models without filtering
-        accessible_models = [ModelInfo(**model_info) for model_info in available_models]
-        
-        # Get default model - use Sonnet 4 as default
-        default_model = "openrouter/anthropic/claude-sonnet-4"
+        # Format the models for the response
+        accessible_models = []
+        for model_info in model_infos:
+            accessible_models.append(ModelInfo(
+                name=model_info["id"],
+                display_name=model_info["display_name"],
+                provider=model_info["provider"],
+                description=model_info.get("description", f"{model_info['provider']} AI model"),
+                max_tokens=model_info.get("max_tokens"),
+                supports_thinking=model_info.get("supports_thinking", False),
+                supports_vision=model_info.get("supports_vision", False)
+            ))
         
         logger.info(f"Listed {len(accessible_models)} accessible models for account {account_id}")
         return ModelsListResponse(
             models=accessible_models,
-            total=len(accessible_models),
-            default_model=default_model
+            total=len(accessible_models)
         )
         
     except HTTPException:
@@ -586,16 +505,24 @@ async def execute_agent(
         
         logger.info(f"Executing agent via API for account {account_id} with model {model_name}")
         
-        # Check billing and model access
-        from services.billing import check_billing_status, can_use_model
+        # Check billing and model access using the billing integration
+        from core.billing.billing_integration import billing_integration
         
-        can_use, model_message, allowed_models = await can_use_model(client, account_id, model_name)
-        if not can_use:
-            raise HTTPException(status_code=403, detail={"message": model_message, "allowed_models": allowed_models})
-
-        can_run, message, subscription = await check_billing_status(client, account_id)
-        if not can_run:
-            raise HTTPException(status_code=402, detail={"message": message, "subscription": subscription})
+        can_proceed, error_message, context = await billing_integration.check_model_and_billing_access(
+            account_id, model_name, client
+        )
+        
+        if not can_proceed:
+            if context.get("error_type") == "model_access_denied":
+                raise HTTPException(status_code=403, detail={
+                    "message": error_message, 
+                    "allowed_models": context.get("allowed_models", [])
+                })
+            else:
+                raise HTTPException(status_code=402, detail={
+                    "message": error_message,
+                    "subscription": context.get("subscription_info", {})
+                })
         
         # Load agent configuration if agent_id is provided
         agent_config = None
@@ -870,16 +797,24 @@ async def send_message_to_thread(
         
         logger.info(f"Sending message to thread {thread_id} via API for account {account_id} with model {model_name}")
         
-        # Check billing and model access
-        from services.billing import check_billing_status, can_use_model
+        # Check billing and model access using the billing integration
+        from core.billing.billing_integration import billing_integration
         
-        can_use, model_message, allowed_models = await can_use_model(client, account_id, model_name)
-        if not can_use:
-            raise HTTPException(status_code=403, detail={"message": model_message, "allowed_models": allowed_models})
-
-        can_run, message, subscription = await check_billing_status(client, account_id)
-        if not can_run:
-            raise HTTPException(status_code=402, detail={"message": message, "subscription": subscription})
+        can_proceed, error_message, context = await billing_integration.check_model_and_billing_access(
+            account_id, model_name, client
+        )
+        
+        if not can_proceed:
+            if context.get("error_type") == "model_access_denied":
+                raise HTTPException(status_code=403, detail={
+                    "message": error_message, 
+                    "allowed_models": context.get("allowed_models", [])
+                })
+            else:
+                raise HTTPException(status_code=402, detail={
+                    "message": error_message,
+                    "subscription": context.get("subscription_info", {})
+                })
         
         # Get agent configuration from previous run
         agent_config = None
