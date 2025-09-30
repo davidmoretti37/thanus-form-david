@@ -19,9 +19,9 @@ import {
     FolderPlusIcon,
     ChevronDownIcon,
     ChevronRightIcon,
-    MoreVerticalIcon
+    MoreVerticalIcon,
+    Leaf
 } from 'lucide-react';
-import { KnowledgeBasePageHeader } from './knowledge-base-header';
 import {
     DndContext,
     closestCenter,
@@ -51,6 +51,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { SharedTreeItem, FileDragOverlay } from '@/components/knowledge-base/shared-kb-tree';
 import { KBFilePreviewModal } from './kb-file-preview-modal';
+import { AnimatedAIBackground } from '@/components/ui/animated-ai-background';
 
 // Get backend URL from environment variables
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
@@ -894,32 +895,43 @@ export function KnowledgeBasePage() {
     }
 
     return (
-        <div>
-            <div className="min-h-screen">
-                <div className="container mx-auto max-w-7xl px-4 py-8">
-                    <KnowledgeBasePageHeader />
-                </div>
-                <div className="container mx-auto max-w-7xl px-4 py-2">
-                    <div className="w-full min-h-[calc(100vh-300px)]">
-                        {/* Header Section */}
-                        <div className="flex justify-between items-start mb-8">
-                            <div className="space-y-1">
-                                <h2 className="text-xl font-semibold text-foreground">Knowledge Base</h2>
-                                <p className="text-sm text-muted-foreground">
-                                    Organize documents and files for AI agents to search and reference
-                                </p>
-                            </div>
-                            <div className="flex gap-3">
-                                <Button variant="outline" onClick={handleCreateFolder}>
-                                    <FolderPlusIcon className="h-4 w-4 mr-2" />
-                                    New Folder
-                                </Button>
-                                <FileUploadModal
-                                    folders={folders}
-                                    onUploadComplete={refetchFolders}
-                                />
-                            </div>
+        <div className="min-h-screen">
+            {/* Animated AI Background Header */}
+            <AnimatedAIBackground height="9cm" className="w-full">
+                <div className="container mx-auto max-w-7xl px-4 h-full">
+                    <div className="flex justify-between items-center h-full">
+                        <div className="space-y-1">
+                            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
+                                <Leaf className="h-8 w-8 text-green-600" />
+                                Jardim do Conhecimento
+                            </h1>
+                            <p className="text-lg text-foreground/80">
+                                Cultive suas sementes de memória para que os agentes de IA possam colher sabedoria
+                            </p>
                         </div>
+                        <div className="flex gap-3">
+                            <Button variant="outline" onClick={handleCreateFolder} size="lg">
+                                <Leaf className="h-5 w-5 mr-2 text-green-600" />
+                                Caixa de Sementes
+                            </Button>
+                            <FileUploadModal
+                                folders={folders}
+                                onUploadComplete={refetchFolders}
+                                trigger={
+                                    <Button size="lg" className="gap-2">
+                                        <Leaf className="h-5 w-5 text-green-600" />
+                                        Adicionar Sementes
+                                    </Button>
+                                }
+                            />
+                        </div>
+                    </div>
+                </div>
+            </AnimatedAIBackground>
+
+            {/* Main Content */}
+            <div className="container mx-auto max-w-7xl px-4 py-8">
+                <div className="w-full min-h-[calc(100vh-300px)]">
 
                         {/* Main Content */}
                         <div
@@ -935,10 +947,10 @@ export function KnowledgeBasePage() {
                                 <div className="mb-8">
                                     <div className="flex items-center justify-between mb-6">
                                         <h3 className="text-lg font-medium text-foreground">
-                                            Recently Added
+                                            🌿 Sementes Recém-Plantadas
                                         </h3>
                                         <span className="text-xs text-muted-foreground">
-                                            {recentFiles.length} files
+                                            {recentFiles.length} sementes
                                         </span>
                                     </div>
                                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-8">
@@ -981,7 +993,7 @@ export function KnowledgeBasePage() {
                                     </div>
                                     <div className="flex items-center justify-between mb-6 mt-8">
                                         <h3 className="text-lg font-medium text-foreground">
-                                            All Folders
+                                            🌳 Todos os Canteiros
                                         </h3>
                                     </div>
                                 </div>
@@ -991,16 +1003,19 @@ export function KnowledgeBasePage() {
                                 <div className="text-center py-20">
                                     <div className="mx-auto max-w-md">
                                         <div className="relative mb-8">
-                                            <div className="mx-auto w-20 h-20 bg-muted rounded-xl flex items-center justify-center border border-border/50">
-                                                <FolderIcon className="h-10 w-10 text-muted-foreground" />
+                                            <div className="mx-auto w-20 h-20 bg-green-50 dark:bg-green-950/20 rounded-xl flex items-center justify-center border border-green-200 dark:border-green-800">
+                                                <Leaf className="h-10 w-10 text-green-600" />
                                             </div>
                                             <div className="absolute -top-2 -right-2 w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center">
                                                 <PlusIcon className="h-4 w-4 text-foreground" />
                                             </div>
                                         </div>
-                                        <h3 className="text-xl font-semibold mb-3 text-foreground">Start Building Your Knowledge Base</h3>
+                                        <h3 className="text-xl font-semibold mb-3 text-foreground flex items-center justify-center gap-2">
+                                            <Leaf className="h-5 w-5 text-green-600" />
+                                            Comece a Cultivar seu Jardim
+                                        </h3>
                                         <p className="text-muted-foreground mb-8 leading-relaxed">
-                                            Create folders to organize documents, PDFs, and files that your AI agents can search and reference during conversations.
+                                            Crie canteiros para organizar documentos, PDFs e arquivos que seus agentes de IA podem explorar durante as conversas.
                                         </p>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-left">
@@ -1009,25 +1024,25 @@ export function KnowledgeBasePage() {
                                                     <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
                                                         <FileIcon className="h-4 w-4 text-foreground/70" />
                                                     </div>
-                                                    <h4 className="text-sm font-semibold">Smart Search</h4>
+                                                    <h4 className="text-sm font-semibold">🔍 Busca Inteligente</h4>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">Agents can intelligently search across all your documents</p>
+                                                <p className="text-xs text-muted-foreground">Os agentes colhem conhecimento de todas suas sementes plantadas</p>
                                             </div>
 
                                             <div className="bg-muted/20 border border-border/50 rounded-lg p-4">
                                                 <div className="flex items-center gap-3 mb-2">
-                                                    <div className="w-8 h-8 bg-muted rounded-lg flex items-center justify-center">
-                                                        <FolderIcon className="h-4 w-4 text-foreground/70" />
+                                                    <div className="w-8 h-8 bg-green-50 dark:bg-green-950/20 rounded-lg flex items-center justify-center">
+                                                        <Leaf className="h-4 w-4 text-green-600" />
                                                     </div>
-                                                    <h4 className="text-sm font-semibold">Organized</h4>
+                                                    <h4 className="text-sm font-semibold">🗂️ Bem Organizado</h4>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">Keep files organized by topic, project, or purpose</p>
+                                                <p className="text-xs text-muted-foreground">Mantenha suas memórias organizadas por tema, projeto ou propósito</p>
                                             </div>
                                         </div>
 
                                         <Button onClick={handleCreateFolder} size="lg">
-                                            <FolderPlusIcon className="h-4 w-4 mr-2" />
-                                            Create Your First Folder
+                                            <Leaf className="h-4 w-4 mr-2 text-green-600" />
+                                            Criar Primeiras Sementes
                                         </Button>
                                     </div>
                                 </div>
@@ -1094,7 +1109,7 @@ export function KnowledgeBasePage() {
                                                     return (
                                                         <div className="bg-background border rounded-lg p-3">
                                                             <div className="flex items-center gap-2">
-                                                                <FolderIcon className="h-4 w-4 text-blue-500" />
+                                                                <Leaf className="h-4 w-4 text-green-600" />
                                                                 <span className="font-medium text-sm">
                                                                     {activeItem?.name}
                                                                 </span>
@@ -1108,7 +1123,6 @@ export function KnowledgeBasePage() {
                                 </div>
                             )}
                         </div>
-                    </div>
                 </div>
             </div>
             <div>

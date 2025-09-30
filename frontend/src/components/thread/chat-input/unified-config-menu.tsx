@@ -39,6 +39,7 @@ type UnifiedConfigMenuProps = {
     // Agent
     selectedAgentId?: string;
     onAgentSelect?: (agentId: string | undefined) => void;
+    evaMode?: 'only' | 'exclude';
 
     // Model
     selectedModel: string;
@@ -54,6 +55,7 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
     isLoggedIn = true,
     selectedAgentId,
     onAgentSelect,
+    evaMode,
     selectedModel,
     onModelChange,
     modelOptions,
@@ -104,7 +106,14 @@ const LoggedInMenu: React.FC<UnifiedConfigMenuProps> = ({
         }
     }, [agentsResponse, currentPage, debouncedSearchQuery]);
 
-    const agents: any[] = allAgents;
+    const agents: any[] = useMemo(() => {
+        const list = allAgents || [];
+        if (!evaMode) return list;
+        return list.filter((a: any) => {
+            const name = (a?.name || '').toLowerCase();
+            return evaMode === 'only' ? name === 'eva' : name !== 'eva';
+        });
+    }, [allAgents, evaMode]);
 
 
 
@@ -458,5 +467,3 @@ export const UnifiedConfigMenu: React.FC<UnifiedConfigMenuProps> = (props) => {
 };
 
 export default UnifiedConfigMenu;
-
-

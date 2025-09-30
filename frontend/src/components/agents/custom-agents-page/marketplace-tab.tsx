@@ -66,26 +66,14 @@ export const MarketplaceTab = ({
   };
 
   return (
-    <div className="space-y-6 mt-8 flex flex-col min-h-full">
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
+    <div className="space-y-4 mt-2 flex flex-col min-h-full">
+      <div className="w-full flex justify-center mb-[5cm]">
         <SearchBar
           placeholder="Search agents..."
           value={marketplaceSearchQuery}
           onChange={setMarketplaceSearchQuery}
+          className="w-full max-w-3xl"
         />
-        <div className="flex items-center gap-3">
-          <Select value={marketplaceFilter} onValueChange={(value: 'all' | 'kortix' | 'community' | 'mine') => setMarketplaceFilter(value)}>
-            <SelectTrigger className="w-[180px] h-12 rounded-xl">
-              <SelectValue placeholder="Filter agents" />
-            </SelectTrigger>
-            <SelectContent className='rounded-xl'>
-              <SelectItem className='rounded-xl' value="all">All Agents</SelectItem>
-              <SelectItem className='rounded-xl' value="mine">Mine</SelectItem>
-              <SelectItem className='rounded-xl' value="kortix">Kortix Verified</SelectItem>
-              <SelectItem className='rounded-xl' value="community">Community</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <div className="flex-1">
@@ -173,4 +161,4 @@ export const MarketplaceTab = ({
       </div>
     </div>
   );
-}; 
+};

@@ -14,7 +14,8 @@ import {
     Pen,
     GripVerticalIcon,
     Loader2,
-    FileTextIcon
+    FileTextIcon,
+    Leaf
 } from 'lucide-react';
 import {
     DropdownMenu,
@@ -231,8 +232,8 @@ export function SharedTreeItem({
                         }
 
                         {/* Folder Icon */}
-                        <div className="w-10 h-10 mr-4 bg-muted border border-border/50 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-muted/80 transition-all duration-200">
-                            <FolderIcon className="h-5 w-5 text-foreground/70" />
+                        <div className="w-10 h-10 mr-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-green-100 dark:group-hover:bg-green-950/30 transition-all duration-200">
+                            <Leaf className="h-5 w-5 text-green-600" />
                         </div>
 
                         {/* Folder Name */}

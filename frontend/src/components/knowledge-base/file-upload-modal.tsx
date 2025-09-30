@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Upload, FileIcon, X, CheckCircle, AlertCircle, Loader2, FolderIcon, CloudUpload, Plus, Info } from 'lucide-react';
+import { Upload, FileIcon, X, CheckCircle, AlertCircle, Loader2, FolderIcon, CloudUpload, Plus, Info, Leaf } from 'lucide-react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 
@@ -235,7 +235,7 @@ export function FileUploadModal({
                 {trigger || (
                     <Button className="gap-2">
                         <CloudUpload className="h-4 w-4" />
-                        Upload Files
+                        Adicionar Sementes
                     </Button>
                 )}
             </DialogTrigger>
@@ -246,9 +246,12 @@ export function FileUploadModal({
                             <CloudUpload className="h-5 w-5 text-foreground" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-semibold">Upload Files to Knowledge Base</DialogTitle>
+                            <DialogTitle className="text-xl font-semibold flex items-center gap-2">
+                                <Leaf className="h-5 w-5 text-green-600" />
+                                Adicionar Sementes no Jardim
+                            </DialogTitle>
                             <p className="text-sm text-muted-foreground mt-1">
-                                Add documents, PDFs, and text files that your AI agents can query and reference
+                                Adicione documentos, PDFs e arquivos que seus agentes de IA podem consultar e referenciar
                             </p>
                         </div>
                     </div>
@@ -262,12 +265,15 @@ export function FileUploadModal({
                                 <Info className="h-4 w-4 text-muted-foreground" />
                             </div>
                             <div className="flex-1">
-                                <h4 className="text-sm font-medium mb-2">How Knowledge Base Works</h4>
+                                <h4 className="text-sm font-medium mb-2 flex items-center gap-2">
+                                    <Leaf className="h-4 w-4 text-green-600" />
+                                    Como Funciona o Jardim
+                                </h4>
                                 <ul className="text-xs text-muted-foreground space-y-1">
-                                    <li>• Organize files into folders by topic or purpose</li>
-                                    <li>• Agents can search and query content from these files</li>
-                                    <li>• Supports PDFs, documents, text files, and more</li>
-                                    <li>• Files are processed to enable semantic search capabilities</li>
+                                    <li>• Organize suas sementes em canteiros por tema ou propósito</li>
+                                    <li>• Os agentes podem explorar e colher conhecimento dessas sementes</li>
+                                    <li>• Suporta PDFs, documentos, arquivos de texto e mais</li>
+                                    <li>• As sementes são processadas para busca semântica inteligente</li>
                                 </ul>
                             </div>
                         </div>
@@ -276,22 +282,22 @@ export function FileUploadModal({
                     {/* Folder Selection */}
                     <div className="space-y-3">
                         <Label htmlFor="folder-select" className="text-sm font-medium flex items-center gap-2">
-                            <FolderIcon className="h-4 w-4" />
-                            Destination Folder
+                            <Leaf className="h-4 w-4 text-green-600" />
+                            🌳 Canteiro de Destino
                         </Label>
                         <Select value={selectedFolder} onValueChange={setSelectedFolder}>
                             <SelectTrigger className="h-11">
-                                <SelectValue placeholder="Choose a folder..." />
+                                <SelectValue placeholder="Escolha um canteiro..." />
                             </SelectTrigger>
                             <SelectContent>
                                 {folders.map((folder) => (
                                     <SelectItem key={folder.folder_id} value={folder.folder_id}>
                                         <div className="flex items-center gap-3 py-1">
-                                            <FolderIcon className="h-4 w-4 text-muted-foreground" />
+                                            <Leaf className="h-4 w-4 text-green-600" />
                                             <div className="flex-1">
                                                 <div className="font-medium">{folder.name}</div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    {folder.entry_count} files
+                                                    {folder.entry_count} sementes
                                                 </div>
                                             </div>
                                         </div>
@@ -304,8 +310,8 @@ export function FileUploadModal({
                     {/* Drag & Drop Area */}
                     <div className="space-y-3">
                         <Label className="text-sm font-medium flex items-center gap-2">
-                            <Upload className="h-4 w-4" />
-                            Upload Files
+                            <Leaf className="h-4 w-4 text-green-600" />
+                            Adicionar Sementes
                         </Label>
                         <div
                             className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 ${
@@ -337,14 +343,14 @@ export function FileUploadModal({
                                     <p className={`font-medium transition-colors ${
                                         isDragOver ? 'text-foreground' : 'text-foreground'
                                     }`}>
-                                        {isDragOver ? 'Drop files here' : 'Drag & drop files here'}
+                                        {isDragOver ? 'Solte as sementes aqui' : 'Arraste e solte as sementes aqui'}
                                     </p>
                                     <p className="text-sm text-muted-foreground mt-1">
-                                        or <span className="text-foreground font-medium">browse files</span> to upload
+                                        ou <span className="text-foreground font-medium">navegue pelos arquivos</span> para plantar
                                     </p>
                                 </div>
                                 <p className="text-xs text-muted-foreground">
-                                    Supports PDF, DOC, TXT, MD, CSV, and more • Max 50MB total
+                                    Suporta PDF, DOC, TXT, MD, CSV e mais • Máx 50MB total
                                 </p>
                             </div>
                         </div>
@@ -354,8 +360,8 @@ export function FileUploadModal({
                     {selectedFiles.length > 0 && (
                         <div className="space-y-3">
                             <Label className="text-sm font-medium flex items-center gap-2">
-                                <FileIcon className="h-4 w-4" />
-                                Selected Files ({selectedFiles.length})
+                                <Leaf className="h-4 w-4 text-green-600" />
+                                Sementes Selecionadas ({selectedFiles.length})
                             </Label>
                             <div className="border rounded-lg p-4 max-h-48 overflow-y-auto space-y-3 bg-muted/20">
                                 {uploadStatuses.map((status, index) => (
@@ -426,7 +432,7 @@ export function FileUploadModal({
                             onClick={() => setIsOpen(false)}
                             disabled={isUploading}
                         >
-                            Cancel
+                            Cancelar
                         </Button>
                         <Button
                             onClick={handleUpload}
@@ -436,12 +442,12 @@ export function FileUploadModal({
                             {isUploading ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin" />
-                                    Uploading...
+                                    Plantando...
                                 </>
                             ) : (
                                 <>
-                                    <Upload className="h-4 w-4" />
-                                    Upload {selectedFiles.length} file(s)
+                                    <Leaf className="h-4 w-4 text-green-600" />
+                                    Plantar {selectedFiles.length} semente(s)
                                 </>
                             )}
                         </Button>

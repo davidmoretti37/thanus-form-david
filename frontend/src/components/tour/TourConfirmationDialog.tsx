@@ -4,7 +4,7 @@ import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { KortixLogo } from '../sidebar/kortix-logo';
 import { AlertDialog, AlertDialogContent, AlertDialogHeader } from '../ui/alert-dialog';
-import { AlertDialogDescription, AlertDialogTitle } from '@radix-ui/react-alert-dialog';
+import { AlertDialogDescription, AlertDialogTitle } from '../ui/alert-dialog';
 
 interface TourConfirmationDialogProps {
   open: boolean;
@@ -59,4 +59,4 @@ export const TourConfirmationDialog = React.memo(({ open, onAccept, onDecline }:
   );
 });
 
-TourConfirmationDialog.displayName = 'TourConfirmationDialog'; 
+TourConfirmationDialog.displayName = 'TourConfirmationDialog';

@@ -23,6 +23,7 @@ import { useInitiateAgentWithInvalidation } from '@/hooks/react-query/dashboard/
 
 import { useAgents } from '@/hooks/react-query/agents/use-agents';
 import { cn } from '@/lib/utils';
+import type { Agent } from '@/hooks/react-query/agents/utils';
 import { BillingModal } from '@/components/billing/billing-modal';
 import { useAgentSelection } from '@/lib/stores/agent-selection-store';
 import { Examples } from './examples';
@@ -65,7 +66,9 @@ const dashboardTourSteps: Step[] = [
   },
 ];
 
-export function DashboardContent() {
+type DashboardContentProps = { evaMode?: 'only' | 'exclude' };
+
+export function DashboardContent({ evaMode }: DashboardContentProps) {
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -95,6 +98,7 @@ export function DashboardContent() {
   const chatInputRef = React.useRef<ChatInputHandles>(null);
   const initiateAgentMutation = useInitiateAgentWithInvalidation();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const disableTours = evaMode === 'only';
 
   // Tour integration
   const {
@@ -107,6 +111,13 @@ export function DashboardContent() {
     handleWelcomeDecline,
   } = useDashboardTour();
 
+  // Ensure tour is completely disabled on pages that pass evaMode="only" (e.g., /construtor)
+  useEffect(() => {
+    if (disableTours) {
+      stopTour();
+    }
+  }, [disableTours, stopTour]);
+
   // Feature flag for custom agents section
 
   // Fetch agents to get the selected agent's name
@@ -116,9 +127,26 @@ export function DashboardContent() {
     sort_order: 'asc'
   });
 
-  const agents = agentsResponse?.agents || [];
+  const filterByEva = (a: Agent) => {
+    const name = (a.name || '').toLowerCase();
+    if (evaMode === 'only') return name === 'eva';
+    if (evaMode === 'exclude') return name !== 'eva';
+    return true;
+  };
+  const filteredAgents = (agentsResponse?.agents || []).filter(filterByEva);
+
+  // Force EVA as the active agent when evaMode="only" (e.g., /construtor)
+  useEffect(() => {
+    if (evaMode === 'only') {
+      const eva = filteredAgents.find(a => (a.name || '').toLowerCase() === 'eva');
+      if (eva && selectedAgentId !== eva.agent_id) {
+        setSelectedAgent(eva.agent_id);
+      }
+    }
+  }, [evaMode, filteredAgents, selectedAgentId, setSelectedAgent]);
+
   const selectedAgent = selectedAgentId
-    ? agents.find(agent => agent.agent_id === selectedAgentId)
+    ? filteredAgents.find(agent => agent.agent_id === selectedAgentId)
     : null;
   const displayName = selectedAgent?.name || 'Tars';
   const agentAvatar = undefined;
@@ -129,10 +157,10 @@ export function DashboardContent() {
   const enabledEnvironment = isStagingMode() || isLocalMode();
 
   React.useEffect(() => {
-    if (agents.length > 0) {
-      initializeFromAgents(agents, undefined, setSelectedAgent);
+    if (filteredAgents.length > 0) {
+      initializeFromAgents(filteredAgents, undefined, setSelectedAgent);
     }
-  }, [agents, initializeFromAgents, setSelectedAgent]);
+  }, [filteredAgents, initializeFromAgents, setSelectedAgent]);
 
   React.useEffect(() => {
     const agentIdFromUrl = searchParams.get('agent_id');
@@ -266,9 +294,10 @@ export function DashboardContent() {
 
   return (
     <>
-      <Joyride
+      {!disableTours && (
+        <Joyride
         steps={dashboardTourSteps}
-        run={run}
+        run={run && !disableTours}
         stepIndex={stepIndex}
         callback={handleTourCallback}
         continuous
@@ -333,9 +362,10 @@ export function DashboardContent() {
           },
         }}
       />
+      )}
       
       <TourConfirmationDialog
-        open={showWelcome}
+        open={showWelcome && !disableTours}
         onAccept={handleWelcomeAccept}
         onDecline={handleWelcomeDecline}
       />
@@ -361,7 +391,11 @@ export function DashboardContent() {
                     className="tracking-tight text-2xl md:text-3xl font-normal text-foreground/90"
                     data-tour="dashboard-title"
                   >
-                    What would you like to do today?
+                    {evaMode === 'only' ? (
+                      <> What will you bring to <span className="text-green-400">life</span> today? </>
+                    ) : (
+                      'What would you like to do today?'
+                    )}
                   </p>
                 </div>
                 <div className="w-full" data-tour="chat-input">
@@ -376,6 +410,7 @@ export function DashboardContent() {
                     selectedAgentId={selectedAgentId}
                     onAgentSelect={setSelectedAgent}
                     enableAdvancedConfig={true}
+                    evaMode={evaMode}
                     onConfigureAgent={(agentId) => {
                       setConfigAgentId(agentId);
                       setShowConfigDialog(true);
@@ -383,13 +418,15 @@ export function DashboardContent() {
                   />
                 </div>
                 
-                {/* Examples section - right after chat input */}
-                <div className="w-full pt-2" data-tour="examples">
-                  <Examples 
-                    onSelectPrompt={setInputValue} 
-                    count={isMobile ? 2 : 4} 
-                  />
-                </div>
+                {/* Examples section - right after chat input (hidden on /construtor) */}
+                {evaMode !== 'only' && (
+                  <div className="w-full pt-2" data-tour="examples">
+                    <Examples 
+                      onSelectPrompt={setInputValue} 
+                      count={isMobile ? 2 : 4} 
+                    />
+                  </div>
+                )}
                 
                 {/* AgentExamples section - commented out */}
                 {/* <div className="w-full pt-2" data-tour="examples">

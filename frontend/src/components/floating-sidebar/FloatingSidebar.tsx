@@ -11,7 +11,7 @@ import {
   Plug,
   ListTodo,
   Bot,
-  Folder
+  Flower2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BlueRingIcon from '@/components/ui/blue-ring-icon';
@@ -49,7 +49,7 @@ export function FloatingSidebar() {
     // Agents
     { href: '/agents?tab=my-agents', icon: Bot, label: 'Agents' },
     // Knowledge (pastas) - abaixo de Agents
-    { href: '/knowledge', icon: Folder, label: 'Knowledge' },
+    { href: '/knowledge', icon: Flower2, label: 'Jardim do conhecimento' },
     // Integrations
     { href: '/settings/credentials', icon: Plug, label: 'Integrations' },
     // Settings (last)

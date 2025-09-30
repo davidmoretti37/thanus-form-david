@@ -49,6 +49,7 @@ interface MessageInputProps {
   onAgentSelect?: (agentId: string | undefined) => void;
   enableAdvancedConfig?: boolean;
   hideAgentSelection?: boolean;
+  evaMode?: 'only' | 'exclude';
   isTarsAgent?: boolean;
 }
 
@@ -88,6 +89,7 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
       onAgentSelect,
       enableAdvancedConfig = false,
       hideAgentSelection = false,
+      evaMode,
       isTarsAgent,
     },
     ref,
@@ -169,6 +171,7 @@ export const MessageInput = forwardRef<HTMLTextAreaElement, MessageInputProps>(
             isLoggedIn={isLoggedIn}
             selectedAgentId={!hideAgentSelection ? selectedAgentId : undefined}
             onAgentSelect={!hideAgentSelection ? onAgentSelect : undefined}
+            evaMode={evaMode}
             selectedModel={selectedModel}
             onModelChange={onModelChange}
             modelOptions={modelOptions}

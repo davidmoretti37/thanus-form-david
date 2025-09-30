@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { Sparkles, Wand2, Loader2 } from 'lucide-react';
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
+import { Sparkles, Wand2, Loader2, Image as ImageIcon, Trash2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
   DialogTitle,
-  DialogFooter 
+  DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -51,25 +51,105 @@ export function ProfilePictureDialog({
   const [selectedIcon, setSelectedIcon] = useState(currentIconName || 'bot');
   const [iconColor, setIconColor] = useState(currentIconColor || '#000000');
   const [backgroundColor, setBackgroundColor] = useState(currentBackgroundColor || '#e5e5e5');
-  
+
+  // New states for local image upload and scaling
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [imageScale, setImageScale] = useState<number>(1);
+  const [loadedImage, setLoadedImage] = useState<HTMLImageElement | null>(null);
+
   const generateIconMutation = useGenerateAgentIcon();
+
+  // Helper to load an image element from data URL for canvas rendering
+  const loadImage = useCallback((src: string) => {
+    return new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = src;
+    });
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
       setSelectedIcon(currentIconName || 'bot');
       setIconColor(currentIconColor || '#000000');
       setBackgroundColor(currentBackgroundColor || '#e5e5e5');
+
+      // Initialize with current image if present
+      if (currentImageUrl) {
+        setUploadedImage(currentImageUrl);
+        loadImage(currentImageUrl)
+          .then(setLoadedImage)
+          .catch(() => setLoadedImage(null));
+        setImageScale(1);
+      } else {
+        setUploadedImage(null);
+        setLoadedImage(null);
+        setImageScale(1);
+      }
     }
-  }, [isOpen, currentIconName, currentIconColor, currentBackgroundColor]);
-  
-  const handleIconSave = useCallback(() => {
+  }, [isOpen, currentIconName, currentIconColor, currentBackgroundColor, currentImageUrl, loadImage]);
+
+  const handleIconSave = useCallback(async () => {
+    // If user uploaded an image, save that (with current scale) instead of icon selection
+    if (uploadedImage && loadedImage) {
+      try {
+        const size = 512;
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) throw new Error('Canvas not supported');
+
+        // Fill background
+        ctx.fillStyle = backgroundColor || '#ffffff';
+        ctx.fillRect(0, 0, size, size);
+
+        // Fit image with 'contain' behavior, then apply scale
+        const ratio = Math.min(size / loadedImage.naturalWidth, size / loadedImage.naturalHeight);
+        const baseW = loadedImage.naturalWidth * ratio;
+        const baseH = loadedImage.naturalHeight * ratio;
+
+        const drawW = baseW * imageScale;
+        const drawH = baseH * imageScale;
+
+        const dx = (size - drawW) / 2;
+        const dy = (size - drawH) / 2;
+
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(loadedImage, dx, dy, drawW, drawH);
+
+        const dataUrl = canvas.toDataURL('image/png');
+        onImageUpdate(dataUrl);
+        toast.success('Agent image updated!');
+        onClose();
+      } catch (err) {
+        console.error('Failed to save uploaded image', err);
+        toast.error('Failed to save image. Please try again.');
+      }
+      return;
+    }
+
+    // Otherwise, proceed with icon save flow
     if (onIconUpdate) {
       onIconUpdate(selectedIcon, iconColor, backgroundColor);
       onImageUpdate(null);
       toast.success('Agent icon updated!');
       onClose();
     }
-  }, [selectedIcon, iconColor, backgroundColor, onIconUpdate, onImageUpdate, onClose]);
+  }, [
+    uploadedImage,
+    loadedImage,
+    imageScale,
+    backgroundColor,
+    onImageUpdate,
+    onIconUpdate,
+    selectedIcon,
+    iconColor,
+    onClose,
+  ]);
 
   const handleAutoGenerate = useCallback(() => {
     if (!agentName) {
@@ -84,6 +164,11 @@ export function ProfilePictureDialog({
       },
       {
         onSuccess: (result) => {
+          // If previously using an uploaded image, clear it because we switch to icon flow
+          setUploadedImage(null);
+          setLoadedImage(null);
+          setImageScale(1);
+
           setSelectedIcon(result.icon_name);
           setIconColor(result.icon_color);
           setBackgroundColor(result.icon_background);
@@ -98,16 +183,16 @@ export function ProfilePictureDialog({
   }, [agentName, agentDescription, generateIconMutation]);
 
   const presetColors = [
-    '#000000', '#FFFFFF', '#6366F1', '#10B981', '#F59E0B', 
+    '#000000', '#FFFFFF', '#6366F1', '#10B981', '#F59E0B',
     '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316',
     '#06B6D4', '#84CC16', '#F43F5E', '#A855F7', '#3B82F6'
   ];
 
-  const ColorPickerField = ({ 
-    label, 
-    color, 
+  const ColorPickerField = ({
+    label,
+    color,
     onChange,
-  }: { 
+  }: {
     label: string;
     color: string;
     onChange: (color: string) => void;
@@ -142,27 +227,27 @@ export function ProfilePictureDialog({
                   e.preventDefault();
                   return;
                 }
-                
+
                 const target = e.target as HTMLElement;
-                const isColorPickerElement = target.closest('[class*="react-colorful"]') || 
+                const isColorPickerElement = target.closest('[class*="react-colorful"]') ||
                   target.className.includes('react-colorful') ||
                   target.closest('.react-colorful-container');
-                
+
                 if (isColorPickerElement) {
                   e.preventDefault();
                 }
               }}
             >
               <div className="space-y-3">
-                <div 
+                <div
                   className="react-colorful-container"
                   onMouseDown={() => setIsInteracting(true)}
                   onMouseUp={() => setIsInteracting(false)}
                   onTouchStart={() => setIsInteracting(true)}
                   onTouchEnd={() => setIsInteracting(false)}
                 >
-                  <HexColorPicker 
-                    color={color} 
+                  <HexColorPicker
+                    color={color}
                     onChange={(newColor) => {
                       onChange(newColor);
                     }}
@@ -239,7 +324,7 @@ export function ProfilePictureDialog({
     { bg: '#EF4444', icon: '#FFFFFF', name: 'Red' },
     { bg: '#8B5CF6', icon: '#FFFFFF', name: 'Purple' },
   ];
-  
+
   const ColorControls = () => (
     <div className="space-y-6">
       <div className="flex flex-col items-center space-y-3 py-4">
@@ -282,16 +367,16 @@ export function ProfilePictureDialog({
               }}
               className={cn(
                 "group relative h-12 w-full rounded-xl border-2 transition-all hover:scale-105",
-                backgroundColor === preset.bg && iconColor === preset.icon 
-                  ? "border-primary shadow-md" 
+                backgroundColor === preset.bg && iconColor === preset.icon
+                  ? "border-primary shadow-md"
                   : "border-border hover:border-primary/60"
               )}
               style={{ backgroundColor: preset.bg }}
               title={preset.name}
             >
               <span className="absolute inset-0 flex items-center justify-center">
-                <Sparkles 
-                  className="w-4 h-4" 
+                <Sparkles
+                  className="w-4 h-4"
                   style={{ color: preset.icon }}
                 />
               </span>
@@ -303,6 +388,125 @@ export function ProfilePictureDialog({
     </div>
   );
 
+  // Image tab content (upload + scale)
+  const ImageUploadContent = () => {
+    const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = String(reader.result);
+        setUploadedImage(dataUrl);
+        try {
+          const img = await loadImage(dataUrl);
+          setLoadedImage(img);
+          setImageScale(1);
+        } catch {
+          toast.error('Failed to load image preview.');
+          setLoadedImage(null);
+        }
+      };
+      reader.onerror = () => {
+        toast.error('Failed to read the selected file.');
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const onClearImage = () => {
+      setUploadedImage(null);
+      setLoadedImage(null);
+      setImageScale(1);
+    };
+
+    return (
+      <div className="flex flex-col h-full">
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Upload Image</Label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml"
+              onChange={onFileChange}
+            />
+            {uploadedImage && (
+              <Button type="button" variant="outline" onClick={onClearImage} className="gap-2">
+                <Trash2 className="h-4 w-4" />
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 grid grid-cols-1 gap-4">
+          <div>
+            <Label className="text-sm font-medium">Preview</Label>
+            <div
+              className="mt-2 flex items-center justify-center rounded-2xl border bg-muted/30"
+              style={{
+                width: '100%',
+                height: 280,
+              }}
+            >
+              <div
+                className="rounded-2xl shadow-inner flex items-center justify-center"
+                style={{
+                  width: 220,
+                  height: 220,
+                  backgroundColor: backgroundColor || '#e5e5e5',
+                  overflow: 'hidden',
+                }}
+              >
+                {uploadedImage ? (
+                  // Use CSS scale for smooth preview; final rendering is done on canvas on save
+                  <img
+                    src={uploadedImage}
+                    alt="Uploaded preview"
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      transform: `scale(${imageScale})`,
+                      transformOrigin: 'center center',
+                      objectFit: 'contain'
+                    }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center text-muted-foreground">
+                    <ImageIcon className="h-8 w-8 mb-2" />
+                    <span className="text-xs">No image selected</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Size</Label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0.2}
+                max={2}
+                step={0.05}
+                value={imageScale}
+                onChange={(e) => setImageScale(parseFloat(e.target.value))}
+                className="flex-1"
+              />
+              <div className="w-12 text-right tabular-nums text-sm">{imageScale.toFixed(2)}x</div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Adjust how large the image appears inside the square. The final image is baked at 512×512.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
@@ -312,18 +516,41 @@ export function ProfilePictureDialog({
             Customize Agent Icon
           </DialogTitle>
         </DialogHeader>
+
+        {/* Desktop layout */}
         <div className="hidden md:flex flex-1 min-h-0 px-6">
           <div className="flex gap-6 w-full">
             <div className="flex-1 min-w-0">
-              <IconPicker
-                selectedIcon={selectedIcon}
-                onIconSelect={setSelectedIcon}
-                iconColor={iconColor}
-                backgroundColor={backgroundColor}
-                className="h-full"
-              />
+              <Tabs defaultValue="icons" className="h-full flex flex-col">
+                <TabsList className="grid w-full grid-cols-2 shrink-0 mb-3">
+                  <TabsTrigger value="icons">Icons</TabsTrigger>
+                  <TabsTrigger value="image">Image</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="icons" className="flex-1 min-h-0">
+                  <IconPicker
+                    selectedIcon={selectedIcon}
+                    onIconSelect={(name) => {
+                      // If switching back to icons, clear any uploaded image
+                      setUploadedImage(null);
+                      setLoadedImage(null);
+                      setImageScale(1);
+                      setSelectedIcon(name);
+                    }}
+                    iconColor={iconColor}
+                    backgroundColor={backgroundColor}
+                    className="h-full"
+                  />
+                </TabsContent>
+
+                <TabsContent value="image" className="flex-1 min-h-0">
+                  <ImageUploadContent />
+                </TabsContent>
+              </Tabs>
             </div>
+
             <Separator orientation="vertical" className="h-full" />
+
             <div className="w-80 shrink-0">
               <ScrollArea className="h-[500px] pr-4">
                 <ColorControls />
@@ -331,29 +558,43 @@ export function ProfilePictureDialog({
             </div>
           </div>
         </div>
+
+        {/* Mobile layout */}
         <div className="md:hidden flex-1 min-h-0 px-6">
           <Tabs defaultValue="customize" className="h-full flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 shrink-0">
+            <TabsList className="grid w-full grid-cols-3 shrink-0">
               <TabsTrigger value="customize">Customize</TabsTrigger>
               <TabsTrigger value="icons">Icons</TabsTrigger>
+              <TabsTrigger value="image">Image</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="customize" className="flex-1 min-h-0 mt-4">
               <ScrollArea className="h-[400px]">
                 <ColorControls />
               </ScrollArea>
             </TabsContent>
+
             <TabsContent value="icons" className="flex-1 min-h-0 mt-4">
               <IconPicker
                 selectedIcon={selectedIcon}
-                onIconSelect={setSelectedIcon}
+                onIconSelect={(name) => {
+                  setUploadedImage(null);
+                  setLoadedImage(null);
+                  setImageScale(1);
+                  setSelectedIcon(name);
+                }}
                 iconColor={iconColor}
                 backgroundColor={backgroundColor}
                 className="h-[400px]"
               />
             </TabsContent>
+
+            <TabsContent value="image" className="flex-1 min-h-0 mt-4">
+              <ImageUploadContent />
+            </TabsContent>
           </Tabs>
         </div>
+
         <DialogFooter className="px-6 py-4 shrink-0 border-t">
           <div className="flex items-center gap-2 mr-auto">
             <Button
@@ -376,10 +617,8 @@ export function ProfilePictureDialog({
           >
             Cancel
           </Button>
-          <Button 
-            onClick={handleIconSave}
-          >
-            Save Icon
+          <Button onClick={handleIconSave}>
+            {uploadedImage ? 'Save Image' : 'Save Icon'}
           </Button>
         </DialogFooter>
       </DialogContent>

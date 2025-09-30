@@ -13,7 +13,7 @@ import type { MarketplaceTemplate } from '@/components/agents/installation/types
 
 import { AgentsParams } from '@/hooks/react-query/agents/utils';
 
-import { AgentsPageHeader } from '@/components/agents/custom-agents-page/header';
+import DemoOne from '@/components/agents/custom-agents-page/hero-demo';
 import { TabsNavigation } from '@/components/agents/custom-agents-page/tabs-navigation';
 import { MyAgentsTab } from '@/components/agents/custom-agents-page/my-agents-tab';
 import { MarketplaceTab } from '@/components/agents/custom-agents-page/marketplace-tab';
@@ -91,19 +91,8 @@ export default function AgentsPage() {
 
   const activeTab = useMemo(() => {
     const tab = searchParams.get('tab');
-    if (tab === 'marketplace') {
-      return 'my-agents';
-    }
     return tab || 'my-agents';
   }, [searchParams]);
-
-  useEffect(() => {
-    if (searchParams.get('tab') === 'marketplace') {
-      const params = new URLSearchParams(searchParams.toString());
-      params.set('tab', 'my-agents');
-      router.replace(`${pathname}?${params.toString()}`);
-    }
-  }, [searchParams, pathname, router]);
 
   const agentsQueryParams: AgentsParams = useMemo(() => {
     const params: AgentsParams = {
@@ -553,19 +542,25 @@ export default function AgentsPage() {
   return (
     <div className="min-h-screen">
       <div className="container mx-auto max-w-7xl px-4 py-8">
-        <AgentsPageHeader />
+        <DemoOne />
       </div>
-      <div className="sticky top-0 z-50">
-        <div className="absolute inset-0 backdrop-blur-md" style={{
-          maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)'
-        }}></div>
-        <div className="relative bg-gradient-to-b from-background/95 via-background/70 to-transparent">
-          <div className="container mx-auto max-w-7xl px-4 py-4">
-            <TabsNavigation activeTab={activeTab} onTabChange={handleTabChange} onCreateAgent={handleCreateNewAgent} />
+      {activeTab !== 'marketplace' && (
+        <div className="sticky top-0 z-50">
+          <div className="absolute inset-0 backdrop-blur-md" style={{
+            maskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 60%, transparent 100%)'
+          }}></div>
+          <div className="relative bg-gradient-to-b from-background/95 via-background/70 to-transparent">
+            <div className="container mx-auto max-w-7xl px-4 py-4">
+              <TabsNavigation
+                activeTab={activeTab}
+                onTabChange={handleTabChange}
+                onCreateAgent={handleCreateNewAgent}
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
       <div className="container mx-auto max-w-7xl px-4 py-2">
         <div className="w-full min-h-[calc(100vh-300px)]">
           {activeTab === "my-agents" && (
@@ -604,7 +599,6 @@ export default function AgentsPage() {
             />
           )}
 
-          {/* Marketplace tab is disabled
           {activeTab === "marketplace" && (
             <MarketplaceTab
               marketplaceSearchQuery={marketplaceSearchQuery}
@@ -626,11 +620,9 @@ export default function AgentsPage() {
               onMarketplacePageSizeChange={handleMarketplacePageSizeChange}
               marketplacePagination={marketplaceTemplates?.pagination}
             />
-          )} */}
-
-          {activeTab === "multi-agents" && (
-            <MultiAgentWorkspace />
           )}
+
+          {/* Removido: botão e workspace de Multi Agents */}
         </div>
 
         <PublishDialog

@@ -127,9 +127,13 @@ class ToolManager:
         ]
         
         for tool_name, tool_class, kwargs in sandbox_tools:
-            if tool_name not in disabled_tools:
-                self.thread_manager.add_tool(tool_class, **kwargs)
-                # logger.debug(f"Registered {tool_name}")
+            if tool_name in disabled_tools:
+                continue
+            if tool_name == 'image_search_tool' and not config.SERPER_API_KEY:
+                logger.warning("Skipping image_search_tool registration: SERPER_API_KEY not configured")
+                continue
+            self.thread_manager.add_tool(tool_class, **kwargs)
+            # logger.debug(f"Registered {tool_name}")
     
     def _register_utility_tools(self, disabled_tools: List[str]):
         """Register utility and data provider tools."""

@@ -1163,12 +1163,10 @@ export const streamAgent = (
           try {
             const jsonData = JSON.parse(rawData);
             if (jsonData.status === 'error') {
-              console.error(`[STREAM] Error status received for ${agentRunId}:`, jsonData);
-              
-              // Pass the error message to the callback
-              callbacks.onError(jsonData.message || 'Unknown error occurred');
-              
-              // Don't close the stream for error status messages as they may continue
+              const detail = jsonData.detail || jsonData.error || jsonData.message || jsonData.reason || jsonData;
+              const message = typeof detail === 'string' ? detail : JSON.stringify(detail);
+              console.error(`[STREAM] Error status received for ${agentRunId}: ${message}`, jsonData);
+              callbacks.onError(message);
               return;
             }
           } catch (jsonError) {

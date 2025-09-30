@@ -17,11 +17,11 @@ const agentTabs: TabConfig[] = [
     label: 'My Agents',
   },
   {
-    value: 'multi-agents',
-    icon: FileText, // using an existing import; swap icon if you prefer another
-    label: 'Multi Agents',
+    value: 'marketplace',
+    icon: ShoppingBag,
+    label: 'Marketplace',
   },
-]; 
+];
 
 export const TabsNavigation = ({ activeTab, onTabChange, onCreateAgent }: TabsNavigationProps) => {
   const tabs = React.useMemo(() => {

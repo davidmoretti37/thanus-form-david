@@ -6,6 +6,7 @@ import React, {
   useEffect,
   forwardRef,
   useImperativeHandle,
+  useMemo,
 } from 'react';
 import { useAgents } from '@/hooks/react-query/agents/use-agents';
 import { useAgentSelection } from '@/lib/stores/agent-selection-store';
@@ -69,6 +70,7 @@ export interface ChatInputProps {
   enableAdvancedConfig?: boolean;
   onConfigureAgent?: (agentId: string) => void;
   hideAgentSelection?: boolean;
+  evaMode?: 'only' | 'exclude';
   defaultShowSnackbar?: 'tokens' | 'upgrade' | false;
   showToLowCreditUsers?: boolean;
   agentMetadata?: {
@@ -116,6 +118,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
       enableAdvancedConfig = false,
       onConfigureAgent,
       hideAgentSelection = false,
+      evaMode,
       defaultShowSnackbar = false,
       showToLowCreditUsers = true,
       agentMetadata,
@@ -194,7 +197,14 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { data: agentsResponse } = useAgents({}, { enabled: isLoggedIn });
-    const agents = agentsResponse?.agents || [];
+    const filteredAgents = useMemo(() => {
+      const list = agentsResponse?.agents || [];
+      if (!evaMode) return list;
+      return list.filter((a: any) => {
+        const name = (a?.name || '').toLowerCase();
+        return evaMode === 'only' ? name === 'eva' : name !== 'eva';
+      });
+    }, [agentsResponse?.agents, evaMode]);
 
     const { initializeFromAgents } = useAgentSelection();
     useImperativeHandle(ref, () => ({
@@ -203,10 +213,10 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
     }));
 
     useEffect(() => {
-      if (agents.length > 0 && !onAgentSelect) {
-        initializeFromAgents(agents);
+      if (filteredAgents.length > 0 && !onAgentSelect) {
+        initializeFromAgents(filteredAgents);
       }
-    }, [agents, onAgentSelect, initializeFromAgents]);
+    }, [filteredAgents, onAgentSelect, initializeFromAgents]);
 
 
 
@@ -419,12 +429,13 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
                   selectedAgentId={selectedAgentId}
                   onAgentSelect={onAgentSelect}
                   hideAgentSelection={hideAgentSelection}
+                  evaMode={evaMode}
                 />
               </CardContent>
             </div>
           </Card>
 
-          {enableAdvancedConfig && selectedAgentId && (
+          {enableAdvancedConfig && selectedAgentId && evaMode !== 'only' && (
             <div className="w-full max-w-4xl mx-auto -mt-12 relative z-20">
               <div className="bg-gradient-to-b from-transparent via-transparent to-muted/30 pt-8 pb-2 px-4 rounded-b-3xl border border-t-0 border-border/50 transition-all duration-300 ease-out">
                 <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-none relative">

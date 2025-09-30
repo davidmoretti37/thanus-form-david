@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { Bot, Menu, Plus, Zap, ChevronRight, BookOpen } from 'lucide-react';
+import { Bot, Menu, Plus, Zap, ChevronRight, Flower2, MessageSquare } from 'lucide-react';
 
 import { NavAgents } from '@/components/sidebar/nav-agents';
 import { NavUserWithTeams } from '@/components/sidebar/nav-user-with-teams';
@@ -220,9 +220,9 @@ export function SidebarLeft({
                 if (isMobile) setOpenMobile(false);
               }}
             >
-              <BookOpen className="h-4 w-4 mr-1" />
+              <Flower2 className="h-4 w-4 mr-1" />
               <span className="flex items-center justify-between w-full">
-                Knowledge Base
+                Jardim do conhecimento
               </span>
             </SidebarMenuButton>
           </Link>

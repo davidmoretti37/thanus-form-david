@@ -255,10 +255,18 @@ export default function HomePage() {
 
       {/* Top icons (restaurados) */}
       <div className="absolute top-5 left-6 flex items-center gap-2">
-        <BlueRingIcon className="h-8 w-8" />
-        <div className="flex items-baseline gap-1">
-          <span className="text-[22px] leading-none font-semibold text-black dark:text-white">TARS</span>
-          <span className="text-[24px] leading-none font-semibold bg-gradient-to-b from-blue-400 to-cyan-400 text-transparent bg-clip-text">/</span>
+        <div className="flex items-center gap-2">
+          <img 
+            src="/Logo Echo.png" 
+            alt="Echo Logo" 
+            className="w-auto"
+            style={{ height: '22.58px' }}
+          />
+          <img 
+            src="/Ai First.png" 
+            alt="AI First" 
+            className="h-6 w-auto"
+          />
         </div>
       </div>
       <div className="absolute top-5 right-6 flex items-center gap-3">
@@ -354,9 +362,9 @@ export default function HomePage() {
         style={{ gridTemplateRows: '4fr 1.6fr 3.4fr 56px' }}>
         {/* Left column: Agents (2 rows) */}
         <BentoCard
-          name="Agents"
-          description="Ecossistema de Agents"
-          href="/agents?tab=my-agents"
+          name="Criar  Worker"
+          description=" Crie seus proprio funcionarios Virtuais com a Criar  Worker"
+          href="/construtor"
           cta="Abrir Agents"
           className="col-start-1 row-start-1 row-span-2"
           background={
@@ -384,19 +392,16 @@ export default function HomePage() {
                 }}
               />
               <div className="absolute inset-0 rounded-2xl bg-white/28 dark:bg-black/40 backdrop-blur-2xl shadow-[inset_0_2px_14px_rgba(255,255,255,0.5)] dark:shadow-[inset_0_2px_14px_rgba(0,0,0,0.6)]" />
-              <span className="absolute right-4 bottom-4 text-[10px] text-muted-foreground">
-                2.981 Créditos do Agent
-              </span>
             </div>
           }
         />
 
-        {/* Center column: Tasks (3 rows - principal) */}
+        {/* Center column: Workers (3 rows - principal) */}
         <BentoCard
-          name="Tasks"
-          description="Lista de Tarefas em Andamento"
-          href="/tasks"
-          cta="Abrir Tasks"
+          name="Workers"
+          description="Seus funcionários virtuais especializados"
+          href="/agents?tab=marketplace"
+          cta="Abrir Workers"
           className="col-start-2 row-start-1 row-span-3"
           background={
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
@@ -477,10 +482,10 @@ export default function HomePage() {
 
         {/* Right column - bottom: My Workspace (2 rows) */}
         <BentoCard
-          name="My Workspace"
-          description="Área de trabalho"
-          href="/dashboard"
-          cta="Abrir Workspace"
+          name="Tasks"
+          description="Lista de Tarefas"
+          href="/tasks"
+          cta="Abrir Tasks"
           className="col-start-3 row-start-3 row-span-1"
           background={
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
@@ -703,19 +708,7 @@ export default function HomePage() {
         <Link href="/docs/introduction">Docs</Link>
       </div>
 
-      {/* Team avatars replaced with AnimatedTooltip */}
-      <div className="fixed right-6 bottom-8">
-        <AnimatedTooltip
-          items={[
-            { id: 1, name: 'AL', designation: 'Team', image: 'https://randomuser.me/api/portraits/women/68.jpg' },
-            { id: 2, name: 'BR', designation: 'Team', image: 'https://randomuser.me/api/portraits/men/32.jpg' },
-            { id: 3, name: 'CM', designation: 'Team', image: 'https://randomuser.me/api/portraits/women/65.jpg' },
-            { id: 4, name: 'DN', designation: 'Team', image: 'https://randomuser.me/api/portraits/men/12.jpg' },
-            { id: 5, name: 'ER', designation: 'Team', image: 'https://randomuser.me/api/portraits/women/43.jpg' },
-            { id: 6, name: 'FS', designation: 'Team', image: 'https://randomuser.me/api/portraits/men/75.jpg' },
-          ]}
-        />
-      </div>
+      {/* Removido: Avatares/ícones da equipe */}
     </main>
   );
 }
