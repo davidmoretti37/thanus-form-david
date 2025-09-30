@@ -67,7 +67,7 @@ async def list_api_tokens(
 ):
     """List all API tokens for the current user"""
     try:
-        client = await utils.db.client
+        client = await db.client
         
         # Get API tokens for this user
         result = await client.table('api_tokens').select('token_id, name, token_prefix, is_active, created_at, updated_at').eq('account_id', user_id).order('created_at', desc=True).execute()
@@ -87,7 +87,7 @@ async def create_api_token(
 ):
     """Create a new API token"""
     try:
-        client = await utils.db.client
+        client = await db.client
         
         # Generate token
         token, token_hash, token_prefix = generate_api_token()
@@ -130,7 +130,7 @@ async def update_api_token(
 ):
     """Update an API token"""
     try:
-        client = await utils.db.client
+        client = await db.client
         
         # Prepare update data
         update_data = {}
@@ -166,7 +166,7 @@ async def delete_api_token(
 ):
     """Delete an API token"""
     try:
-        client = await utils.db.client
+        client = await db.client
         
         # Delete token
         result = await client.table('api_tokens').delete().eq('token_id', token_id).eq('account_id', user_id).execute()
@@ -188,7 +188,7 @@ async def validate_api_token(token: str) -> Optional[str]:
     try:
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         
-        client = await utils.db.client
+        client = await db.client
         
         result = await client.table('api_tokens').select('account_id').eq('token_hash', token_hash).eq('is_active', True).execute()
         
@@ -331,7 +331,7 @@ async def list_user_agents(
 ):
     """List all agents for the current user (requires valid API key)"""
     try:
-        client = await utils.db.client
+        client = await db.client
         
         # Get all agents for this account
         result = await client.table('agents').select('*').eq('account_id', account_id).order('created_at', desc=True).execute()
@@ -384,7 +384,7 @@ async def list_available_models(
         from utils.config import config
         from services.billing import can_use_model
         
-        client = await utils.db.client
+        client = await db.client
         
         # Get available models from system configuration
         from utils.constants import MODELS, get_model_display_name
@@ -506,7 +506,7 @@ async def list_user_projects(
 ):
     """List all projects for the current user with pagination (requires valid API key)"""
     try:
-        client = await utils.db.client
+        client = await db.client
         
         # Build query with optional filtering
         query = client.table('projects').select('*').eq('account_id', account_id)
@@ -574,7 +574,7 @@ async def execute_agent(
         from utils.config import config
         from utils.constants import MODEL_NAME_ALIASES
         
-        client = await utils.db.client
+        client = await db.client
         
         # Use model from config if not specified
         model_name = execute_request.model_name
@@ -836,7 +836,7 @@ async def send_message_to_thread(
         from utils.config import config
         from utils.constants import MODEL_NAME_ALIASES
         
-        client = await utils.db.client
+        client = await db.client
         
         # Verify access to the thread and get project info
         thread_result = await client.table('threads').select('project_id, account_id').eq('thread_id', thread_id).execute()
@@ -1047,7 +1047,7 @@ async def init_and_list_sandbox(
     - If sandbox exists, ensures it's running
     - Lists up to 500 files from the sandbox workspace
     """
-    client = await utils.db.client
+    client = await db.client
     try:
         # Resolve project_id from input
         project_id: Optional[str] = body.project_id
@@ -1197,7 +1197,7 @@ async def list_sandbox_files_api(
     List files in the sandbox using API key authentication (client API).
     Mirrors the server endpoint /api/sandboxes/{sandbox_id}/files but validates by API key (account_id).
     """
-    client = await utils.db.client
+    client = await db.client
     try:
         # Resolve project_id if not provided
         if not project_id and agent_run_id:
@@ -1267,7 +1267,7 @@ async def download_sandbox_file_api(
     Download a specific file from the sandbox using API key authentication (client API).
     Mirrors the server endpoint /api/sandboxes/{sandbox_id}/files/content but validates by API key (account_id).
     """
-    client = await utils.db.client
+    client = await db.client
     try:
         # Resolve project_id if not provided
         if not project_id and agent_run_id:
@@ -1342,7 +1342,7 @@ async def stream_agent_run_api(
 ):
     """Stream the responses of an agent run using Redis Lists and Pub/Sub for API clients."""
     logger.info(f"Starting API stream for agent run: {agent_run_id}")
-    client = await utils.db.client
+    client = await db.client
 
     # Verify access to the agent run
     agent_run_data = await get_agent_run_with_access_check_api(client, agent_run_id, account_id)
@@ -1558,7 +1558,7 @@ async def get_agent_run_status_api(
 ):
     """Get agent run status for API clients."""
     logger.info(f"Getting agent run status for API: {agent_run_id}")
-    client = await utils.db.client
+    client = await db.client
     
     try:
         agent_run_data = await get_agent_run_with_access_check_api(client, agent_run_id, account_id)
@@ -1589,7 +1589,7 @@ async def get_thread_messages_api(
 ):
     """Get complete messages and responses for a thread (non-streaming)."""
     logger.info(f"Getting complete messages for thread: {thread_id}")
-    client = await utils.db.client
+    client = await db.client
     
     try:
         # Verify access to the thread
@@ -1855,7 +1855,7 @@ async def verify_whatsapp_number(
             )
         
         # Get database client
-        client = await utils.db.client
+        client = await db.client
         
         # Save to database using Supabase client
         try:
@@ -1929,7 +1929,7 @@ async def get_agent_run_result_api(
 ):
     """Get the final result/output of a completed agent run in a simplified format."""
     logger.info(f"Getting agent run result for API: {agent_run_id}")
-    client = await utils.db.client
+    client = await db.client
     
     try:
         # Verify access to the agent run
