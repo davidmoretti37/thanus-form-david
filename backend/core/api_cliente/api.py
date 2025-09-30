@@ -704,7 +704,7 @@ async def execute_agent(
         
         # Start agent execution in background
         from run_agent_background import run_agent_background
-        from services import redis
+        from core.services import redis
         
         # Register run in Redis
         instance_key = f"active_run:api:{agent_run_id}"
@@ -884,7 +884,7 @@ async def send_message_to_thread(
         
         # Start agent execution in background
         from run_agent_background import run_agent_background
-        from services import redis
+        from core.services import redis
         
         # Register run in Redis
         instance_key = f"active_run:api:{new_agent_run_id}"
