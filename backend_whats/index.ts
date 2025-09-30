@@ -623,7 +623,8 @@ const startSock = async () => {
               if (!result.success) {
                 console.log('Usuário não cadastrado:', cleanPhoneNumber);
                 await sendMessageWTyping({
-                  text: '❌ Você ainda não está com o número do celular cadastrado no Thanus. Por favor, faça seu cadastro primeiro para continuar no link '+THANUS_API_URL+'/settings/whatsapp\n\nCertifique-se que o número cadastrado está no formato 5511999999999'
+                  // text: '❌ Você ainda não está com o número do celular cadastrado no Thanus. Por favor, faça seu cadastro primeiro para continuar no link '+THANUS_API_URL+'/settings/whatsapp\n\nCertifique-se que o número cadastrado está no formato 5511999999999'
+                  text: '❌ Você ainda não está com o número do celular cadastrado no Thanus.'
                 }, senderJid);
                 return;
               }
@@ -732,7 +733,8 @@ const startSock = async () => {
                 if (!result.success) {
                   // Usuário não cadastrado
                   await sendMessageWTyping({
-                    text: '❌ Você ainda não está com o número do celular cadastrado no Thanus. Por favor, faça seu cadastro primeiro para continuar no link '+THANUS_API_URL+'/settings/whatsapp\n\nCertifique-se que o número cadastrado está no formato 5511999999999'
+                    // text: '❌ Você ainda não está com o número do celular cadastrado no Thanus. Por favor, faça seu cadastro primeiro para continuar no link '+THANUS_API_URL+'/settings/whatsapp\n\nCertifique-se que o número cadastrado está no formato 5511999999999'
+                    text: '❌ Você ainda não está com o número do celular cadastrado no Thanus.'
                   }, senderJid)
                   return
                 }
