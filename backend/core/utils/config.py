@@ -380,6 +380,10 @@ class Configuration:
         'tier_25_170_yearly_commitment': 2500,
     }
 
+        # WhatsApp API configuration
+    WHATSAPP_API_URL: Optional[str] = None
+    WHATSAPP_API_TOKEN: Optional[str] = "thanus_whats_GVpcu6z9ipOt5FtL8lZ0aL8ds05Vo6khJLsB2AlCw3o2QHvjTHCdqQjxJS9UrgbWi3ULDbhiEU2BUMFAjqbO347"
+
     @property
     def MAX_PARALLEL_AGENT_RUNS(self) -> int:
         """

@@ -68,5 +68,17 @@ services:
     depends_on:
       - backend
 
+  backend_whats:
+    build:
+      context: ./backend_whats
+      dockerfile: Dockerfile
+    ports:
+      - "3005:3005"
+    volumes:
+      - ./backend_whats/.env:/usr/src/app/.env:ro
+      - ./backend_whats/baileys_auth_info:/usr/src/app/baileys_auth_info
+    environment:
+      - NODE_ENV=production
+
 volumes:
   redis_data:
