@@ -496,12 +496,16 @@ async def execute_agent(
         client = await db.client
         
         # Use model from config if not specified
+        from core.ai_models import model_manager
+        
         model_name = execute_request.model_name
         if model_name is None:
-            model_name = config.MODEL_TO_USE
-        
-        # Resolve model aliases using the model registry
-        model_name = registry.resolve_model_id(model_name) or model_name
+            model_name = "openrouter/deepseek/deepseek-chat-v3.1"  # Default model
+            
+        # Resolve model aliases using the model manager
+        resolved_model = model_manager.resolve_model_id(model_name)
+        logger.debug(f"Resolved model name: {resolved_model}")
+        model_name = resolved_model
         
         logger.info(f"Executing agent via API for account {account_id} with model {model_name}")
         
@@ -728,6 +732,8 @@ async def execute_agent(
             is_agent_builder=False,
             target_agent_id=None,
             request_id=str(uuid.uuid4()),
+            enable_prompt_caching=False,
+            is_continuation=False
         )
         
         logger.info(f"Successfully initiated agent execution via API for account {account_id}")
@@ -787,7 +793,7 @@ async def send_message_to_thread(
             recent_agent_version_id = recent_run.get('agent_version_id')
         
         # Use provided values or fall back to previous execution settings
-        model_name = send_request.model_name or previous_metadata.get('model_name') or config.MODEL_TO_USE
+        model_name = send_request.model_name or previous_metadata.get('model_name') or 'openrouter/deepseek/deepseek-chat-v3.1'
         enable_thinking = send_request.enable_thinking if send_request.enable_thinking is not None else previous_metadata.get('enable_thinking', False)
         reasoning_effort = send_request.reasoning_effort or previous_metadata.get('reasoning_effort', 'low')
         enable_context_manager = send_request.enable_context_manager if send_request.enable_context_manager is not None else previous_metadata.get('enable_context_manager', False)
