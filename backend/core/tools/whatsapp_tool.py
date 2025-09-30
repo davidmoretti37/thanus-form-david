@@ -4,11 +4,11 @@ import json
 import zipfile
 import io
 from typing import Optional, Dict, Any, List
-from agentpress.tool import ToolResult, ToolSchema, SchemaType, openapi_schema, usage_example
-from agentpress.thread_manager import ThreadManager
-from sandbox.tool_base import SandboxToolsBase
-from utils.logger import logger
-from utils.config import config
+from core.agentpress.tool import ToolResult, ToolSchema, SchemaType, openapi_schema, usage_example
+from core.agentpress.thread_manager import ThreadManager
+from core.sandbox.tool_base import SandboxToolsBase
+from core.utils.logger import logger
+from core.utils.config import config
 
 class WhatsAppTool(SandboxToolsBase):
     """Tool for sending files via WhatsApp."""
