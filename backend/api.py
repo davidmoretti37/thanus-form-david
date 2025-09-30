@@ -30,7 +30,7 @@ import sys
 from core.services import email_api
 from core.triggers import api as triggers_api
 from core.services import api_keys_api
-from api_cliente.api import router as api_cliente_router, initialize as initialize_api_cliente
+from core.api_cliente import api as api_cliente_api
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
@@ -73,7 +73,7 @@ async def lifespan(app: FastAPI):
         credentials_api.initialize(db)
         template_api.initialize(db)
         composio_api.initialize(db)
-        initialize_api_cliente(db)
+        api_cliente_api.initialize(db)
         
         yield
         
@@ -226,7 +226,7 @@ async def health_check():
 
 
 app.include_router(api_router, prefix="/api")
-app.include_router(api_cliente_router, prefix="/api/user-api")
+app.include_router(api_cliente_api.router, prefix="/api/user-api")
 app.include_router(billing_router)
 app.include_router(transcription_api.router)
 
