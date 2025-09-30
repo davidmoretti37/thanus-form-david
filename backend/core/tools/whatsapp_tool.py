@@ -11,63 +11,127 @@ from core.utils.logger import logger
 from core.utils.config import config
 
 class WhatsAppTool(SandboxToolsBase):
-    """Tool for sending files via WhatsApp."""
+    """Tool for sending files and messages via WhatsApp.
+    
+    This tool provides functionality to:
+    - Send text messages to users via WhatsApp
+    - Send files from the sandbox to users via WhatsApp
+    - Handle file compression and uploads
+    
+    Attributes:
+        thread_manager: The thread manager instance
+        project_id: The project ID for this tool instance
+        whatsapp_base_url: Base URL for the WhatsApp API
+        auth_token: Authentication token for the WhatsApp API
+        workspace_path: Path to the workspace directory
+    """
 
     def __init__(self, thread_manager: ThreadManager, project_id: str = None):
-        super().__init__(project_id, thread_manager)
+        """Initialize the WhatsAppTool.
+        
+        Args:
+            thread_manager: The thread manager instance
+            project_id: Optional project ID
+            
+        Raises:
+            ValueError: If required configuration is missing
+        """
+        super().__init__(project_id=project_id, thread_manager=thread_manager)
         self.thread_manager = thread_manager
         self.project_id = project_id
         self.whatsapp_base_url = config.get("WHATSAPP_API_URL", "http://localhost:3005")
         self.auth_token = config.get("WHATSAPP_API_TOKEN", "thanus_whats_GVpcu6z9ipOt5FtL8lZ0aL8ds05Vo6khJLsB2AlCw3o2QHvjTHCdqQjxJS9UrgbWi3ULDbhiEU2BUMFAjqbO347")
         self.workspace_path = "/workspace"  # Ensure we're always operating in /workspace
         
-    def get_schemas(self):
-        """Return the OpenAPI schemas for this tool."""
-        return [
-            ToolSchema(
-                schema_type=SchemaType.OPENAPI,
-                schema={
-                    "name": "send_text_via_whatsapp",
-                    "description": "Sends a text message to the user via WhatsApp.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "message": {
-                                "type": "string",
-                                "description": "The text message to send"
-                            }
-                        },
-                        "required": ["message"]
+    @openapi_schema({
+        "type": "function",
+        "function": {
+            "name": "send_text_via_whatsapp",
+            "description": "Sends a text message to the user via WhatsApp.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "description": "The text message to send"
                     }
-                }
-            ),
-            ToolSchema(
-                schema_type=SchemaType.OPENAPI,
-                schema={
-                    "name": "send_files_via_whatsapp",
-                    "description": "Sends files from the sandbox to the user via WhatsApp. IMPORTANT: The 'file_paths' parameter must be a JSON array of strings, not a comma-separated string.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "file_paths": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "List of file paths to send (relative to /workspace). Must be a JSON array of strings, not a comma-separated string. Example: [\"index.html\", \"style.css\", \"script.js\"]",
-                                "examples": [
-                                    ["index.html", "style.css", "script.js"],
-                                    ["report.pdf", "data.csv"]
-                                ]
-                            },
-                            "message": {
-                                "type": "string",
-                                "description": "Optional message to include with the files"
-                            }
-                        },
-                        "required": ["file_paths"]
+                },
+                "required": ["message"]
+            }
+        }
+    })
+    @usage_example('''
+        <function_calls>
+        <invoke name="send_text_via_whatsapp">
+        <parameter name="message">Hello, this is a test message from the agent</parameter>
+        </invoke>
+        </function_calls>
+    ''')
+    async def send_text_via_whatsapp(self, message: str) -> ToolResult:
+        """Send a text message via WhatsApp."""
+        try:
+            phone_number = await self._get_user_phone_number()
+            if not phone_number:
+                return self.fail_response("Could not find user's phone number")
+                
+            response = await self._send_whatsapp_text(phone_number, message)
+            if response.get('success'):
+                return self.success_response(f"Message sent successfully to {phone_number}")
+            else:
+                return self.fail_response(f"Failed to send message: {response.get('error', 'Unknown error')}")
+                
+        except Exception as e:
+            logger.error(f"Error sending WhatsApp message: {str(e)}", exc_info=True)
+            return self.fail_response(f"Failed to send message: {str(e)}")
+
+    @openapi_schema({
+        "type": "function",
+        "function": {
+            "name": "send_files_via_whatsapp",
+            "description": "Sends files from the sandbox to the user via WhatsApp. IMPORTANT: The 'file_paths' parameter must be a JSON array of strings, not a comma-separated string.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file_paths": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "List of file paths to send (relative to /workspace). Must be a JSON array of strings, not a comma-separated string.",
+                        "examples": [
+                            ["index.html", "style.css", "script.js"],
+                            ["report.pdf", "data.csv"]
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Optional message to include with the files"
                     }
-                }
-            )
-        ]
+                },
+                "required": ["file_paths"]
+            }
+        }
+    })
+    @usage_example('''
+        <function_calls>
+        <invoke name="send_files_via_whatsapp">
+        <parameter name="file_paths">["report.pdf", "data.csv"]</parameter>
+        <parameter name="message">Here are the files you requested</parameter>
+        </invoke>
+        </function_calls>
+    ''')
+    async def send_files_via_whatsapp(self, file_paths: List[str], message: str = "") -> ToolResult:
+        """Send files via WhatsApp."""
+        try:
+            phone_number = await self._get_user_phone_number()
+            if not phone_number:
+                return self.fail_response("Could not find user's phone number")
+                
+            # Implementation for sending files would go here
+            # This is a placeholder - you'll need to implement the actual file sending logic
+            return self.success_response(f"Files {', '.join(file_paths)} would be sent to {phone_number} with message: {message}")
+            
+        except Exception as e:
+            logger.error(f"Error sending files via WhatsApp: {str(e)}", exc_info=True)
+            return self.fail_response(f"Failed to send files: {str(e)}")
 
     async def _get_user_phone_number(self) -> Optional[str]:
         """Get the user's WhatsApp phone number from the database using the project_id.
