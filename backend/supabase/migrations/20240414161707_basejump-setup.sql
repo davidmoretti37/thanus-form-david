@@ -80,12 +80,12 @@ GRANT SELECT ON basejump.config TO authenticated, service_role;
 ALTER TABLE basejump.config
     ENABLE ROW LEVEL SECURITY;
 
-create policy "Basejump settings can be read by authenticated users" on basejump.config
-    for select
-    to authenticated
-    using (
-    true
-    );
+-- create policy "Basejump settings can be read by authenticated users" on basejump.config
+--     for select
+--     to authenticated
+--     using (
+--     true
+--     );
 
 /**
   * -------------------------------------------------------

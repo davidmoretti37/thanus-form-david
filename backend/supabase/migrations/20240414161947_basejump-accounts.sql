@@ -65,11 +65,11 @@ CREATE TABLE IF NOT EXISTS basejump.accounts
 
 -- constraint that conditionally allows nulls on the slug ONLY if personal_account is true
 -- remove this if you want to ignore accounts slugs entirely
-ALTER TABLE basejump.accounts
-    ADD CONSTRAINT basejump_accounts_slug_null_if_personal_account_true CHECK (
-            (personal_account = true AND slug is null)
-            OR (personal_account = false AND slug is not null)
-        );
+-- ALTER TABLE basejump.accounts
+--     ADD CONSTRAINT basejump_accounts_slug_null_if_personal_account_true CHECK (
+--             (personal_account = true AND slug is null)
+--             OR (personal_account = false AND slug is not null)
+--         );
 
 -- Open up access to accounts
 GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE basejump.accounts TO authenticated, service_role;
@@ -99,11 +99,11 @@ END
 $$ LANGUAGE plpgsql;
 
 -- trigger to protect account fields
-CREATE TRIGGER basejump_protect_account_fields
-    BEFORE UPDATE
-    ON basejump.accounts
-    FOR EACH ROW
-EXECUTE FUNCTION basejump.protect_account_fields();
+-- CREATE TRIGGER basejump_protect_account_fields
+--     BEFORE UPDATE
+--     ON basejump.accounts
+--     FOR EACH ROW
+-- EXECUTE FUNCTION basejump.protect_account_fields();
 
 -- convert any character in the slug that's not a letter, number, or dash to a dash on insert/update for accounts
 CREATE OR REPLACE FUNCTION basejump.slugify_account_slug()
@@ -119,29 +119,29 @@ END
 $$ LANGUAGE plpgsql;
 
 -- trigger to slugify the account slug
-CREATE TRIGGER basejump_slugify_account_slug
-    BEFORE INSERT OR UPDATE
-    ON basejump.accounts
-    FOR EACH ROW
-EXECUTE FUNCTION basejump.slugify_account_slug();
+-- CREATE TRIGGER basejump_slugify_account_slug
+--     BEFORE INSERT OR UPDATE
+--     ON basejump.accounts
+--     FOR EACH ROW
+-- EXECUTE FUNCTION basejump.slugify_account_slug();
 
 -- enable RLS for accounts
 alter table basejump.accounts
     enable row level security;
 
--- protect the timestamps
-CREATE TRIGGER basejump_set_accounts_timestamp
-    BEFORE INSERT OR UPDATE
-    ON basejump.accounts
-    FOR EACH ROW
-EXECUTE PROCEDURE basejump.trigger_set_timestamps();
+-- -- protect the timestamps
+-- CREATE TRIGGER basejump_set_accounts_timestamp
+--     BEFORE INSERT OR UPDATE
+--     ON basejump.accounts
+--     FOR EACH ROW
+-- EXECUTE PROCEDURE basejump.trigger_set_timestamps();
 
 -- set the user tracking
-CREATE TRIGGER basejump_set_accounts_user_tracking
-    BEFORE INSERT OR UPDATE
-    ON basejump.accounts
-    FOR EACH ROW
-EXECUTE PROCEDURE basejump.trigger_set_user_tracking();
+-- CREATE TRIGGER basejump_set_accounts_user_tracking
+--     BEFORE INSERT OR UPDATE
+--     ON basejump.accounts
+--     FOR EACH ROW
+-- EXECUTE PROCEDURE basejump.trigger_set_user_tracking();
 
 /**
   * Account users are the users that are associated with an account.
@@ -188,11 +188,11 @@ end;
 $$;
 
 -- trigger the function whenever a new account is created
-CREATE TRIGGER basejump_add_current_user_to_new_account
-    AFTER INSERT
-    ON basejump.accounts
-    FOR EACH ROW
-EXECUTE FUNCTION basejump.add_current_user_to_new_account();
+-- CREATE TRIGGER basejump_add_current_user_to_new_account
+--     AFTER INSERT
+--     ON basejump.accounts
+--     FOR EACH ROW
+-- EXECUTE FUNCTION basejump.add_current_user_to_new_account();
 
 /**
   * When a user signs up, we need to create a personal account for them
@@ -229,11 +229,11 @@ end;
 $$;
 
 -- trigger the function every time a user is created
-create trigger on_auth_user_created
-    after insert
-    on auth.users
-    for each row
-execute procedure basejump.run_new_user_setup();
+-- create trigger on_auth_user_created
+--     after insert
+--     on auth.users
+--     for each row
+-- execute procedure basejump.run_new_user_setup();
 
 /**
   * -------------------------------------------------------
@@ -300,61 +300,61 @@ grant execute on function basejump.get_accounts_with_role(basejump.account_role)
   * This is where we define access to tables in the basejump schema
  */
 
-create policy "users can view their own account_users" on basejump.account_user
-    for select
-    to authenticated
-    using (
-    user_id = auth.uid()
-    );
+-- create policy "users can view their own account_users" on basejump.account_user
+--     for select
+--     to authenticated
+--     using (
+--     user_id = auth.uid()
+--     );
 
-create policy "users can view their teammates" on basejump.account_user
-    for select
-    to authenticated
-    using (
-    basejump.has_role_on_account(account_id) = true
-    );
+-- create policy "users can view their teammates" on basejump.account_user
+--     for select
+--     to authenticated
+--     using (
+--     basejump.has_role_on_account(account_id) = true
+--     );
 
-create policy "Account users can be deleted by owners except primary account owner" on basejump.account_user
-    for delete
-    to authenticated
-    using (
-        (basejump.has_role_on_account(account_id, 'owner') = true)
-        AND
-        user_id != (select primary_owner_user_id
-                    from basejump.accounts
-                    where account_id = accounts.id)
-    );
+-- create policy "Account users can be deleted by owners except primary account owner" on basejump.account_user
+--     for delete
+--     to authenticated
+--     using (
+--         (basejump.has_role_on_account(account_id, 'owner') = true)
+--         AND
+--         user_id != (select primary_owner_user_id
+--                     from basejump.accounts
+--                     where account_id = accounts.id)
+--     );
 
-create policy "Accounts are viewable by members" on basejump.accounts
-    for select
-    to authenticated
-    using (
-    basejump.has_role_on_account(id) = true
-    );
+-- create policy "Accounts are viewable by members" on basejump.accounts
+--     for select
+--     to authenticated
+--     using (
+--     basejump.has_role_on_account(id) = true
+--     );
 
--- Primary owner should always have access to the account
-create policy "Accounts are viewable by primary owner" on basejump.accounts
-    for select
-    to authenticated
-    using (
-    primary_owner_user_id = auth.uid()
-    );
+-- -- Primary owner should always have access to the account
+-- create policy "Accounts are viewable by primary owner" on basejump.accounts
+--     for select
+--     to authenticated
+--     using (
+--     primary_owner_user_id = auth.uid()
+--     );
 
-create policy "Team accounts can be created by any user" on basejump.accounts
-    for insert
-    to authenticated
-    with check (
-            basejump.is_set('enable_team_accounts') = true
-        and personal_account = false
-    );
+-- create policy "Team accounts can be created by any user" on basejump.accounts
+--     for insert
+--     to authenticated
+--     with check (
+--             basejump.is_set('enable_team_accounts') = true
+--         and personal_account = false
+--     );
 
 
-create policy "Accounts can be edited by owners" on basejump.accounts
-    for update
-    to authenticated
-    using (
-    basejump.has_role_on_account(id, 'owner') = true
-    );
+-- create policy "Accounts can be edited by owners" on basejump.accounts
+--     for update
+--     to authenticated
+--     using (
+--     basejump.has_role_on_account(id, 'owner') = true
+--     );
 
 /**
   * -------------------------------------------------------

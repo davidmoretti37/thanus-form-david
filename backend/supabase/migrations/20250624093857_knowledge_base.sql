@@ -53,34 +53,34 @@ CREATE INDEX IF NOT EXISTS idx_kb_usage_used_at ON knowledge_base_usage_log(used
 ALTER TABLE knowledge_base_entries ENABLE ROW LEVEL SECURITY;
 ALTER TABLE knowledge_base_usage_log ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY kb_entries_user_access ON knowledge_base_entries
-    FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM threads t
-            LEFT JOIN projects p ON t.project_id = p.project_id
-            WHERE t.thread_id = knowledge_base_entries.thread_id
-            AND (
-                basejump.has_role_on_account(t.account_id) = true OR 
-                basejump.has_role_on_account(p.account_id) = true OR
-                basejump.has_role_on_account(knowledge_base_entries.account_id) = true
-            )
-        )
-    );
+-- CREATE POLICY kb_entries_user_access ON knowledge_base_entries
+--     FOR ALL
+--     USING (
+--         EXISTS (
+--             SELECT 1 FROM threads t
+--             LEFT JOIN projects p ON t.project_id = p.project_id
+--             WHERE t.thread_id = knowledge_base_entries.thread_id
+--             AND (
+--                 basejump.has_role_on_account(t.account_id) = true OR 
+--                 basejump.has_role_on_account(p.account_id) = true OR
+--                 basejump.has_role_on_account(knowledge_base_entries.account_id) = true
+--             )
+--         )
+--     );
 
-CREATE POLICY kb_usage_log_user_access ON knowledge_base_usage_log
-    FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM threads t
-            LEFT JOIN projects p ON t.project_id = p.project_id
-            WHERE t.thread_id = knowledge_base_usage_log.thread_id
-            AND (
-                basejump.has_role_on_account(t.account_id) = true OR 
-                basejump.has_role_on_account(p.account_id) = true
-            )
-        )
-    );
+-- CREATE POLICY kb_usage_log_user_access ON knowledge_base_usage_log
+--     FOR ALL
+--     USING (
+--         EXISTS (
+--             SELECT 1 FROM threads t
+--             LEFT JOIN projects p ON t.project_id = p.project_id
+--             WHERE t.thread_id = knowledge_base_usage_log.thread_id
+--             AND (
+--                 basejump.has_role_on_account(t.account_id) = true OR 
+--                 basejump.has_role_on_account(p.account_id) = true
+--             )
+--         )
+--     );
 
 CREATE OR REPLACE FUNCTION get_thread_knowledge_base(
     p_thread_id UUID,
@@ -182,10 +182,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_kb_entries_updated_at
-    BEFORE UPDATE ON knowledge_base_entries
-    FOR EACH ROW
-    EXECUTE FUNCTION update_kb_entry_timestamp();
+-- CREATE TRIGGER trigger_kb_entries_updated_at
+--     BEFORE UPDATE ON knowledge_base_entries
+--     FOR EACH ROW
+--     EXECUTE FUNCTION update_kb_entry_timestamp();
 
 CREATE OR REPLACE FUNCTION calculate_kb_entry_tokens()
 RETURNS TRIGGER AS $$
@@ -195,10 +195,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trigger_kb_entries_calculate_tokens
-    BEFORE INSERT ON knowledge_base_entries
-    FOR EACH ROW
-    EXECUTE FUNCTION calculate_kb_entry_tokens();
+-- CREATE TRIGGER trigger_kb_entries_calculate_tokens
+--     BEFORE INSERT ON knowledge_base_entries
+--     FOR EACH ROW
+--     EXECUTE FUNCTION calculate_kb_entry_tokens();
 
 GRANT ALL PRIVILEGES ON TABLE knowledge_base_entries TO authenticated, service_role;
 GRANT ALL PRIVILEGES ON TABLE knowledge_base_usage_log TO authenticated, service_role;
