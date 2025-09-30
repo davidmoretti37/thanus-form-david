@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Optional, Dict, Any, Union
 import hashlib
+from core.ai_models.registry import registry
 import secrets
 import uuid
 import json
@@ -395,10 +396,10 @@ async def list_available_models(
         for model_info in model_infos:
             accessible_models.append(ModelInfo(
                 name=model_info["id"],
-                display_name=model_info["display_name"],
+                display_name=model_info["name"],  # Changed from display_name to name
                 provider=model_info["provider"],
                 description=model_info.get("description", f"{model_info['provider']} AI model"),
-                max_tokens=model_info.get("max_tokens"),
+                max_tokens=model_info.get("context_window"),  # Changed from max_tokens to context_window
                 supports_thinking=model_info.get("supports_thinking", False),
                 supports_vision=model_info.get("supports_vision", False)
             ))
@@ -543,7 +544,7 @@ async def execute_agent(
             version_data = None
             if agent_data.get('current_version_id'):
                 try:
-                    from agent.versioning.version_service import get_version_service
+                    from core.versioning.version_service import get_version_service
                     version_service = await get_version_service()
                     version_obj = await version_service.get_version(
                         agent_id=execute_request.agent_id,
@@ -556,7 +557,7 @@ async def execute_agent(
                     logger.warning(f"Failed to get version data: {e}")
             
             # Extract agent configuration
-            from agent.config_helper import extract_agent_config
+            from core.config_helper import extract_agent_config
             agent_config = extract_agent_config(agent_data, version_data)
             
             if version_data:
@@ -575,7 +576,7 @@ async def execute_agent(
                 version_data = None
                 if agent_data.get('current_version_id'):
                     try:
-                        from agent.versioning.version_service import get_version_service
+                        from core.versioning.version_service import get_version_service
                         version_service = await get_version_service()
                         version_obj = await version_service.get_version(
                             agent_id=agent_data['agent_id'],
@@ -587,7 +588,7 @@ async def execute_agent(
                     except Exception as e:
                         logger.warning(f"Failed to get default agent version data: {e}")
                 
-                from agent.config_helper import extract_agent_config
+                from core.config_helper import extract_agent_config
                 agent_config = extract_agent_config(agent_data, version_data)
                 
                 if version_data:
@@ -762,7 +763,6 @@ async def send_message_to_thread(
 ):
     """Send a new message to an existing thread to continue the conversation (requires valid API key)"""
     try:
-        from utils.config import config
         
         client = await db.client
         
@@ -832,7 +832,7 @@ async def send_message_to_thread(
                 version_data = None
                 if agent_data.get('current_version_id'):
                     try:
-                        from agent.versioning.version_service import get_version_service
+                        from core.versioning.version_service import get_version_service
                         version_service = await get_version_service()
                         version_obj = await version_service.get_version(
                             agent_id=recent_agent_id,
@@ -845,7 +845,7 @@ async def send_message_to_thread(
                         logger.warning(f"Failed to get version data: {e}")
                 
                 # Extract agent configuration
-                from agent.config_helper import extract_agent_config
+                from core.config_helper import extract_agent_config
                 agent_config = extract_agent_config(agent_data, version_data)
                 
                 logger.info(f"Using agent {agent_config['name']} ({recent_agent_id}) for continued conversation")
