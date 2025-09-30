@@ -9,10 +9,75 @@ from core.utils.auth_utils import verify_and_get_user_id_from_jwt, verify_and_au
 from core.utils.logger import logger
 from core.sandbox.sandbox import create_sandbox, delete_sandbox
 
-from .api_models import CreateThreadResponse, MessageCreateRequest
+from .api_models import CreateThreadResponse, MessageCreateRequest, ActiveThread
+from core.utils.auth_utils import verify_and_get_user_id_from_jwt
 from . import core_utils as utils
 
 router = APIRouter()
+
+
+@router.get("/user/active-threads")
+async def get_user_active_threads(
+    user_id: str = Depends(verify_and_get_user_id_from_jwt)
+):
+    """
+    Get all active threads (with running agent runs) for the authenticated user.
+    
+    Args:
+        user_id: ID of the authenticated user (automatically extracted from JWT)
+        
+    Returns:
+        List of active threads with additional information:
+        - thread_id
+        - project_id
+        - project_name
+        - updated_at
+        - agent_run_id
+    """
+    logger.info(f"Fetching active threads for authenticated user: {user_id}")
+    
+    try:
+        client = await utils.db.client
+        
+        # Buscar threads do usuário que têm agent_runs ativos
+        # Usando uma única consulta com join implícito
+        threads_result = await client.from_('threads')\
+            .select('thread_id, project_id, updated_at, projects(name), agent_runs!inner(id)')\
+            .eq('account_id', user_id)\
+            .eq('agent_runs.status', 'running')\
+            .execute()
+        
+        if not threads_result.data:
+            logger.info(f"No active threads found for user {user_id}")
+            return {"threads": []}
+        
+        # Processar os resultados
+        active_threads = []
+        for thread in threads_result.data:
+            # Obter informações do agent run
+            agent_run = thread.get('agent_runs', [{}])[0] if thread.get('agent_runs') else {}
+            
+            # Obter o nome do projeto
+            project = thread.get('projects', {})
+            project_name = project.get('name', 'Untitled Project') if project else 'Untitled Project'
+            
+            active_thread = {
+                "thread_id": thread['thread_id'],
+                "project_id": thread['project_id'],
+                "project_name": project_name,
+                "updated_at": thread.get('updated_at'),
+                "agent_run_id": agent_run.get('id')
+            }
+            active_threads.append(active_thread)
+        
+        logger.info(f"Found {len(active_threads)} active threads for user {user_id}")
+        return {"threads": active_threads}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching active threads: {str(e)}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error fetching active threads: {str(e)}")
 
 @router.get("/threads")
 async def get_user_threads(

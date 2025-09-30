@@ -27,6 +27,7 @@ from .threads import (
     InitiateAgentResponse,
     CreateThreadResponse,
     MessageCreateRequest,
+    ActiveThread,
 )
 
 from .imports import (

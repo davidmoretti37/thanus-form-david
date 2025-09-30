@@ -295,6 +295,18 @@ export function SidebarLeft({
                           <span>New Agent</span>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton 
+                          className={cn('pl-3 touch-manipulation', {
+                            'bg-accent text-accent-foreground font-medium': pathname === '/running-agents',
+                          })} 
+                          asChild
+                        >
+                          <Link href="/multi-computer" onClick={() => isMobile && setOpenMobile(false)}>
+                            <span>Multi Computer</span>
+                          </Link>
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </CollapsibleContent>
                 </SidebarMenuItem>

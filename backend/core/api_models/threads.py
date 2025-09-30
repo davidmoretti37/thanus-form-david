@@ -32,3 +32,10 @@ class MessageCreateRequest(BaseModel):
     type: str
     content: str
     is_llm_message: bool = True
+
+class ActiveThread(BaseModel):
+    thread_id: str
+    project_id: str
+    project_name: str
+    updated_at: str
+    agent_run_id: str

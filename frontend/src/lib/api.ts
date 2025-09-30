@@ -1931,6 +1931,57 @@ export interface ReactivateSubscriptionResponse {
   };
 }
 
+export interface ActiveThread {
+  thread_id: string;
+  project_id: string;
+  project_name: string;
+  updated_at: string;
+  agent_run_id: string;
+}
+
+export const getUserActiveThreads = async (): Promise<ActiveThread[]> => {
+  try {
+    const supabase = createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new Error('No access token available');
+    }
+
+    const response = await fetch(`${API_URL}/user/active-threads`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const errorText = await response
+        .text()
+        .catch(() => 'No error details available');
+      console.error(
+        `Error getting active threads: ${response.status} ${response.statusText}`,
+        errorText,
+      );
+      throw new Error(
+        `Error getting active threads: ${response.statusText} (${response.status})`,
+      );
+    }
+
+    const data = await response.json();
+    return data.threads || [];
+  } catch (error) {
+    console.error('Failed to get active threads:', error);
+    handleApiError(error, {
+      operation: 'load active threads',
+      resource: 'active threads',
+    });
+    throw error;
+  }
+};
+
 // Billing API Functions
 export const createCheckoutSession = async (
   request: CreateCheckoutSessionRequest,

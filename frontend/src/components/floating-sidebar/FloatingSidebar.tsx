@@ -11,7 +11,8 @@ import {
   Plug,
   ListTodo,
   Bot,
-  Flower2
+  Flower2,
+  Monitor
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import BlueRingIcon from '@/components/ui/blue-ring-icon';
@@ -21,7 +22,7 @@ import BlueRingIcon from '@/components/ui/blue-ring-icon';
  * Minimal floating vertical menu on the left side, applied globally.
  * Matches the attached reference: rounded vertical bar with stacked icons.
  */
-export function FloatingSidebar() {
+export default function FloatingSidebar() {
   const pathname = usePathname();
   const isExcalidrawFull = pathname === '/artefatos/criar';
 
@@ -50,6 +51,7 @@ export function FloatingSidebar() {
     { href: '/agents?tab=my-agents', icon: Bot, label: 'Agents' },
     // Knowledge (pastas) - abaixo de Agents
     { href: '/knowledge', icon: Flower2, label: 'Jardim do conhecimento' },
+    { href: '/multi-computer', icon: Monitor, label: 'Multi Computer' },
     // Integrations
     { href: '/settings/credentials', icon: Plug, label: 'Integrations' },
     // Settings (last)
@@ -108,4 +110,3 @@ export function FloatingSidebar() {
   );
 }
 
-export default FloatingSidebar;

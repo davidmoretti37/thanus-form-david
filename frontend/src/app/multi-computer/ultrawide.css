@@ -1,0 +1,36 @@
+/* Custom CSS for ultrawide monitor support */
+
+/* Removed fixed column count for ultrawide monitors - now handled dynamically in JS */
+
+/* Ensure full width for ultrawide displays */
+@media (min-width: 1920px) {
+  .grid-container {
+    max-width: 100% !important;
+    padding: 0 2rem !important;
+  }
+}
+
+/* Adjust card heights for different column counts */
+.card-height-normal {
+  height: 500px;
+}
+
+.card-height-compact {
+  height: 450px;
+}
+
+/* Responsive animation for grid layout changes */
+@keyframes grid-transition {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.grid-layout-change {
+  animation: grid-transition 0.3s ease-out;
+}
