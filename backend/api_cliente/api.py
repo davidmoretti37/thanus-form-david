@@ -8,14 +8,13 @@ import uuid
 import json
 import asyncio
 from datetime import datetime
-from utils.auth_utils import verify_and_get_user_id_from_jwt, get_user_id_from_stream_auth
+from core.utils.auth_utils import verify_and_get_user_id_from_jwt, get_user_id_from_stream_auth
 from services.supabase import DBConnection
 from services import redis
-from utils.logger import logger
-from utils.config import config
+from core.utils.logger import logger
+from core.utils.config import config
 import httpx
 from daytona_sdk import SessionExecuteRequest
-from core.utils.auth_utils import verify_and_get_user_id_from_jwt
 
 router = APIRouter()
 
