@@ -32,7 +32,7 @@ class TemplateService:
         filters: MarketplaceFilters
     ) -> PaginatedResponse[Dict[str, Any]]:
         try:
-            logger.debug(f"Fetching marketplace templates with filters: {filters.__dict__}")
+            # logger.debug(f"Fetching marketplace templates with filters: {filters.__dict__}")
             
             from ..template_service import get_template_service
             from ..utils import format_template_for_response
@@ -90,7 +90,11 @@ class TemplateService:
             )
                 
         except Exception as e:
-            logger.error(f"Error fetching marketplace templates: {e}", exc_info=True)
+            try:
+                error_str = str(e)
+            except Exception:
+                error_str = f"Error of type {type(e).__name__}"
+            logger.error(f"Error fetching marketplace templates: {error_str}")
             raise
 
     async def get_user_templates_paginated(
@@ -118,8 +122,7 @@ class TemplateService:
                 search_term = filters.search.lower()
                 filtered_templates = [
                     t for t in filtered_templates 
-                    if (search_term in t.name.lower() if t.name else False) or 
-                       (search_term in t.description.lower() if t.description else False)
+                    if (search_term in t.name.lower() if t.name else False)
                 ]
             
             if filters.tags:
@@ -166,7 +169,11 @@ class TemplateService:
             )
                 
         except Exception as e:
-            logger.error(f"Error fetching user templates: {e}", exc_info=True)
+            try:
+                error_str = str(e)
+            except Exception:
+                error_str = f"Error of type {type(e).__name__}"
+            logger.error(f"Error fetching user templates: {error_str}")
             raise
 
     def _build_marketplace_base_query(self, filters: MarketplaceFilters):
@@ -174,7 +181,7 @@ class TemplateService:
         
         if filters.search:
             search_term = f"%{filters.search}%"
-            query = query.or_(f"name.ilike.{search_term},description.ilike.{search_term}")
+            query = query.ilike("name", search_term)
         
         if filters.is_kortix_team is not None:
             query = query.eq('is_kortix_team', filters.is_kortix_team)
@@ -204,7 +211,7 @@ class TemplateService:
         
         if filters.search:
             search_term = f"%{filters.search}%"
-            query = query.or_(f"name.ilike.{search_term},description.ilike.{search_term}")
+            query = query.ilike("name", search_term)
         
         if filters.is_kortix_team is not None:
             query = query.eq('is_kortix_team', filters.is_kortix_team)
@@ -228,7 +235,7 @@ class TemplateService:
         
         if filters.search:
             search_term = f"%{filters.search}%"
-            query = query.or_(f"name.ilike.{search_term},description.ilike.{search_term}")
+            query = query.ilike("name", search_term)
         
         if filters.tags:
             for tag in filters.tags:
@@ -256,7 +263,7 @@ class TemplateService:
         
         if filters.search:
             search_term = f"%{filters.search}%"
-            query = query.or_(f"name.ilike.{search_term},description.ilike.{search_term}")
+            query = query.ilike("name", search_term)
             
         if filters.tags:
             for tag in filters.tags:

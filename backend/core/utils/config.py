@@ -268,12 +268,8 @@ class Configuration:
     OR_SITE_URL: Optional[str] = "https://tars.ai"
     OR_APP_NAME: Optional[str] = "Tars"    
     
-    # AWS Bedrock credentials
-    AWS_ACCESS_KEY_ID: Optional[str] = None
-    AWS_SECRET_ACCESS_KEY: Optional[str] = None
-    AWS_REGION_NAME: Optional[str] = None
-    
-
+    # AWS Bedrock authentication
+    AWS_BEARER_TOKEN_BEDROCK: Optional[str] = None
     
     # Supabase configuration
     SUPABASE_URL: str
@@ -299,6 +295,7 @@ class Configuration:
     CLOUDFLARE_API_TOKEN: Optional[str] = None
     FIRECRAWL_API_KEY: str
     FIRECRAWL_URL: Optional[str] = "https://api.firecrawl.dev"
+    EXA_API_KEY: Optional[str] = None
     
     # Stripe configuration
     STRIPE_SECRET_KEY: Optional[str] = None
@@ -311,8 +308,8 @@ class Configuration:
     STRIPE_PRODUCT_ID_STAGING: str = 'prod_SCgIj3G7yPOAWY'
     
     # Sandbox configuration
-    SANDBOX_IMAGE_NAME = "kortix/suna:0.1.3.19"
-    SANDBOX_SNAPSHOT_NAME = "kortix/suna:0.1.3.19"
+    SANDBOX_IMAGE_NAME = "kortix/suna:0.1.3.20"
+    SANDBOX_SNAPSHOT_NAME = "kortix/suna:0.1.3.20"
     SANDBOX_ENTRYPOINT = "/usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf"
 
     # LangFuse configuration

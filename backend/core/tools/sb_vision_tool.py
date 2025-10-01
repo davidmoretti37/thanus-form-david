@@ -1,6 +1,8 @@
 import os
 import base64
 import mimetypes
+import uuid
+from datetime import datetime
 from typing import Optional, Tuple
 from io import BytesIO
 from PIL import Image
@@ -9,8 +11,13 @@ from core.agentpress.tool import ToolResult, openapi_schema, usage_example
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager
 from core.tools.image_context_manager import ImageContextManager
+from core.services.supabase import DBConnection
 import json
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPM
+import tempfile
 import requests
+from core.utils.config import config
 
 # Add common image MIME types if mimetypes module is limited
 mimetypes.add_type("image/webp", ".webp")
@@ -38,8 +45,79 @@ class SandboxVisionTool(SandboxToolsBase):
         # Make thread_manager accessible within the tool instance
         self.thread_manager = thread_manager
         self.image_context_manager = ImageContextManager(thread_manager)
+        self.db = DBConnection()
 
-    def compress_image(self, image_bytes: bytes, mime_type: str, file_path: str) -> Tuple[bytes, str]:
+    async def convert_svg_with_sandbox_browser(self, svg_full_path: str) -> Tuple[bytes, str]:
+        """Convert SVG to PNG using sandbox browser API for better rendering support.
+        
+        Args:
+            svg_full_path: Full path to SVG file in sandbox
+            
+        Returns:
+            Tuple of (png_bytes, 'image/png')
+        """
+        try:
+            
+            # Ensure sandbox is initialized
+            await self._ensure_sandbox()
+            
+            env_vars = {"GEMINI_API_KEY": config.GEMINI_API_KEY}
+            init_response = await self.sandbox.process.exec(
+                "curl -s -X POST 'http://localhost:8004/api/init' -H 'Content-Type: application/json' -d '{\"api_key\": \"'$GEMINI_API_KEY'\"}'",
+                timeout=30,
+                env=env_vars
+            )
+            
+            if init_response.exit_code != 0:
+                raise Exception(f"Failed to initialize browser: {init_response.result}")
+            
+            try:
+                init_data = json.loads(init_response.result)
+                if init_data.get("status") not in ["healthy", "initialized"]:
+                    raise Exception(f"Browser initialization failed: {init_data}")
+            except json.JSONDecodeError:
+                # Assume success if we can't parse response
+                pass
+            
+            # Now call the browser API conversion endpoint
+            params = {
+                "svg_file_path": svg_full_path
+            }
+            
+            # Build curl command to call sandbox browser API
+            url = "http://localhost:8004/api/convert-svg"
+            json_data = json.dumps(params)
+            curl_cmd = f"curl -s -X POST '{url}' -H 'Content-Type: application/json' -d '{json_data}'"
+            
+            # Execute the API call
+            response = await self.sandbox.process.exec(curl_cmd, timeout=30)
+            
+            if response.exit_code == 0:
+                try:
+                    response_data = json.loads(response.result)
+                    
+                    if response_data.get("success"):
+                        # Extract the base64 screenshot
+                        screenshot_base64 = response_data.get("screenshot_base64")
+                        if screenshot_base64:
+                            png_bytes = base64.b64decode(screenshot_base64)
+                            print(f"[SeeImage] Converted SVG '{os.path.basename(svg_full_path)}' to PNG using sandbox browser")
+                            return png_bytes, 'image/png'
+                        else:
+                            raise Exception("No screenshot data in browser response")
+                    else:
+                        error_msg = response_data.get("error", "Unknown browser conversion error")
+                        raise Exception(f"Browser conversion failed: {error_msg}")
+                        
+                except json.JSONDecodeError:
+                    raise Exception(f"Invalid JSON response from browser API: {response.result}")
+            else:
+                raise Exception(f"Browser API call failed with exit code {response.exit_code}: {response.result}")
+                
+        except Exception as e:
+            raise Exception(f"Sandbox browser-based SVG conversion failed: {str(e)}")
+    
+    async def compress_image(self, image_bytes: bytes, mime_type: str, file_path: str) -> Tuple[bytes, str]:
         """Compress an image to reduce its size while maintaining reasonable quality.
         
         Args:
@@ -51,6 +129,48 @@ class SandboxVisionTool(SandboxToolsBase):
             Tuple of (compressed_bytes, new_mime_type)
         """
         try:
+            # Handle SVG conversion first (before PIL processing)
+            if mime_type == 'image/svg+xml' or file_path.lower().endswith('.svg'):
+                # Try browser-based conversion first (better quality)
+                try:
+                    # Construct full sandbox path from the relative file_path
+                    full_svg_path = f"{self.workspace_path}/{file_path}"
+                    png_bytes, png_mime = await self.convert_svg_with_sandbox_browser(full_svg_path)
+                    image_bytes = png_bytes
+                    mime_type = png_mime
+                except Exception as browser_error:
+                    print(f"[SeeImage] Browser-based SVG conversion failed: {browser_error}")
+                    
+                    # Fallback to svglib approach
+                    try:
+                        
+                        # Create temporary SVG file for svglib
+                        with tempfile.NamedTemporaryFile(suffix='.svg', delete=False) as temp_svg:
+                            temp_svg.write(image_bytes)
+                            temp_svg_path = temp_svg.name
+                        
+                        try:
+                            # Convert SVG to PNG using svglib + reportlab
+                            drawing = svg2rlg(temp_svg_path)
+                            png_buffer = BytesIO()
+                            renderPM.drawToFile(drawing, png_buffer, fmt='PNG')
+                            png_bytes = png_buffer.getvalue()
+                            
+                            print(f"[SeeImage] Converted SVG '{file_path}' to PNG using fallback method (svglib)")
+                            # Update for PIL processing
+                            image_bytes = png_bytes
+                            mime_type = 'image/png'
+                        finally:
+                            # Clean up temporary file
+                            os.unlink(temp_svg_path)
+                            
+                    except ImportError:
+                        print(f"[SeeImage] SVG conversion not available - using original SVG file '{file_path}'")
+                        return image_bytes, mime_type
+                    except Exception as e:
+                        print(f"[SeeImage] SVG conversion failed - using original SVG file '{file_path}': {str(e)}")
+                        return image_bytes, mime_type
+            
             # Open image from bytes
             img = Image.open(BytesIO(image_bytes))
             
@@ -85,7 +205,7 @@ class SandboxVisionTool(SandboxToolsBase):
                 img.save(output, format='PNG', optimize=True, compress_level=DEFAULT_PNG_COMPRESS_LEVEL)
                 output_mime = 'image/png'
             else:
-                # Convert everything else to JPEG for better compression
+                # Convert everything else to JPEG for better compression (converted SVGs stay PNG above)
                 img.save(output, format='JPEG', quality=DEFAULT_JPEG_QUALITY, optimize=True)
                 output_mime = 'image/jpeg'
             
@@ -151,7 +271,7 @@ class SandboxVisionTool(SandboxToolsBase):
                 "properties": {
                     "file_path": {
                         "type": "string",
-                        "description": "Either a relative path to the image file within the /workspace directory (e.g., 'screenshots/image.png') or a URL to an image (e.g., 'https://example.com/image.jpg'). Supported formats: JPG, PNG, GIF, WEBP. Max size: 10MB."
+                        "description": "Either a relative path to the image file within the /workspace directory (e.g., 'screenshots/image.png') or a URL to an image (e.g., 'https://example.com/image.jpg'). Supported formats: JPG, PNG, GIF, WEBP, SVG. Max size: 10MB. SVG files are automatically converted to PNG using browser rendering for best quality."
                     }
                 },
                 "required": ["file_path"]
@@ -219,26 +339,75 @@ class SandboxVisionTool(SandboxToolsBase):
                     elif ext == '.png': mime_type = 'image/png'
                     elif ext == '.gif': mime_type = 'image/gif'
                     elif ext == '.webp': mime_type = 'image/webp'
+                    elif ext == '.svg': mime_type = 'image/svg+xml'
                     else:
-                        return self.fail_response(f"Unsupported or unknown image format for file: '{cleaned_path}'. Supported: JPG, PNG, GIF, WEBP.")
+                        return self.fail_response(f"Unsupported or unknown image format for file: '{cleaned_path}'. Supported: JPG, PNG, GIF, WEBP, SVG.")
                 
                 original_size = file_info.size
             
 
             # Compress the image
-            compressed_bytes, compressed_mime_type = self.compress_image(image_bytes, mime_type, cleaned_path)
+            compressed_bytes, compressed_mime_type = await self.compress_image(image_bytes, mime_type, cleaned_path)
             
             # Check if compressed image is still too large
             if len(compressed_bytes) > MAX_COMPRESSED_SIZE:
                 return self.fail_response(f"Image file '{cleaned_path}' is still too large after compression ({len(compressed_bytes) / (1024*1024):.2f}MB). Maximum compressed size is {MAX_COMPRESSED_SIZE / (1024*1024)}MB.")
 
-            # Convert to base64
-            base64_image = base64.b64encode(compressed_bytes).decode('utf-8')
+            # For SVG files that were converted to PNG, save the converted PNG to sandbox
+            if (mime_type == 'image/svg+xml' or cleaned_path.lower().endswith('.svg')) and compressed_mime_type == 'image/png':
+                # Create PNG filename by replacing .svg extension
+                png_filename = cleaned_path.rsplit('.', 1)[0] + '_converted.png'
+                png_full_path = f"{self.workspace_path}/{png_filename}"
+                
+                try:
+                    # Save converted PNG to sandbox
+                    await self.sandbox.fs.upload_file(compressed_bytes, png_full_path)
+                    cleaned_path = png_filename
+                    print(f"[SeeImage] Saved converted PNG to sandbox as '{png_filename}' for frontend display")
+                except Exception as e:
+                    print(f"[SeeImage] Warning: Could not save converted PNG to sandbox: {e}")
+                    # Continue with original path if save fails
 
-            # Add the image to context using the dedicated manager
+            # Upload to Supabase Storage instead of base64
+            try:
+                # Generate unique filename
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                unique_id = str(uuid.uuid4())[:8]
+                
+                # Determine file extension from mime type
+                ext_map = {
+                    'image/jpeg': 'jpg',
+                    'image/png': 'png',
+                    'image/gif': 'gif',
+                    'image/webp': 'webp'
+                }
+                ext = ext_map.get(compressed_mime_type, 'jpg')
+                
+                # Create filename from original path
+                base_filename = os.path.splitext(os.path.basename(cleaned_path))[0]
+                storage_filename = f"loaded_images/{base_filename}_{timestamp}_{unique_id}.{ext}"
+                
+                # Upload to Supabase storage (public bucket for LLM access)
+                client = await self.db.client
+                storage_response = await client.storage.from_('image-uploads').upload(
+                    storage_filename,
+                    compressed_bytes,
+                    {"content-type": compressed_mime_type}
+                )
+                
+                # Get public URL
+                public_url = await client.storage.from_('image-uploads').get_public_url(storage_filename)
+                
+                print(f"[LoadImage] Uploaded image to S3: {public_url}")
+                
+            except Exception as upload_error:
+                print(f"[LoadImage] Failed to upload to S3: {upload_error}")
+                return self.fail_response(f"Failed to upload image to cloud storage: {str(upload_error)}")
+
+            # Add the image to context using the public URL
             result = await self.image_context_manager.add_image_to_context(
                 thread_id=self.thread_id,
-                base64_data=base64_image,
+                image_url=public_url,
                 mime_type=compressed_mime_type,
                 file_path=cleaned_path,
                 original_size=original_size,
@@ -248,8 +417,14 @@ class SandboxVisionTool(SandboxToolsBase):
             if not result:
                 return self.fail_response(f"Failed to add image '{cleaned_path}' to conversation context.")
 
-            # Inform the agent the image will be available next turn
-            return self.success_response(f"Successfully loaded and compressed the image '{cleaned_path}' (reduced from {original_size / 1024:.1f}KB to {len(compressed_bytes) / 1024:.1f}KB).")
+            # Return structured output like other tools
+            result_data = {
+                "message": f"Successfully loaded image '{cleaned_path}' and uploaded to cloud storage (reduced from {original_size / 1024:.1f}KB to {len(compressed_bytes) / 1024:.1f}KB). Using public URL instead of base64 for efficient token usage.",
+                "file_path": cleaned_path,
+                "image_url": public_url
+            }
+            
+            return self.success_response(result_data)
 
         except Exception as e:
             return self.fail_response(f"An unexpected error occurred while trying to see the image: {str(e)}")

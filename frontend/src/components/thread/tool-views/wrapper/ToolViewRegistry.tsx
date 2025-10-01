@@ -11,6 +11,10 @@ import { StrReplaceToolView } from '../str-replace/StrReplaceToolView';
 import { WebCrawlToolView } from '../WebCrawlToolView';
 import { WebScrapeToolView } from '../web-scrape-tool/WebScrapeToolView';
 import { WebSearchToolView } from '../web-search-tool/WebSearchToolView';
+import { PeopleSearchToolView } from '../people-search-tool/PeopleSearchToolView';
+import { CompanySearchToolView } from '../company-search-tool/CompanySearchToolView';
+import { PaperSearchToolView } from '../paper-search-tool/PaperSearchToolView';
+import { DocumentParserToolView } from '../document-parser-tool/DocumentParserToolView';
 import { SeeImageToolView } from '../see-image-tool/SeeImageToolView';
 import { TerminateCommandToolView } from '../command-tool/TerminateCommandToolView';
 import { AskToolView } from '../ask-tool/AskToolView';
@@ -34,7 +38,7 @@ import { PresentationViewer } from '../presentation-tools/PresentationViewer';
 import { ListPresentationsToolView } from '../presentation-tools/ListPresentationsToolView';
 import { DeleteSlideToolView } from '../presentation-tools/DeleteSlideToolView';
 import { DeletePresentationToolView } from '../presentation-tools/DeletePresentationToolView';
-import { PresentationStylesToolView } from '../presentation-tools/PresentationStylesToolView';
+// import { PresentationStylesToolView } from '../presentation-tools/PresentationStylesToolView';
 import { PresentPresentationToolView } from '../presentation-tools/PresentPresentationToolView';
 import { SheetsToolView } from '../sheets-tools/sheets-tool-view';
 import { GetProjectStructureView } from '../web-dev/GetProjectStructureView';
@@ -77,9 +81,14 @@ const defaultRegistry: ToolViewRegistryType = {
   'read-file': FileOperationToolView,
   'edit-file': FileEditToolView,
 
+  'parse-document': DocumentParserToolView,
+
   'str-replace': StrReplaceToolView,
 
   'web-search': WebSearchToolView,
+  'people-search': PeopleSearchToolView,
+  'company-search': CompanySearchToolView,
+  'paper-search': PaperSearchToolView,
   'crawl-webpage': WebCrawlToolView,
   'scrape-webpage': WebScrapeToolView,
   'image-search': WebSearchToolView,
@@ -125,7 +134,7 @@ const defaultRegistry: ToolViewRegistryType = {
   'list-presentations': ListPresentationsToolView,
   'delete-slide': DeleteSlideToolView,
   'delete-presentation': DeletePresentationToolView,
-  'presentation-styles': PresentationStylesToolView,
+  // 'presentation-styles': PresentationStylesToolView,
   'present-presentation': PresentPresentationToolView,
 
   'create-sheet': SheetsToolView,
@@ -253,7 +262,7 @@ export function ToolView({ name = 'default', assistantContent, toolContent, ...p
     'list-slides',
     'delete-slide',
     'delete-presentation',
-    'presentation-styles',
+    // 'presentation-styles',
     'present-presentation',
   ]
 

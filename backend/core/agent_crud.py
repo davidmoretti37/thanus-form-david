@@ -5,6 +5,7 @@ from core.utils.auth_utils import verify_and_get_user_id_from_jwt
 from core.utils.logger import logger
 from core.utils.config import config, EnvMode
 from core.utils.pagination import PaginationParams
+from core.utils.core_tools_helper import ensure_core_tools_enabled
 from core.ai_models import model_manager
 
 from .api_models import (
@@ -28,7 +29,6 @@ async def update_agent(
     # Debug logging for icon fields
     if config.ENV_MODE == EnvMode.STAGING:
         print(f"[DEBUG] update_agent: Received icon fields - icon_name={agent_data.icon_name}, icon_color={agent_data.icon_color}, icon_background={agent_data.icon_background}")
-        print(f"[DEBUG] update_agent: Also received - profile_image_url={agent_data.profile_image_url}")
     
     client = await utils.db.client
     
@@ -215,8 +215,6 @@ async def update_agent(
         update_data = {}
         if agent_data.name is not None:
             update_data["name"] = agent_data.name
-        if agent_data.description is not None:
-            update_data["description"] = agent_data.description
         if agent_data.is_default is not None:
             update_data["is_default"] = agent_data.is_default
             if agent_data.is_default:
@@ -261,6 +259,7 @@ async def update_agent(
             current_custom_mcps = current_version_data.get('custom_mcps', [])
 
         current_agentpress_tools = agent_data.agentpress_tools if agent_data.agentpress_tools is not None else current_version_data.get('agentpress_tools', {})
+        current_agentpress_tools = ensure_core_tools_enabled(current_agentpress_tools)
         new_version_id = None
         if needs_new_version:
             try:
@@ -319,7 +318,6 @@ async def update_agent(
         
         print(f"[DEBUG] update_agent AFTER UPDATE FETCH: agent_id={agent.get('agent_id')}")
         print(f"[DEBUG] update_agent AFTER UPDATE FETCH: icon_name={agent.get('icon_name')}, icon_color={agent.get('icon_color')}, icon_background={agent.get('icon_background')}")
-        print(f"[DEBUG] update_agent AFTER UPDATE FETCH: profile_image_url={agent.get('profile_image_url')}")
         print(f"[DEBUG] update_agent AFTER UPDATE FETCH: All keys in agent: {agent.keys()}")
         
         current_version = None
@@ -389,7 +387,6 @@ async def update_agent(
         response = AgentResponse(
             agent_id=agent['agent_id'],
             name=agent['name'],
-            description=agent.get('description'),
             system_prompt=system_prompt,
             configured_mcps=configured_mcps,
             custom_mcps=custom_mcps,
@@ -397,7 +394,6 @@ async def update_agent(
             is_default=agent.get('is_default', False),
             is_public=agent.get('is_public', False),
             tags=agent.get('tags', []),
-            profile_image_url=agent_config.get('profile_image_url'),
             icon_name=agent_config.get('icon_name'),
             icon_color=agent_config.get('icon_color'),
             icon_background=agent_config.get('icon_background'),
@@ -412,7 +408,6 @@ async def update_agent(
 
         print(f"[DEBUG] update_agent FINAL RESPONSE: agent_id={response.agent_id}")
         print(f"[DEBUG] update_agent FINAL RESPONSE: icon_name={response.icon_name}, icon_color={response.icon_color}, icon_background={response.icon_background}")
-        print(f"[DEBUG] update_agent FINAL RESPONSE: profile_image_url={response.profile_image_url}")
         print(f"[DEBUG] update_agent FINAL RESPONSE: Full response dict keys: {response.dict().keys()}")
         
         return response
@@ -493,7 +488,7 @@ async def get_agents(
     user_id: str = Depends(verify_and_get_user_id_from_jwt),
     page: Optional[int] = Query(1, ge=1, description="Page number (1-based)"),
     limit: Optional[int] = Query(20, ge=1, le=100, description="Number of items per page"),
-    search: Optional[str] = Query(None, description="Search in name and description"),
+    search: Optional[str] = Query(None, description="Search in name"),
     sort_by: Optional[str] = Query("created_at", description="Sort field: name, created_at, updated_at, tools_count"),
     sort_order: Optional[str] = Query("desc", description="Sort order: asc, desc"),
     has_default: Optional[bool] = Query(None, description="Filter by default agents"),
@@ -574,7 +569,6 @@ async def get_agent(agent_id: str, user_id: str = Depends(verify_and_get_user_id
         
         if config.ENV_MODE == EnvMode.STAGING:
             print(f"[DEBUG] get_agent: Fetched agent from DB - icon_name={agent_data.get('icon_name')}, icon_color={agent_data.get('icon_color')}, icon_background={agent_data.get('icon_background')}")
-            print(f"[DEBUG] get_agent: Also has - profile_image_url={agent_data.get('profile_image_url')}")
         
         if agent_data['account_id'] != user_id and not agent_data.get('is_public', False):
             raise HTTPException(status_code=403, detail="Access denied")
@@ -660,7 +654,6 @@ async def get_agent(agent_id: str, user_id: str = Depends(verify_and_get_user_id
             is_default=agent_data.get('is_default', False),
             is_public=agent_data.get('is_public', False),
             tags=agent_data.get('tags', []),
-            profile_image_url=agent_config.get('profile_image_url'),
             icon_name=agent_config.get('icon_name'),
             icon_color=agent_config.get('icon_color'),
             icon_background=agent_config.get('icon_background'),
@@ -709,7 +702,6 @@ async def create_agent(
         insert_data = {
             "account_id": user_id,
             "name": agent_data.name,
-            "description": agent_data.description,
             "icon_name": agent_data.icon_name or "bot",
             "icon_color": agent_data.icon_color or "#000000",
             "icon_background": agent_data.icon_background or "#F3F4F6",
@@ -736,6 +728,7 @@ async def create_agent(
             system_prompt = SUNA_CONFIG["system_prompt"]
             
             agentpress_tools = agent_data.agentpress_tools if agent_data.agentpress_tools else _get_default_agentpress_tools()
+            agentpress_tools = ensure_core_tools_enabled(agentpress_tools)
             
             default_model = await model_manager.get_default_model_for_user(client, user_id)
             
@@ -782,7 +775,6 @@ async def create_agent(
         response = AgentResponse(
             agent_id=agent['agent_id'],
             name=agent['name'],
-            description=agent.get('description'),
             system_prompt=version.system_prompt,
             model=version.model,
             configured_mcps=version.configured_mcps,
@@ -791,7 +783,6 @@ async def create_agent(
             is_default=agent.get('is_default', False),
             is_public=agent.get('is_public', False),
             tags=agent.get('tags', []),
-            profile_image_url=agent.get('profile_image_url'),
             icon_name=agent.get('icon_name'),
             icon_color=agent.get('icon_color'),
             icon_background=agent.get('icon_background'),
@@ -805,7 +796,6 @@ async def create_agent(
         
         if config.ENV_MODE == EnvMode.STAGING:
             print(f"[DEBUG] create_agent RESPONSE: Returning icon_name={response.icon_name}, icon_color={response.icon_color}, icon_background={response.icon_background}")
-            print(f"[DEBUG] create_agent RESPONSE: Also returning profile_image_url={response.profile_image_url}")
         
         return response
         
@@ -821,15 +811,14 @@ async def generate_agent_icon(
     request: AgentIconGenerationRequest,
     user_id: str = Depends(verify_and_get_user_id_from_jwt)
 ):
-    """Generate an appropriate icon and colors for an agent based on its name and description."""
+    """Generate an appropriate icon and colors for an agent based on its name."""
     logger.debug(f"Generating icon and colors for agent: {request.name}")
     
     try:
         from .core_utils import generate_agent_icon_and_colors
         
         result = await generate_agent_icon_and_colors(
-            name=request.name,
-            description=request.description
+            name=request.name
         )
         
         response = AgentIconGenerationResponse(

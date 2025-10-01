@@ -219,7 +219,7 @@ export function HeroSection({ hero, cta }: HeroSectionProps) {
   // Handle ChatInput submission
   const handleChatInputSubmit = async (
     message: string,
-    options?: { model_name?: string; enable_thinking?: boolean }
+    options?: { model_name?: string }
   ) => {
     if ((!message.trim() && !chatInputRef.current?.getPendingFiles().length) || isSubmitting) return;
 
@@ -251,9 +251,7 @@ export function HeroSection({ hero, cta }: HeroSectionProps) {
       });
 
       if (options?.model_name) formData.append('model_name', options.model_name);
-      formData.append('enable_thinking', String(options?.enable_thinking ?? false));
-      formData.append('reasoning_effort', 'low');
-      formData.append('stream', 'true');
+      formData.append('stream', 'true'); // Always stream for better UX
       formData.append('enable_context_manager', 'false');
 
       const result = await initiateAgentMutation.mutateAsync(formData);
