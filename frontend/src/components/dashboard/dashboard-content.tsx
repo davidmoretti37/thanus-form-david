@@ -39,36 +39,49 @@ import { useDashboardTour } from '@/hooks/use-dashboard-tour';
 import { TourConfirmationDialog } from '@/components/tour/TourConfirmationDialog';
 import { Calendar, MessageSquare, Plus, Sparkles, Zap } from 'lucide-react';
 import { AgentConfigurationDialog } from '@/components/agents/agent-configuration-dialog';
+import { t, detectClientLanguage, type LanguageCode } from '@/lib/i18n';
+import { LanguageSelectorSimple } from '@/components/ui/language-selector-simple';
+
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
-const dashboardTourSteps: Step[] = [
-  {
-    target: '[data-tour="chat-input"]',
-    content: 'Type your questions or tasks here. Tars can help with research, analysis, automation, and much more.',
-    title: 'Start a Conversation',
-    placement: 'top',
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tour="my-agents"]',
-    content: 'Create and manage your custom AI agents here. Build specialized agents for different tasks and workflows.',
-    title: 'Manage Your Agents',
-    placement: 'right',
-    disableBeacon: true,
-  },
-  {
-    target: '[data-tour="examples"]',
-    content: 'Get started quickly with these example prompts. Click any example to try it out.',
-    title: 'Example Prompts',
-    placement: 'top',
-    disableBeacon: true,
-  },
-];
+  const dashboardTourSteps: Step[] = [
+    {
+      target: '[data-tour="chat-input"]',
+      content: 'Type your questions or tasks here. Tars can help with research, analysis, automation, and much more.',
+      title: 'Start a Conversation',
+      placement: 'top',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="my-agents"]',
+      content: 'Create and manage your custom AI agents here. Build specialized agents for different tasks and workflows.',
+      title: 'Manage Your Agents',
+      placement: 'right',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="examples"]',
+      content: 'Get started quickly with these example prompts. Click any example to try it out.',
+      title: 'Example Prompts',
+      placement: 'top',
+      disableBeacon: true,
+    }
+  ];
 
 type DashboardContentProps = { evaMode?: 'only' | 'exclude' };
 
 export function DashboardContent({ evaMode }: DashboardContentProps) {
+
+  
+  // Language state
+  const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
+
+  // Initialize language
+  useEffect(() => {
+    const lang = detectClientLanguage();
+    setCurrentLang(lang);
+  }, []);
   const [inputValue, setInputValue] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfigDialog, setShowConfigDialog] = useState(false);
@@ -379,6 +392,10 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
       <div className="flex flex-col h-screen w-full overflow-hidden">
         <div className="flex-1 overflow-y-auto">
           <div className="min-h-full flex flex-col">
+            {/* Language Selector - Wrapped in a client component */}
+            <div className="absolute top-4 right-4 z-10">
+              <LanguageSelectorSimple variant="icon" />
+            </div>
             {/* {(
               <div className="flex justify-center px-4 pt-4 md:pt-8">
                 <ReleaseBadge className='hover:cursor-pointer' text="Custom Agents, Playbooks, and more!" link="/agents?tab=my-agents" />
@@ -392,9 +409,9 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
                     data-tour="dashboard-title"
                   >
                     {evaMode === 'only' ? (
-                      <> What will you bring to <span className="text-green-400">life</span> today? </>
+                      <>{t('dashboard.question', currentLang).replace('?', '')} <span className="text-green-400">life</span>?</>
                     ) : (
-                      'What would you like to do today?'
+                      t('dashboard.question', currentLang)
                     )}
                   </p>
                 </div>
@@ -403,7 +420,7 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
                     ref={chatInputRef}
                     onSubmit={handleSubmit}
                     loading={isSubmitting || isRedirecting}
-                    placeholder="Describe what you need help with..."
+                    placeholder={t('dashboard.placeholder', currentLang) || 'Describe what you need help with...'}
                     value={inputValue}
                     onChange={setInputValue}
                     hideAttachments={false}
