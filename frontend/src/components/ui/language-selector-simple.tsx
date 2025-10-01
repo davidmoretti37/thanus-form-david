@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Languages, Check, ChevronDown } from 'lucide-react';
-import { setLanguage, getCurrentLanguage, type LanguageCode } from '@/lib/i18n';
+import { setLanguage, getCurrentLanguage, type LanguageCode } from '../../lib/i18n';
 
 const languageMap: Record<LanguageCode, { nativeName: string }> = {
   en: { nativeName: 'English' },

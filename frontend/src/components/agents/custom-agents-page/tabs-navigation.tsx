@@ -3,6 +3,7 @@
 import React from 'react';
 import { Bot, ShoppingBag, FileText, Plus } from 'lucide-react';
 import { FancyTabs, TabConfig } from '@/components/ui/fancy-tabs';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TabsNavigationProps {
   activeTab: string;
@@ -14,12 +15,12 @@ const agentTabs: TabConfig[] = [
   {
     value: 'my-agents',
     icon: Bot,
-    label: 'My Agents',
+    label: 'Meus Agentes',
   },
   {
     value: 'marketplace',
     icon: ShoppingBag,
-    label: 'Marketplace',
+    label: 'Mercado',
   },
 ];
 
@@ -28,7 +29,7 @@ export const TabsNavigation = ({ activeTab, onTabChange, onCreateAgent }: TabsNa
     if (onCreateAgent) {
       return [
         ...agentTabs,
-        { value: 'create-agent', icon: Plus, label: 'Create Agent' }
+        { value: 'create-agent', icon: Plus, label: 'Criar Agente' }
       ];
     }
     return agentTabs;

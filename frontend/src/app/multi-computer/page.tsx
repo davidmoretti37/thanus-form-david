@@ -226,33 +226,33 @@ export default function MultiComputerPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <div className="fixed top-4 left-4 z-50">
+      <div className="fixed top-6 left-8 z-50">
         <Button
           variant="ghost"
-          size="sm"
+          size="default"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
             router.push('/dashboard');
           }}
-          className="h-10 px-4 py-2 rounded-lg bg-background/30 backdrop-blur-md hover:bg-background/50 transition-all border border-purple-500/20 shadow-lg flex items-center gap-2"
+          className="h-12 px-6 py-3 rounded-xl bg-background/40 backdrop-blur-md hover:bg-background/60 transition-all border border-blue-500/30 shadow-xl flex items-center gap-2 group"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="text-purple-400"
+            className="text-blue-400 group-hover:text-blue-300 transition-colors"
           >
             <path d="m12 19-7-7 7-7" />
             <path d="M19 12H5" />
           </svg>
-          <span className="text-xs text-purple-300">Back</span>
+          <span className="text-sm font-medium text-blue-300 group-hover:text-white transition-colors">Voltar ao Dashboard</span>
         </Button>
       </div>
 
@@ -261,21 +261,21 @@ export default function MultiComputerPage() {
           variant="ghost"
           size="sm"
           onClick={loadThreads}
-          className="h-10 w-10 p-0 rounded-full bg-background/30 backdrop-blur-md hover:bg-background/50 transition-all border border-purple-500/20 shadow-lg"
+          className="h-10 w-10 p-0 rounded-full bg-background/30 backdrop-blur-md hover:bg-background/50 transition-all border border-blue-500/20 shadow-lg"
         >
-          <RefreshCw className="h-5 w-5 text-purple-400" />
+          <RefreshCw className="h-5 w-5 text-blue-400" />
         </Button>
       </div>
 
       {totalPages > 1 && (
         <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex items-center gap-2">
-          <div className="bg-background/30 backdrop-blur-md border border-purple-500/20 rounded-lg shadow-lg flex items-center">
+          <div className="bg-background/30 backdrop-blur-md border border-blue-500/20 rounded-lg shadow-lg flex items-center">
             <Button
               variant="ghost"
               size="sm"
               onClick={prevPage}
               disabled={currentPage === 0}
-              className="h-10 px-4 py-2 text-purple-300 hover:bg-background/50 transition-all disabled:opacity-50"
+              className="h-10 px-4 py-2 text-blue-300 hover:bg-background/50 transition-all disabled:opacity-50"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -294,7 +294,7 @@ export default function MultiComputerPage() {
               Prev
             </Button>
 
-            <div className="px-4 py-2 text-xs text-purple-300">
+            <div className="px-4 py-2 text-xs text-blue-300">
               {currentPage + 1} / {totalPages}
             </div>
 
@@ -303,7 +303,7 @@ export default function MultiComputerPage() {
               size="sm"
               onClick={nextPage}
               disabled={currentPage === totalPages - 1}
-              className="h-10 px-4 py-2 text-purple-300 hover:bg-background/50 transition-all disabled:opacity-50"
+              className="h-10 px-4 py-2 text-blue-300 hover:bg-background/50 transition-all disabled:opacity-50"
             >
               Next
               <svg
@@ -325,10 +325,10 @@ export default function MultiComputerPage() {
         </div>
       )}
 
-      <main className="w-full p-6 pt-16">
+      <main className="w-full p-10 pt-32 pl-16 pr-8">
         {threads.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-purple-100/50 dark:bg-purple-900/20 border border-purple-200/50 dark:border-purple-800/30">
+            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-blue-100/50 dark:bg-blue-900/20 border border-blue-200/50 dark:border-blue-800/30">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -339,7 +339,7 @@ export default function MultiComputerPage() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-purple-500 dark:text-purple-400"
+                className="text-blue-500 dark:text-blue-400"
               >
                 <rect width="14" height="8" x="5" y="2" rx="2" />
                 <rect width="20" height="8" x="2" y="14" rx="2" />
@@ -357,7 +357,7 @@ export default function MultiComputerPage() {
               onClick={loadThreads}
               variant="outline"
               size="sm"
-              className="border-purple-500/20 text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+              className="border-blue-500/20 text-blue-400 hover:bg-blue-500/10 hover:text-blue-300"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
@@ -396,7 +396,7 @@ export default function MultiComputerPage() {
                       ? 'card-height-compact'
                       : 'card-height-normal',
                     thread.isRunning
-                      ? 'border-purple-500/50 bg-background/40 backdrop-blur-sm'
+                      ? 'border-blue-500/50 bg-background/40 backdrop-blur-sm'
                       : 'border-border/30 bg-background/20 backdrop-blur-sm',
                   )}
                   onClick={(e) => {
@@ -412,7 +412,7 @@ export default function MultiComputerPage() {
                   }}
                 >
                   <div className="absolute bottom-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="bg-purple-600/80 backdrop-blur-md rounded-full p-2 shadow-lg border border-purple-400/30 flex items-center justify-center">
+                    <div className="bg-blue-600/80 backdrop-blur-md rounded-full p-2 shadow-lg border border-blue-400/30 flex items-center justify-center">
                       <MessageSquare className="h-5 w-5 text-white" />
                     </div>
                   </div>

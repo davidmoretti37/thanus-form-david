@@ -1,22 +1,14 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
-import {
-  MessageCircle,
-  Wrench,
-  Plug,
-  ListTodo,
-  Bot,
-  Flower2,
-  Monitor,
-  MessageSquare
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
-import BlueRingIcon from '@/components/ui/blue-ring-icon';
+import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Bot, Flower2, ListTodo, MessageCircle, MessageSquare, Monitor, Plug, Wrench } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import BlueRingIcon from "@/components/ui/blue-ring-icon";
 
 /**
  * FloatingSidebar
@@ -25,7 +17,20 @@ import BlueRingIcon from '@/components/ui/blue-ring-icon';
  */
 export default function FloatingSidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const isExcalidrawFull = pathname === '/artefatos/criar';
+  
+  // Memoize the items to prevent unnecessary re-renders
+  const items = [
+    { href: '/dashboard', icon: MessageCircle, label: t('floatingSidebar.chat') },
+    { href: '/tasks', icon: ListTodo, label: t('floatingSidebar.tasks') },
+    { href: '/agents?tab=my-agents', icon: Bot, label: t('floatingSidebar.agents') },
+    { href: '/knowledge', icon: Flower2, label: t('floatingSidebar.knowledge') },
+    { href: '/multi-computer', icon: Monitor, label: t('floatingSidebar.multiComputer') },
+    { href: '/settings/whatsapp', icon: MessageSquare, label: t('floatingSidebar.whatsapp') },
+    { href: '/settings/credentials', icon: Plug, label: t('floatingSidebar.integrations') },
+    { href: '/settings', icon: Wrench, label: t('floatingSidebar.settings') },
+  ];
 
   // Render in a portal to avoid parent transforms breaking position: fixed (e.g., marketplace)
   const [mounted, setMounted] = useState(false);
@@ -42,24 +47,6 @@ export default function FloatingSidebar() {
   }, []);
   if (!mounted || !portalEl) return null;
 
-  // Try to keep links stable using existing routes in the project
-  const items = [
-    // Chat bubble -> Dashboard chat area
-    { href: '/dashboard', icon: MessageCircle, label: 'Chat' },
-    // Tasks (second item)
-    { href: '/tasks', icon: ListTodo, label: 'Tasks' },
-    // Agents
-    { href: '/agents?tab=my-agents', icon: Bot, label: 'Agents' },
-    // Knowledge (pastas) - abaixo de Agents
-    { href: '/knowledge', icon: Flower2, label: 'Jardim do conhecimento' },
-    { href: '/multi-computer', icon: Monitor, label: 'Multi Computer' },
-    // WhatsApp
-    { href: '/settings/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
-    // Integrations
-    { href: '/settings/credentials', icon: Plug, label: 'Integrations' },
-    // Settings (last)
-    { href: '/settings', icon: Wrench, label: 'Settings' },
-  ];
 
   return createPortal(
     <div

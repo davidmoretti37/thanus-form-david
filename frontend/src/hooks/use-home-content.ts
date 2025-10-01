@@ -25,15 +25,20 @@ export const useHomeContent = () => {
       description: t('home.hero.description'),
       inputPlaceholder: t('home.hero.inputPlaceholder'),
     },
-    cloudPricingItems: staticSiteConfig.cloudPricingItems.map((item) => ({
-      ...item,
-      name: t(`home.pricing.${item.name.toLowerCase()}.name`),
-      description: t(`home.pricing.${item.name.toLowerCase()}.description`),
-      buttonText: t(`home.pricing.${item.name.toLowerCase()}.buttonText`),
-      features: item.features.map((_, index) => 
-        t(`home.pricing.${item.name.toLowerCase()}.features.${index}`)
-      ),
-    })),
+    cloudPricingItems: staticSiteConfig.cloudPricingItems.map((item) => {
+      const pricingItemName = item.name.toLowerCase() as 'basic' | 'pro' | 'enterprise' | 'self-hosted';
+      const baseKey = `home.pricing.${pricingItemName}` as const;
+      
+      return {
+        ...item,
+        name: t(`${baseKey}.name` as const),
+        description: t(`${baseKey}.description` as const),
+        buttonText: t(`${baseKey}.buttonText` as const),
+        features: item.features.map((_, index) => 
+          t(`${baseKey}.features.${index}` as const)
+        ),
+      };
+    }),
     companyShowcase: {
       ...staticSiteConfig.companyShowcase,
       title: t('home.companies.title'),

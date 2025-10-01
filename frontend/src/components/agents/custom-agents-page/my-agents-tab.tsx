@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Globe } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SearchBar } from './search-bar';
 import { EmptyState } from '../empty-state';
@@ -56,10 +57,7 @@ interface MyAgentsTabProps {
   publishingAgentId?: string | null;
 }
 
-const filterOptions = [
-  { value: 'all', label: 'All Agents' },
-  { value: 'templates', label: 'Templates' },
-];
+// Filter options will be defined inside the component to use translations
 
 export const MyAgentsTab = ({
   agentsSearchQuery,
@@ -96,6 +94,12 @@ export const MyAgentsTab = ({
   publishingAgentId
 }: MyAgentsTabProps) => {
   const [agentFilter, setAgentFilter] = useState<AgentFilter>('all');
+  const { t } = useLanguage();
+  
+  const filterOptions = [
+    { value: 'all', label: t('myAgents.allAgents') },
+    { value: 'templates', label: t('myAgents.templates') },
+  ];
 
   const templateAgentsCount = useMemo(() => {
     return myTemplates?.length || 0;
@@ -113,16 +117,16 @@ export const MyAgentsTab = ({
           <LoadingState viewMode={viewMode} />
         ) : templatesError ? (
           <div className="text-center py-16">
-            <p className="text-destructive">Failed to load templates</p>
+            <p className="text-destructive">{t('myAgents.failedToLoadTemplates')}</p>
           </div>
         ) : !myTemplates || myTemplates.length === 0 ? (
           <div className="text-center py-16">
             <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-3xl flex items-center justify-center mb-6">
               <Globe className="h-10 w-10 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-3">No published templates yet</h3>
+            <h3 className="text-xl font-semibold mb-3">{t('myAgents.noTemplatesTitle')}</h3>
             <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-              Publish your agents to the marketplace to share them with the community and track their usage.
+              {t('myAgents.noTemplatesDescription')}
             </p>
           </div>
         ) : (
@@ -171,14 +175,14 @@ export const MyAgentsTab = ({
     <div className="space-y-6 mt-8 flex flex-col min-h-full">
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
         <SearchBar
-          placeholder="Search agents..."
+          placeholder={t('myAgents.searchPlaceholder')}
           value={agentsSearchQuery}
           onChange={setAgentsSearchQuery}
         />
         <div className="flex items-center gap-3">
           <Select value={agentFilter} onValueChange={(value: AgentFilter) => setAgentFilter(value)}>
             <SelectTrigger className="w-[180px] h-12 rounded-xl">
-              <SelectValue placeholder="Filter agents" />
+              <SelectValue placeholder={t('myAgents.filterAgents')} />
             </SelectTrigger>
             <SelectContent className='rounded-xl'>
               {filterOptions.map((filter) => (

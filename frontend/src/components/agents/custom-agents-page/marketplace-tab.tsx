@@ -69,7 +69,7 @@ export const MarketplaceTab = ({
     <div className="space-y-4 mt-2 flex flex-col min-h-full">
       <div className="w-full flex justify-center mb-[5cm]">
         <SearchBar
-          placeholder="Search agents..."
+          placeholder="Pesquisar agentes..."
           value={marketplaceSearchQuery}
           onChange={setMarketplaceSearchQuery}
           className="w-full max-w-3xl"
@@ -78,17 +78,17 @@ export const MarketplaceTab = ({
 
       <div className="flex-1">
         {marketplaceLoading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="bg-card rounded-2xl overflow-hidden shadow-sm">
                 <Skeleton className="h-48" />
                 <div className="p-6 space-y-3">
-                  <Skeleton className="h-5 rounded" />
+                  <Skeleton className="h-5 rounded w-3/4" />
                   <div className="space-y-2">
                     <Skeleton className="h-4 rounded" />
-                    <Skeleton className="h-4 rounded w-3/4" />
+                    <Skeleton className="h-4 rounded w-5/6" />
                   </div>
-                  <Skeleton className="h-10 rounded-full" />
+                  <Skeleton className="h-10 rounded-full mt-4" />
                 </div>
               </div>
             ))}
@@ -97,14 +97,14 @@ export const MarketplaceTab = ({
           <div className="text-center py-12">
             <p className="text-muted-foreground">
               {marketplaceSearchQuery 
-                ? "No templates found matching your criteria. Try adjusting your search or filters."
-                : "No agent templates are currently available in the marketplace."}
+                ? "Nenhum modelo encontrado com os critérios atuais. Tente ajustar sua busca ou filtros."
+                : "Nenhum modelo disponível no marketplace no momento."}
             </p>
           </div>
         ) : (
           <div className="space-y-12">
-            {marketplaceFilter === 'all' ? (
-              <div className="space-y-6">
+            {marketplaceFilter === 'all' && (
+              <>
                 {/* <MarketplaceSectionHeader
                   title="Popular Agents"
                   subtitle="Sorted by popularity - most downloads first"
@@ -124,8 +124,9 @@ export const MarketplaceTab = ({
                     />
                   ))}
                 </div>
-              </div>
-            ) : (
+              </>
+            )}
+            {marketplaceFilter !== 'all' && (
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {allMarketplaceItems.map((item) => (
                   <AgentCard

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -49,22 +50,22 @@ interface ApiEndpoint {
   };
 }
 
-const API_ENDPOINTS: ApiEndpoint[] = [
+const API_ENDPOINTS = (t: (key: string) => string): ApiEndpoint[] => [
   {
     method: "GET",
     path: "/user-api/agents",
-    title: "List Agents",
-    description: "Get all agents for the authenticated user",
+    title: t('apiEndpoints.listAgents'),
+    description: t('apiEndpoints.listAgentsDescription'),
     responses: {
       success: {
         code: 200,
-        description: "List of user agents",
+        description: t('apiEndpoints.listAgentsResponse'),
         example: {
           agents: [
             {
               agent_id: "agent_123",
               name: "My Agent",
-              description: "A helpful AI agent",
+              description: t('apiModelDescriptions.helpfulAI'),
               is_default: true,
               is_public: false,
               created_at: "2025-08-11T10:00:00Z",
@@ -80,19 +81,19 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/user-api/models",
-    title: "List Models",
-    description: "Get all available AI models for the authenticated user",
+    title: t('apiEndpoints.listModels'),
+    description: t('apiEndpoints.listModelsDescription'),
     responses: {
       success: {
         code: 200,
-        description: "List of available models",
+        description: t('apiEndpoints.listModelsResponse'),
         example: {
           models: [
             {
               name: "anthropic/claude-sonnet-4-20250514",
               display_name: "thanus-2.0",
               provider: "Anthropic",
-              description: "Advanced AI model optimized for complex reasoning and analysis",
+              description: t('apiModelDescriptions.advancedAI'),
               max_tokens: 200000,
               supports_thinking: true,
               supports_vision: true
@@ -107,35 +108,35 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/user-api/projects",
-    title: "List Projects",
-    description: "Get all projects for the authenticated user. This includes both manual projects created through the dashboard and API-generated projects from agent executions. Use this endpoint to get an overview of all your work and find specific project IDs for other operations.",
+    title: t('apiEndpoints.listProjects'),
+    description: t('apiEndpoints.listProjectsDescription'),
     parameters: [
       {
         name: "api_only",
         type: "boolean",
         required: false,
-        description: "Filter projects: true for API-created only, false for dashboard-created only, null for all",
+        description: t('apiParams.apiOnly'),
         example: true
       },
       {
         name: "page",
         type: "integer",
         required: false,
-        description: "Page number (starts from 1)",
+        description: t('apiParams.page'),
         example: 1
       },
       {
         name: "limit",
         type: "integer",
         required: false,
-        description: "Number of projects per page (max 100)",
+        description: t('apiParams.limit'),
         example: 100
       }
     ],
     responses: {
       success: {
         code: 200,
-        description: "List of user projects",
+        description: t('apiEndpoints.listProjectsResponse'),
         example: {
           projects: [
             {
@@ -163,17 +164,17 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "POST",
     path: "/user-api/agents/execute",
-    title: "Execute Default Agent",
-    description: "Execute Thanus default agent with a given prompt. If no default agent is configured, the system will use the built-in general-purpose agent.",
+    title: t('apiEndpoints.executeDefaultAgent'),
+    description: t('apiEndpoints.executeDefaultAgentDescription'),
     requestBody: {
       type: "object",
       properties: {
-        prompt: { type: "string", description: "The prompt to send to the agent", required: true },
-        model_name: { type: "string", description: "Optional model name (uses default if not provided)" },
-        enable_thinking: { type: "boolean", description: "Enable thinking mode", default: false },
-        reasoning_effort: { type: "string", description: "Reasoning effort level", enum: ["low", "medium", "high"], default: "low" },
-        stream: { type: "boolean", description: "Enable streaming", default: true },
-        enable_context_manager: { type: "boolean", description: "Enable context manager", default: false }
+        prompt: { type: "string", description: t('apiParams.prompt'), required: true },
+        model_name: { type: "string", description: t('apiParams.modelName') },
+        enable_thinking: { type: "boolean", description: t('apiParams.enableThinking'), default: false },
+        reasoning_effort: { type: "string", description: t('apiParams.reasoningEffort'), enum: ["low", "medium", "high"], default: "low" },
+        stream: { type: "boolean", description: t('apiParams.stream'), default: true },
+        enable_context_manager: { type: "boolean", description: t('apiParams.enableContextManager'), default: false }
       },
       required: ["prompt"],
       example: {
@@ -186,7 +187,7 @@ const API_ENDPOINTS: ApiEndpoint[] = [
     responses: {
       success: {
         code: 200,
-        description: "Agent execution started",
+        description: t('apiResponses.agentExecutionStarted'),
         example: {
           thread_id: "thread_123",
           agent_run_id: "run_456",
@@ -201,18 +202,18 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "POST",
     path: "/user-api/agents/execute",
-    title: "Execute Specific Agent",
-    description: "Execute a specific agent by providing its agent_id. Use the 'List Agents' endpoint to get available agent IDs. This allows you to run custom agents with specialized capabilities and configurations.",
+    title: t('apiEndpoints.executeSpecificAgent'),
+    description: t('apiEndpoints.executeSpecificAgentDescription'),
     requestBody: {
       type: "object",
       properties: {
-        prompt: { type: "string", description: "The prompt to send to the agent", required: true },
-        agent_id: { type: "string", description: "The specific agent ID to execute (required for this example)", required: true },
-        model_name: { type: "string", description: "Optional model name (uses agent's default or system default if not provided)" },
-        enable_thinking: { type: "boolean", description: "Enable thinking mode", default: false },
-        reasoning_effort: { type: "string", description: "Reasoning effort level", enum: ["low", "medium", "high"], default: "low" },
-        stream: { type: "boolean", description: "Enable streaming", default: true },
-        enable_context_manager: { type: "boolean", description: "Enable context manager", default: false }
+        prompt: { type: "string", description: t('apiParams.prompt'), required: true },
+        agent_id: { type: "string", description: t('apiParams.agentId') + ' (required for this example)', required: true },
+        model_name: { type: "string", description: t('apiParams.modelName') },
+        enable_thinking: { type: "boolean", description: t('apiParams.enableThinking'), default: false },
+        reasoning_effort: { type: "string", description: t('apiParams.reasoningEffort'), enum: ["low", "medium", "high"], default: "low" },
+        stream: { type: "boolean", description: t('apiParams.stream'), default: true },
+        enable_context_manager: { type: "boolean", description: t('apiParams.enableContextManager'), default: false }
       },
       required: ["prompt", "agent_id"],
       example: {
@@ -226,7 +227,7 @@ const API_ENDPOINTS: ApiEndpoint[] = [
     responses: {
       success: {
         code: 200,
-        description: "Agent execution started",
+        description: t('apiResponses.agentExecutionStarted'),
         example: {
           thread_id: "thread_456",
           agent_run_id: "run_789",
@@ -241,26 +242,26 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "POST",
     path: "/user-api/threads/{thread_id}/send-message",
-    title: "Send Message to Thread",
-    description: "Send a new message to an existing thread to continue the conversation. This creates a new agent run within the same thread, maintaining the full context and conversation history. Use this to iterate on previous results, ask follow-up questions, or request modifications.",
+    title: t('apiEndpoints.sendMessageToThread'),
+    description: t('apiEndpoints.sendMessageToThreadDescription'),
     parameters: [
       {
         name: "thread_id",
         type: "string",
         required: true,
-        description: "The thread ID to continue the conversation in",
+        description: t('apiParams.threadId'),
         example: "thread_123"
       }
     ],
     requestBody: {
       type: "object",
       properties: {
-        message: { type: "string", description: "The new message to send to the agent", required: true },
-        model_name: { type: "string", description: "Optional model name (uses previous execution model if not provided)" },
-        enable_thinking: { type: "boolean", description: "Enable thinking mode (uses previous execution setting if not provided)" },
-        reasoning_effort: { type: "string", description: "Reasoning effort level", enum: ["low", "medium", "high"] },
-        stream: { type: "boolean", description: "Enable streaming", default: true },
-        enable_context_manager: { type: "boolean", description: "Enable context manager (uses previous execution setting if not provided)" }
+        message: { type: "string", description: t('apiCommon.message'), required: true },
+        model_name: { type: "string", description: t('apiParams.modelName') + ' (uses previous execution model if not provided)' },
+        enable_thinking: { type: "boolean", description: t('apiParams.enableThinking') + ' (uses previous execution setting if not provided)', default: false },
+        reasoning_effort: { type: "string", description: t('apiParams.reasoningEffort'), enum: ["low", "medium", "high"] },
+        stream: { type: "boolean", description: t('apiParams.stream'), default: true },
+        enable_context_manager: { type: "boolean", description: t('apiParams.enableContextManager') + ' (uses previous execution setting if not provided)', default: false }
       },
       required: ["message"],
       example: {
@@ -272,7 +273,7 @@ const API_ENDPOINTS: ApiEndpoint[] = [
     responses: {
       success: {
         code: 200,
-        description: "New agent run started for the message",
+        description: t('apiResponses.newAgentRunStarted'),
         example: {
           agent_run_id: "run_789",
           thread_id: "thread_123",
@@ -287,21 +288,21 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/user-api/agents/runs/{agent_run_id}/stream",
-    title: "Stream Agent Run",
-    description: "Stream real-time responses from an agent execution. This provides a real-time alternative to polling the status endpoint, delivering responses via Server-Sent Events (SSE) as the agent processes your request.",
+    title: t('apiEndpoints.streamAgentRun'),
+    description: t('apiEndpoints.streamAgentRunDescription'),
     parameters: [
       {
         name: "agent_run_id",
         type: "string",
         required: true,
-        description: "The agent run ID to stream",
+        description: t('apiParams.agentRunId'),
         example: "run_456"
       }
     ],
     responses: {
       success: {
         code: 200,
-        description: "Server-sent events stream",
+        description: t('apiResponses.serverSentEvents'),
         example: "data: {\"type\": \"message\", \"role\": \"assistant\", \"content\": \"Hello!\"}\n\n"
       }
     }
@@ -309,14 +310,14 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/user-api/agents/runs/{agent_run_id}/status",
-    title: "Get Agent Run Status",
-    description: "Get the current status of an agent execution. Use this endpoint to check when the execution has completed before calling the 'Get Agent Run Messages' or 'Get Agent Run Result' endpoints.",
+    title: t('apiEndpoints.getAgentRunStatus'),
+    description: t('apiEndpoints.getAgentRunStatusDescription'),
     parameters: [
       {
         name: "agent_run_id",
         type: "string",
         required: true,
-        description: "The agent run ID",
+        description: t('apiResponses.agentRunStatus'),
         example: "run_456"
       }
     ],
@@ -339,21 +340,14 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/user-api/threads/{thread_id}/messages",
-    title: "Get Thread Messages",
-    description: "Get all messages and responses from a thread. This endpoint provides a synchronous way to retrieve all messages as a single JSON response for the entire conversation history in a thread. Use this to get the complete conversation across all agent runs in the thread.",
+    title: t('apiEndpoints.getThreadMessages'),
+    description: t('apiEndpoints.getThreadMessagesDescription'),
     parameters: [
-      {
-        name: "thread_id",
-        type: "string",
-        required: true,
-        description: "The thread ID",
-        example: "thread_123"
-      },
       {
         name: "include_responses",
         type: "boolean",
         required: false,
-        description: "Include all responses from Redis",
+        description: t('apiParams.includeResponses'),
         example: true
       },
       {
@@ -390,14 +384,14 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "GET",
     path: "/user-api/agents/runs/{agent_run_id}/result",
-    title: "Get Agent Run Result",
-    description: "Get the final result of a completed agent execution. This endpoint provides a summary of the execution conclusion, including the main result, tool outputs, and files created. Use this for a simplified view of what the agent accomplished.",
+    title: t('apiEndpoints.getAgentRunResult'),
+    description: t('apiEndpoints.getAgentRunResultDescription'),
     parameters: [
       {
         name: "agent_run_id",
         type: "string",
         required: true,
-        description: "The agent run ID",
+        description: t('apiResponses.agentRunStatus'),
         example: "run_456"
       }
     ],
@@ -421,8 +415,8 @@ const API_ENDPOINTS: ApiEndpoint[] = [
   {
     method: "POST",
     path: "/user-api/sandbox/init-and-list",
-    title: "Initialize Sandbox and List Files",
-    description: "Initialize or start a sandbox for a project and list available files",
+    title: t('apiEndpoints.initSandbox'),
+    description: t('apiEndpoints.initSandboxDescription'),
     requestBody: {
       type: "object",
       properties: {
@@ -464,7 +458,7 @@ const API_ENDPOINTS: ApiEndpoint[] = [
         name: "project_id",
         type: "string",
         required: false,
-        description: "Project ID that owns the sandbox",
+        description: t('apiResponses.sandboxFiles'),
         example: "project_789"
       },
       {
@@ -478,7 +472,7 @@ const API_ENDPOINTS: ApiEndpoint[] = [
         name: "path",
         type: "string",
         required: true,
-        description: "Path of the file to download",
+        description: t('apiResponses.downloadFile'),
         example: "/workspace/hello.py"
       }
     ],
@@ -493,6 +487,7 @@ const API_ENDPOINTS: ApiEndpoint[] = [
 ];
 
 export default function ApiDocsPage() {
+  const { t } = useLanguage();
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [selectedEndpoint, setSelectedEndpoint] = useState<ApiEndpoint | null>(null);
@@ -510,6 +505,9 @@ export default function ApiDocsPage() {
   const [streamingData, setStreamingData] = useState<string[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const router = useRouter();
+  
+  // Initialize endpoints with translations
+  const endpoints = API_ENDPOINTS(t);
 
   useEffect(() => {
     // Load API key from localStorage
@@ -1110,27 +1108,27 @@ export default function ApiDocsPage() {
             className="flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
+            {t('apiDocs.back')}
           </Button>
         </div>
-        <h1 className="text-3xl font-bold">API Documentation</h1>
+        <h1 className="text-3xl font-bold">{t('apiDocs.pageTitle')}</h1>
         <p className="text-muted-foreground mt-2">
-          Interactive documentation for the Thanus AI API. Test endpoints directly from this interface.
+          {t('apiDocs.pageDescription')}
         </p>
       </div>
 
       {/* API Key Section */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>API Authentication</CardTitle>
+          <CardTitle>{t('apiDocs.authTitle')}</CardTitle>
           <CardDescription>
-            Enter your API key to test the endpoints. Your key is stored locally in your browser.
+            {t('apiDocs.authDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
             <div className="flex-1">
-              <Label htmlFor="api-key">API Key</Label>
+              <Label htmlFor="api-key">{t('apiDocs.apiKey')}</Label>
               <div className="flex gap-2">
                 <Input
                   id="api-key"
@@ -1147,13 +1145,13 @@ export default function ApiDocsPage() {
                   {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </Button>
                 <Button onClick={saveApiKey} disabled={!apiKey.trim()}>
-                  Save
+                  {t('apiKeys.save')}
                 </Button>
               </div>
             </div>
           </div>
           <p className="text-sm text-muted-foreground mt-2">
-            Don't have an API key? <Link href="/settings/api-tokens" className="text-blue-600 hover:underline">Create one here</Link>
+            {t('apiKeys.dontHaveKey')} <Link href="/settings/api-tokens" className="text-blue-600 hover:underline">{t('apiDocs.createKeyLink')}</Link>
           </p>
         </CardContent>
       </Card>
@@ -1163,27 +1161,27 @@ export default function ApiDocsPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              Last Agent Execution
+              {t('apiDocs.lastExecution.title')}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   setSavedExecutionData(null);
                   localStorage.removeItem("thanus_execution_data");
-                  toast.success("Execution data cleared");
+                  toast.success(t('apiDocs.lastExecution.cleared'));
                 }}
               >
-                Clear
+                {t('apiDocs.lastExecution.clear')}
               </Button>
             </CardTitle>
             <CardDescription>
-              Data from your last agent execution. Use these IDs in other endpoints.
+              {t('apiDocs.lastExecution.description')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <Label className="text-sm font-medium">Agent Run ID</Label>
+                <Label className="text-sm font-medium">{t('apiDocs.lastExecution.agentRunId')}</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <code className="text-sm bg-muted px-2 py-1 rounded flex-1">
                     {savedExecutionData.agent_run_id}
@@ -1198,7 +1196,7 @@ export default function ApiDocsPage() {
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium">Project ID</Label>
+                <Label className="text-sm font-medium">{t('apiDocs.lastExecution.projectId')}</Label>
                 <div className="flex items-center gap-2 mt-1">
                   <code className="text-sm bg-muted px-2 py-1 rounded flex-1">
                     {savedExecutionData.project_id}
@@ -1236,7 +1234,7 @@ export default function ApiDocsPage() {
                   window.open(`/projects/${savedExecutionData.project_id}/thread/${savedExecutionData.thread_id}`, '_blank');
                 }}
               >
-                View in Dashboard
+                {t('apiEndpoints.viewInDashboard')}
               </Button>
               <Button
                 variant="outline"
@@ -1286,11 +1284,11 @@ export default function ApiDocsPage() {
                   if (fieldsUpdated.length > 0) {
                     toast.success(`Filled: ${fieldsUpdated.join(", ")}`);
                   } else {
-                    toast.info("No compatible fields found in current endpoint");
+                    toast.info(t('apiEndpoints.noCompatibleFields'));
                   }
                 }}
               >
-                Use in Current Endpoint
+                {t('apiEndpoints.useInCurrentEndpoint')}
               </Button>
             </div>
           </CardContent>
@@ -1308,7 +1306,7 @@ export default function ApiDocsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {API_ENDPOINTS.map((endpoint, index) => (
+              {endpoints.map((endpoint, index) => (
                 <div
                   key={index}
                   className={`p-3 border rounded-lg cursor-pointer transition-colors hover:bg-muted/50 ${
@@ -1334,25 +1332,25 @@ export default function ApiDocsPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {selectedEndpoint ? selectedEndpoint.title : "Select an Endpoint"}
+              {selectedEndpoint ? selectedEndpoint.title : t('apiDocs.selectEndpoint')}
             </CardTitle>
             <CardDescription>
-              {selectedEndpoint ? selectedEndpoint.description : "Choose an endpoint from the list to view details and test it"}
+              {selectedEndpoint ? selectedEndpoint.description : t('apiDocs.chooseEndpointDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {selectedEndpoint ? (
               <Tabs defaultValue="docs" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="docs">Documentation</TabsTrigger>
-                  <TabsTrigger value="test">Test Request</TabsTrigger>
-                  <TabsTrigger value="code">Code Examples</TabsTrigger>
+                  <TabsTrigger value="docs">{t('apiDocs.documentation')}</TabsTrigger>
+                  <TabsTrigger value="test">{t('apiDocs.testRequest')}</TabsTrigger>
+                  <TabsTrigger value="code">{t('apiDocs.codeExamples')}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="docs" className="space-y-4">
                   {/* Method and Path */}
                   <div>
-                    <Label>Endpoint</Label>
+                    <Label>{t('apiDocs.endpoint')}</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant={selectedEndpoint.method === "GET" ? "secondary" : "default"}>
                         {selectedEndpoint.method}
@@ -1373,7 +1371,7 @@ export default function ApiDocsPage() {
                   {/* Parameters */}
                   {selectedEndpoint.parameters && selectedEndpoint.parameters.length > 0 && (
                     <div>
-                      <Label>Parameters</Label>
+                      <Label>{t('apiDocs.parameters')}</Label>
                       <div className="space-y-2 mt-2">
                         {selectedEndpoint.parameters.map((param, idx) => (
                           <div key={idx} className="border rounded p-3">
@@ -1384,14 +1382,14 @@ export default function ApiDocsPage() {
                               </Badge>
                               {param.required && (
                                 <Badge variant="destructive" className="text-xs">
-                                  Required
+                                  {t('apiCommon.requiredBadge')}
                                 </Badge>
                               )}
                             </div>
                             <p className="text-sm text-muted-foreground">{param.description}</p>
                             {param.example && (
                               <p className="text-xs text-muted-foreground mt-1">
-                                Example: <code>{JSON.stringify(param.example)}</code>
+                                {t('apiDocs.example')}: <code>{JSON.stringify(param.example)}</code>
                               </p>
                             )}
                           </div>
@@ -1403,7 +1401,7 @@ export default function ApiDocsPage() {
                   {/* Request Body */}
                   {selectedEndpoint.requestBody && (
                     <div>
-                      <Label>Request Body</Label>
+                      <Label>{t('apiDocs.requestBody')}</Label>
                       <div className="mt-2">
                         <pre className="text-xs bg-muted p-3 rounded overflow-auto">
                           {JSON.stringify(selectedEndpoint.requestBody.example, null, 2)}
@@ -1414,7 +1412,7 @@ export default function ApiDocsPage() {
 
                   {/* Response */}
                   <div>
-                    <Label>Response Example</Label>
+                    <Label>{t('apiDocs.responseExample')}</Label>
                     <div className="mt-2">
                       <Badge className="mb-2">{selectedEndpoint.responses.success.code}</Badge>
                       <pre className="text-xs bg-muted p-3 rounded overflow-auto">
@@ -1427,7 +1425,7 @@ export default function ApiDocsPage() {
                 <TabsContent value="test" className="space-y-4">
                   {/* Endpoint Information */}
                   <div>
-                    <Label>Endpoint</Label>
+                    <Label>{t('apiDocs.endpoint')}</Label>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant={selectedEndpoint.method === "GET" ? "secondary" : "default"}>
                         {selectedEndpoint.method}
@@ -1660,7 +1658,7 @@ export default function ApiDocsPage() {
                   {/* Regular Response */}
                   {response && selectedEndpoint?.path !== "/user-api/agents/runs/{agent_run_id}/stream" && (
                     <div>
-                      <Label>Response</Label>
+                      <Label>{t('apiDocs.response')}</Label>
                       <pre className="text-xs bg-muted p-3 rounded overflow-auto mt-2 max-h-96">
                         {response}
                       </pre>

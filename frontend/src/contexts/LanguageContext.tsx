@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { LanguageCode, TranslationKey, supportedLanguages, defaultLanguage, t as translate } from '@/lib/i18n';
+import { LanguageCode, TranslationKey, supportedLanguages, defaultLanguage, t as translate } from '../lib/i18n';
 import { useUserLocation } from '@/hooks/use-user-location';
 
 interface LanguageContextType {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Copy, Eye, EyeOff, Key, ExternalLink, Sparkles, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Get backend URL from environment variables
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || '';
@@ -33,6 +35,8 @@ interface CreateTokenResponse {
 }
 
 export default function ApiKeysPage() {
+  const { t } = useLanguage();
+  const router = useRouter();
   const [tokens, setTokens] = useState<ApiToken[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -60,11 +64,11 @@ export default function ApiKeysPage() {
         const data = await response.json();
         setTokens(data);
       } else {
-        toast.error("Failed to fetch API keys");
+        toast.error(t('apiKeys.failedToLoad'));
       }
     } catch (error) {
       console.error("Error fetching keys:", error);
-      toast.error("Failed to fetch API keys");
+      toast.error(t('apiKeys.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -72,7 +76,7 @@ export default function ApiKeysPage() {
 
   const createToken = async () => {
     if (!newTokenName.trim()) {
-      toast.error("Please enter a key name");
+      toast.error(t('apiKeys.nameRequired'));
       return;
     }
 
@@ -96,13 +100,13 @@ export default function ApiKeysPage() {
         setNewTokenName("");
         setShowCreateDialog(false);
         await fetchTokens();
-        toast.success("API key created successfully");
+        toast.success(t('apiKeys.keyCreated'));
       } else {
-        toast.error("Failed to create API key");
+        toast.error(t('apiKeys.failedToCreate'));
       }
     } catch (error) {
       console.error("Error creating key:", error);
-      toast.error("Failed to create API key");
+      toast.error(t('apiKeys.failedToCreate'));
     } finally {
       setCreating(false);
     }
@@ -122,19 +126,19 @@ export default function ApiKeysPage() {
 
       if (response.ok) {
         await fetchTokens();
-        toast.success("API key deleted successfully");
+        toast.success(t('apiKeys.keyDeleted'));
       } else {
-        toast.error("Failed to delete API key");
+        toast.error(t('apiKeys.failedToDelete'));
       }
     } catch (error) {
       console.error("Error deleting key:", error);
-      toast.error("Failed to delete API key");
+      toast.error(t('apiKeys.failedToDelete'));
     }
   };
 
   const copyToken = (token: string) => {
     navigator.clipboard.writeText(token);
-    toast.success("Key copied to clipboard");
+    toast.success(t('apiKeys.keyCopied'));
   };
 
   const toggleTokenStatus = async (tokenId: string, currentStatus: boolean) => {
@@ -153,13 +157,13 @@ export default function ApiKeysPage() {
 
       if (response.ok) {
         await fetchTokens();
-        toast.success(`Key ${!currentStatus ? "activated" : "deactivated"} successfully`);
+        toast.success(!currentStatus ? t('apiKeys.keyActivated') : t('apiKeys.keyDeactivated'));
       } else {
-        toast.error("Failed to update key status");
+        toast.error(t('apiKeys.failedToUpdate'));
       }
     } catch (error) {
       console.error("Error updating key:", error);
-      toast.error("Failed to update key status");
+      toast.error(t('apiKeys.failedToUpdate'));
     }
   };
 
@@ -174,10 +178,10 @@ export default function ApiKeysPage() {
           <div className="space-y-2">
             <div className="flex items-center gap-3">
               <Key className="w-6 h-6" />
-              <h1 className="text-2xl font-bold">API Keys</h1>
+              <h1 className="text-2xl font-bold">{t('apiKeys.title')}</h1>
             </div>
             <p className="text-muted-foreground">
-              Manage your API keys for programmatic access to your account.
+              {t('apiKeys.description')}
             </p>
           </div>
           
@@ -200,11 +204,11 @@ export default function ApiKeysPage() {
   }
 
   const navigateToApiDocs = () => {
-    window.open('/settings/api-docs', '_blank');
+    router.push('/settings/api-docs');
   };
 
   const navigateToApiProjects = () => {
-    window.open('/settings/api-projects', '_blank');
+    router.push('/settings/api-projects');
   };
 
   return (
@@ -214,7 +218,7 @@ export default function ApiKeysPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Key className="w-6 h-6" />
-              <h1 className="text-2xl font-bold">API Keys</h1>
+              <h1 className="text-2xl font-bold">{t('apiKeys.title')}</h1>
             </div>
             <div className="flex gap-2">
               <Button 
@@ -223,7 +227,7 @@ export default function ApiKeysPage() {
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
-                API Documentation
+                {t('apiKeys.documentation')}
               </Button>
               <Button 
                 variant="outline" 
@@ -231,12 +235,12 @@ export default function ApiKeysPage() {
                 className="flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />
-                API Projects
+                {t('apiKeys.projects')}
               </Button>
             </div>
           </div>
           <p className="text-muted-foreground">
-            Manage your API keys for programmatic access to your account.
+            {t('apiKeys.description')}
           </p>
         </div>
 
@@ -250,18 +254,17 @@ export default function ApiKeysPage() {
                 </div>
                 <div className="absolute -top-1 -right-1">
                   <Badge variant="secondary" className="h-5 px-1.5 text-xs bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700">
-                    Beta
+                    {t('apiKeys.betaBadge')}
                   </Badge>
                 </div>
               </div>
               <div className="flex-1 space-y-3">
                 <div>
                   <h3 className="text-base font-semibold text-blue-900 dark:text-blue-100 mb-1">
-                    Tars SDK & API
+                    {t('apiKeys.sdkBeta.title')}
                   </h3>
                   <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed">
-                    Our SDK and API are currently in beta. Use these API keys to integrate with our 
-                    programmatic interface for building custom applications and automations.
+                    {t('apiKeys.sdkBeta.description')}
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -271,7 +274,7 @@ export default function ApiKeysPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                   >
-                    <span>View SDK Documentation</span>
+                    <span>{t('apiKeys.sdkBeta.viewDocumentation')}</span>
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
@@ -285,7 +288,7 @@ export default function ApiKeysPage() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shield className="w-4 h-4" />
             <span>
-              API keys use a token prefix for secure authentication
+              {t('apiKeys.tokenPrefixDescription')}
             </span>
           </div>
 
@@ -294,22 +297,22 @@ export default function ApiKeysPage() {
               <DialogTrigger asChild>
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
-                  Create Key
+                  {t('apiKeys.createKey')}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Create New API Key</DialogTitle>
+                  <DialogTitle>{t('apiKeys.createNewKey')}</DialogTitle>
                   <DialogDescription>
-                    Create a new API key for programmatic access to your account.
+                    {t('apiKeys.createNewKey')}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="key-name">Key Name</Label>
+                    <Label htmlFor="key-name">{t('apiKeys.keyName')}</Label>
                     <Input
                       id="key-name"
-                      placeholder="Enter a descriptive name for your key"
+                      placeholder={t('apiKeys.keyNamePlaceholder')}
                       value={newTokenName}
                       onChange={(e) => setNewTokenName(e.target.value)}
                     />
@@ -317,10 +320,10 @@ export default function ApiKeysPage() {
                 </div>
                 <DialogFooter>
                   <Button variant="outline" onClick={() => setShowCreateDialog(false)}>
-                    Cancel
+                    {t('apiKeys.cancel')}
                   </Button>
                   <Button onClick={createToken} disabled={creating}>
-                    {creating ? "Creating..." : "Create Key"}
+                    {creating ? t('apiKeys.creating') : t('apiKeys.createKeyButton')}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -334,10 +337,9 @@ export default function ApiKeysPage() {
             <Card>
               <CardContent className="p-6 text-center">
                 <Key className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No API keys yet</h3>
+                <h3 className="text-lg font-medium mb-2">{t('apiKeys.noKeys')}</h3>
                 <p className="text-muted-foreground mb-6">
-                  Create your first API key to start using the Tars API
-                  programmatically. Each key includes a token prefix for secure authentication.
+                  {t('apiKeys.noKeysDescription')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Button 
@@ -345,7 +347,7 @@ export default function ApiKeysPage() {
                     className="flex-1 sm:flex-none"
                   >
                     <Plus className="w-4 h-4 mr-2" />
-                    Create API Key
+                    {t('apiKeys.createKey')}
                   </Button>
                   <Button 
                     variant="outline" 
@@ -353,7 +355,7 @@ export default function ApiKeysPage() {
                     className="flex-1 sm:flex-none"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
-                    View API Documentation
+                    {t('apiKeys.viewDocumentation')}
                   </Button>
                 </div>
               </CardContent>
@@ -361,9 +363,9 @@ export default function ApiKeysPage() {
             
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Getting Started with Tars API</CardTitle>
+                <CardTitle className="text-lg">{t('apiKeys.gettingStarted')}</CardTitle>
                 <CardDescription>
-                  Learn how to integrate with Tars API using your API keys
+                  {t('apiKeys.gettingStartedDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -373,16 +375,16 @@ export default function ApiKeysPage() {
                       <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                         <Key className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       </div>
-                      <h4 className="font-medium">1. Create an API Key</h4>
+                      <h4 className="font-medium">{t('apiKeys.step1.title')}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Generate a new API key to authenticate your requests to the Tars API.
+                      {t('apiKeys.step1.description')}
                     </p>
                   </div>
                   
                   <div className="p-4 border rounded-lg">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                      <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400">
                           <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
                           <polyline points="14 2 14 8 20 8"></polyline>
@@ -391,10 +393,10 @@ export default function ApiKeysPage() {
                           <line x1="10" y1="9" x2="8" y2="9"></line>
                         </svg>
                       </div>
-                      <h4 className="font-medium">2. Read the Documentation</h4>
+                      <h4 className="font-medium">{t('apiKeys.step2.title')}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Explore our API documentation to understand available endpoints and how to use them.
+                      {t('apiKeys.step2.description')}
                     </p>
                   </div>
                   
@@ -406,10 +408,10 @@ export default function ApiKeysPage() {
                           <polyline points="22 4 12 14.01 9 11.01"></polyline>
                         </svg>
                       </div>
-                      <h4 className="font-medium">3. Start Building</h4>
+                      <h4 className="font-medium">{t('apiKeys.step3.title')}</h4>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Integrate Tars API into your applications and automate your workflows.
+                      {t('apiKeys.step3.description')}
                     </p>
                   </div>
                 </div>
@@ -444,14 +446,14 @@ export default function ApiKeysPage() {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={token.is_active ? "default" : "secondary"}>
-                        {token.is_active ? "Active" : "Inactive"}
+                        {token.is_active ? t('apiKeys.active') : t('apiKeys.inactive')}
                       </Badge>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => toggleTokenStatus(token.token_id, token.is_active)}
                       >
-                        {token.is_active ? "Deactivate" : "Activate"}
+                        {token.is_active ? t('apiKeys.deactivate') : t('apiKeys.activate')}
                       </Button>
                       <Button
                         variant="outline"
@@ -467,7 +469,7 @@ export default function ApiKeysPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <p className="text-muted-foreground">Token Prefix</p>
+                      <p className="text-muted-foreground">{t('apiKeys.tokenPrefix')}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
                           {token.token_prefix}...
@@ -483,7 +485,7 @@ export default function ApiKeysPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-muted-foreground">Last Updated</p>
+                      <p className="text-muted-foreground">{t('apiKeys.lastUpdated')}</p>
                       <p>{new Date(token.updated_at).toLocaleDateString()}</p>
                     </div>
                   </div>
@@ -506,10 +508,10 @@ export default function ApiKeysPage() {
                         </div>
                         <div className="flex-1">
                           <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                            Save your API key
+                            {t('apiKeys.saveYourKey')}
                           </h4>
                           <p className="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                            This is the only time you'll be able to see your full API key. Make sure to copy it now and store it securely.
+                            {t('apiKeys.saveYourKeyDescription')}
                           </p>
                           <div className="mt-3 flex items-center gap-2">
                             <code className="flex-1 text-xs font-mono bg-yellow-100 dark:bg-yellow-900/50 px-3 py-2 rounded flex items-center">
@@ -532,11 +534,11 @@ export default function ApiKeysPage() {
                               className="border-yellow-300 text-yellow-700 hover:bg-yellow-100 dark:border-yellow-800 dark:text-yellow-300 dark:hover:bg-yellow-900/30"
                             >
                               <Copy className="w-3 h-3 mr-1" />
-                              Copy
+                              {t('apiKeys.copy')}
                             </Button>
                           </div>
                           <p className="mt-2 text-xs text-yellow-700/80 dark:text-yellow-300/80">
-                            For security reasons, we won't show this key again.
+                            {t('apiKeys.keySecurityWarning')}
                           </p>
                         </div>
                         <Button

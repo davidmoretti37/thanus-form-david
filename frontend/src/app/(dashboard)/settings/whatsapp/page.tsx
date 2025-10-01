@@ -6,15 +6,26 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, MessageCircle, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function WhatsAppSettings() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isValid, setIsValid] = useState(true);
+  // Using direct translations since WhatsApp-specific keys are not in i18n
+  const translations = {
+    title: 'Configurações do WhatsApp',
+    description: 'Configure seu número do WhatsApp para receber notificações e mensagens de suporte.',
+    back: 'Voltar',
+    invalidNumber: 'Por favor, insira um número de telefone válido com código do país',
+    save: 'Salvar',
+    connectedAs: (phone: string) => `Conectado como: ${phone}`,
+    notificationsEnabled: 'Você receberá notificações neste número.'
+  };
   const supabase = createClient();
   const router = useRouter();
 
@@ -135,40 +146,42 @@ export default function WhatsAppSettings() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loader2 className="h-6 w-6 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 p-6 max-w-4xl mx-auto">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-8">
         <div className="space-y-1">
-          <h2 className="text-2xl font-semibold tracking-tight">WhatsApp Settings</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">{translations.title}</h2>
           <p className="text-sm text-muted-foreground">
-            Configure your WhatsApp number to receive notifications and support messages.
+            {translations.description}
           </p>
         </div>
         <Button 
           variant="ghost" 
-          size="icon" 
+          size="icon"
           className="h-8 w-8 -ml-2 mr-1"
           asChild
         >
           <Link href="/dashboard">
             <ArrowLeft className="h-4 w-4" />
-            <span className="sr-only">Back to Dashboard</span>
+            <span className="sr-only">{translations.back}</span>
           </Link>
         </Button>
       </div>
-      <Card>
-        <CardContent>
+      {/* WhatsApp Connection Card */}
+      <Card className="shadow-sm">
+        <CardContent className="p-6">
           <div className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-6">
+              <div className="flex-1 space-y-2">
                 <Input
                   type="tel"
-                  placeholder="+5511999999999"
+                  placeholder="+55 (11) 99999-9999"
                   value={phoneNumber}
                   onChange={handlePhoneNumberChange}
                   className={!isValid && phoneNumber ? 'border-red-500' : ''}
@@ -176,7 +189,7 @@ export default function WhatsAppSettings() {
                 {!isValid && phoneNumber && (
                   <p className="mt-2 text-sm text-red-500 flex items-center">
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    Please enter a valid phone number with country code
+                    {translations.invalidNumber}
                   </p>
                 )}
               </div>
@@ -190,7 +203,7 @@ export default function WhatsAppSettings() {
                 ) : (
                   <CheckCircle2 className="mr-2 h-4 w-4" />
                 )}
-                Save
+                {translations.save}
               </Button>
             </div>
             
@@ -198,9 +211,9 @@ export default function WhatsAppSettings() {
               <div className="p-4 bg-muted rounded-md text-sm flex items-start">
                 <MessageCircle className="h-5 w-5 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="font-medium">Your WhatsApp number is set up</p>
+                  <p className="font-medium">{translations.connectedAs(phoneNumber)}</p>
                   <p className="text-muted-foreground">
-                    You'll receive notifications at {phoneNumber}
+                    {translations.notificationsEnabled}
                   </p>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // --- The ArcGalleryHero Component ---
 type ArcGalleryHeroProps = {
@@ -31,6 +32,7 @@ export const ArcGalleryHero: React.FC<ArcGalleryHeroProps> = ({
   cardSizeSm = 80,
   className = '',
 }) => {
+  const { t } = useLanguage();
   const [dimensions, setDimensions] = useState({
     radius: radiusLg,
     cardSize: cardSizeLg,
@@ -89,7 +91,7 @@ export const ArcGalleryHero: React.FC<ArcGalleryHeroProps> = ({
                   height: dimensions.cardSize,
                   left: `calc(50% + ${x}px)`,
                   bottom: `${y}px`,
-                  transform: `translate(-50%, 50%)`,
+                  transform: 'translate(-50%, 50%)',
                   animationDelay: `${i * 100}ms`,
                   animationFillMode: 'forwards',
                   zIndex: count - i,
@@ -101,12 +103,12 @@ export const ArcGalleryHero: React.FC<ArcGalleryHeroProps> = ({
                 >
                   <img
                     src={src}
-                    alt={`Memory ${i + 1}`}
+                    alt={t('arcGallery.memory')}
                     className="block w-full h-full object-cover"
                     draggable={false}
                     // Add a fallback in case an image fails to load
                     onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://placehold.co/400x400/334155/e2e8f0?text=Memory`;
+                      (e.target as HTMLImageElement).src = `https://placehold.co/400x400/334155/e2e8f0?text=${t('arcGallery.memory')}`;
                     }}
                   />
                 </div>
@@ -120,10 +122,10 @@ export const ArcGalleryHero: React.FC<ArcGalleryHeroProps> = ({
       <div className="relative z-10 flex items-center justify-center px-6 -mt-24 md:-mt-32 lg:-mt-40" style={{ transform: 'translateY(-30%)' }}>
         <div className="text-center max-w-2xl px-6 opacity-0 animate-fade-in" style={{ animationDelay: '800ms', animationFillMode: 'forwards' }}>
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900 dark:text-white">
-            Sua Fabrica de Funcionarios Digitais
+            {t('arcGallery.title')}
           </h1>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
-            Quanto vale seu tempo gasto em tarefas repetitivas ?
+            {t('arcGallery.subtitle')}
           </p>
         </div>
       </div>

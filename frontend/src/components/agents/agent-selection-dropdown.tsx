@@ -15,6 +15,7 @@ import { NewAgentDialog } from '@/components/agents/new-agent-dialog';
 import { cn } from '@/lib/utils';
 import { AgentAvatar } from '@/components/thread/content/agent-avatar';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface AgentSelectionDropdownProps {
   selectedAgentId?: string;
@@ -29,7 +30,7 @@ interface AgentSelectionDropdownProps {
 export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
   selectedAgentId,
   onAgentSelect,
-  placeholder = "Choose an agent",
+  placeholder = "",
   className,
   disabled = false,
   showCreateOption = true,
@@ -39,6 +40,10 @@ export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewAgentDialog, setShowNewAgentDialog] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useLanguage();
+  
+  // Set default placeholder if not provided
+  const displayPlaceholder = placeholder || t('agentSelection.chooseAgent');
 
   const { data: agentsResponse, isLoading } = useAgents();
   const agents = agentsResponse?.agents || [];
@@ -99,14 +104,14 @@ export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
 
     return (
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span>{placeholder}</span>
+        <span>{displayPlaceholder}</span>
         <ChevronDown size={12} className="opacity-60" />
       </div>
     );
   };
 
   return (
-    <>
+    <div>
       <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
         <DropdownMenuTrigger asChild>
           <Button
@@ -134,7 +139,7 @@ export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search agents..."
+                placeholder={t('agentSelection.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 text-sm bg-muted/40 border-0 rounded-lg focus:outline-none focus:ring-1 focus:ring-ring focus:bg-muted/60 placeholder:text-muted-foreground/60"
@@ -156,9 +161,9 @@ export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
             ) : sortedAgents.length === 0 ? (
               <div className="px-3 py-6 text-center text-sm text-muted-foreground">
                 <Search className="h-6 w-6 mx-auto mb-2 opacity-40" />
-                <p>No agents found</p>
+                <p>{t('agentSelection.noAgentsFound')}</p>
                 {searchQuery && (
-                  <p className="text-xs mt-1 opacity-60">Try adjusting your search</p>
+                  <p className="text-xs mt-1 opacity-60">{t('agentSelection.tryAdjustingSearch')}</p>
                 )}
               </div>
             ) : (
@@ -204,14 +209,14 @@ export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
                   onClick={handleCreateAgent}
                 >
                   <Plus className="h-4 w-4" />
-                  <span className="font-medium">Create new agent</span>
+                  <span className="font-medium">{t('agentSelection.createNewAgent')}</span>
                 </DropdownMenuItem>
               </div>
             </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
-
+      
       {/* New Agent Dialog */}
       <NewAgentDialog
         open={showNewAgentDialog}
@@ -222,6 +227,6 @@ export const AgentSelectionDropdown: React.FC<AgentSelectionDropdownProps> = ({
           }
         }}
       />
-    </>
+    </div>
   );
 };

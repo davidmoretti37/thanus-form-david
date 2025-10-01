@@ -3,12 +3,15 @@ import { SubmitButton } from '../ui/submit-button';
 import { Label } from '../ui/label';
 import { GetAccountResponse } from '@usebasejump/shared';
 import { editPersonalAccountName } from '@/lib/actions/personal-account';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type Props = {
   account: GetAccountResponse;
 };
 
 export default function EditPersonalAccountName({ account }: Props) {
+  const { t } = useLanguage();
+
   return (
     <form className="animate-in">
       <input type="hidden" name="accountId" value={account.account_id} />
@@ -18,13 +21,13 @@ export default function EditPersonalAccountName({ account }: Props) {
             htmlFor="name"
             className="text-sm font-medium text-foreground/90"
           >
-            Name
+Name
           </Label>
           <Input
             defaultValue={account.name}
             name="name"
             id="name"
-            placeholder="Marty Mcfly"
+            placeholder="Your name"
             required
             className="h-10 rounded-lg border-subtle dark:border-white/10 bg-white dark:bg-background-secondary"
           />

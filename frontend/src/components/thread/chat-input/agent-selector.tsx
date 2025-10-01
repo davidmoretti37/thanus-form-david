@@ -21,6 +21,7 @@ import { AgentConfigurationDialog } from '@/components/agents/agent-configuratio
 
 import { useRouter } from 'next/navigation';
 import { cn, truncateString } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { KortixLogo } from '@/components/sidebar/kortix-logo';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -34,9 +35,9 @@ interface AgentSelectorProps {
 
 export const AgentSelector: React.FC<AgentSelectorProps> = ({
   selectedAgentId,
-  onAgentSelect,
+  onAgentSelect = () => {},
   disabled = false,
-  isTarsAgent,
+  isTarsAgent = false,
   compact = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -48,6 +49,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
   const [mounted, setMounted] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Fix hydration mismatch by ensuring component only renders after mount
   useEffect(() => {
@@ -223,7 +225,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
 
   // Don't render dropdown until after hydration to prevent ID mismatches
   if (!mounted) {
-    return <div className="h-8 px-2.5 py-1.5" />; // Placeholder with same height
+    return <div className="h-8 px-2.5 py-1.5" aria-hidden="true" />; // Placeholder with same height
   }
 
   return (
@@ -268,13 +270,13 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
               </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Select Agent</p>
+              <p>{t('agentSelection.selectAgent')}</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         <DropdownMenuContent
           align="end"
-          className="w-88 p-0 border-0 shadow-md bg-card/98 backdrop-blur-sm overflow-hidden h-[480px] flex flex-col"
+          className="w-80 p-0 border-0 shadow-md bg-card/98 backdrop-blur-sm overflow-hidden h-[480px] flex flex-col"
           sideOffset={6}
           style={{
             borderRadius: '20px'
@@ -286,28 +288,24 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
               <input
                 ref={searchInputRef}
                 type="text"
-                placeholder="Search agents..."
+                placeholder={t('agentSelection.searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleSearchInputKeyDown}
-                className={cn(
-                  "w-full pl-10 pr-3 py-2 text-sm bg-muted/40 border-0 rounded-xl",
-                  "focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-0 focus:bg-muted/60",
-                  "placeholder:text-muted-foreground/60 transition-all duration-200"
-                )}
+                className="w-full pl-10 pr-3 py-2 text-sm bg-muted/40 border-0 rounded-xl focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-0 focus:bg-muted/60 placeholder:text-muted-foreground/60 transition-all duration-200"
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent px-1.5">
             {agentsLoading ? (
               <div className="px-4 py-6 text-sm text-muted-foreground/70 text-center">
-                <div className="animate-pulse">Loading agents...</div>
+                <div className="animate-pulse">{t('common.loading')}</div>
               </div>
             ) : sortedFilteredAgents.length === 0 ? (
               <div className="px-4 py-6 text-sm text-muted-foreground/70 text-center">
                 <Search className="h-6 w-6 mx-auto mb-2 opacity-40" />
-                <p>No agents found</p>
-                <p className="text-xs mt-1 opacity-60">Try adjusting your search</p>
+                <p>{t('agentSelection.noAgentsFound')}</p>
+                <p className="text-xs mt-1 opacity-60">{t('agentSelection.tryAdjustingSearch')}</p>
               </div>
             ) : (
               <div className="space-y-0.5 pb-2">
@@ -324,7 +322,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                 className="text-xs flex items-center gap-2 rounded-xl hover:bg-accent/40 transition-all duration-200 text-muted-foreground hover:text-foreground px-4 py-2"
               >
                 <Search className="h-3.5 w-3.5" />
-                Explore All Agents
+                {t('agentSelection.exploreAllAgents')}
               </Button>
               <div className="w-px h-4 bg-border/60" />
               <Button
@@ -334,13 +332,14 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
                 className="text-xs flex items-center gap-2 rounded-xl hover:bg-accent/40 transition-all duration-200 text-muted-foreground hover:text-foreground px-4 py-2"
               >
                 <Plus className="h-3.5 w-3.5" />
-                Create Agent
+                {t('agentSelection.createAgent')}
               </Button>
             </div>
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
-      <NewAgentDialog 
+      
+      <NewAgentDialog
         open={showNewAgentDialog} 
         onOpenChange={setShowNewAgentDialog}
         onSuccess={(agentId) => {
@@ -348,6 +347,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({
           handleAgentSelect(agentId);
         }}
       />
+      
       {configAgentId && (
         <AgentConfigurationDialog
           open={showConfigDialog}

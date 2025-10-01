@@ -2,6 +2,10 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAllTriggers, type TriggerWithAgent } from '@/hooks/react-query/triggers/use-all-triggers';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { SimplifiedTriggerDetailPanel } from './simplified-trigger-detail-panel';
+import { TriggerCreationDialog } from './trigger-creation-dialog';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -29,9 +33,6 @@ import {
   Repeat,
   History
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { TriggerCreationDialog } from './trigger-creation-dialog';
-import { SimplifiedTriggerDetailPanel } from './simplified-trigger-detail-panel';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -144,30 +145,34 @@ const TriggerListItem = ({
   );
 };
 
-const EmptyState = () => (
-  <div className="bg-muted/20 rounded-3xl border flex flex-col items-center justify-center py-16 px-4">
-    <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4">
-      <Zap className="h-6 w-6 text-muted-foreground" />
+const EmptyState = () => {
+  const { t } = useLanguage();
+  
+  return (
+    <div className="bg-muted/20 rounded-3xl border flex flex-col items-center justify-center py-16 px-4">
+      <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4">
+        <Zap className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <h3 className="text-base font-semibold text-foreground mb-2">
+        {t('tasks.noTasks')}
+      </h3>
+      <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
+        {t('tasks.getStartedDescription')}
+      </p>
     </div>
-    <h3 className="text-base font-semibold text-foreground mb-2">Get started by adding a trigger</h3>
-    <p className="text-sm text-muted-foreground text-center max-w-sm mb-6">
-      Schedule a trigger to automate actions and get reminders when they complete.
-    </p>
-  </div>
-);
+  );
+};
 
 const LoadingSkeleton = () => (
-  <div className="space-y-4 px-4">
-    {[1, 2, 3, 4, 5].map((i) => (
-      <div key={i} className="rounded-xl border dark:bg-card px-4 py-3">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-4 w-4 rounded" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-48" />
-          </div>
-          <Skeleton className="h-3 w-20" />
+  <div className="space-y-4">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="flex items-center gap-3 p-4 border rounded-lg">
+        <Skeleton className="h-4 w-4 rounded" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-3 w-48" />
         </div>
+        <Skeleton className="h-3 w-20" />
       </div>
     ))}
   </div>
@@ -175,21 +180,32 @@ const LoadingSkeleton = () => (
 
 export function TriggersPage() {
   const { data: triggers = [], isLoading, error } = useAllTriggers();
+  const { t } = useLanguage();
   const [selectedTrigger, setSelectedTrigger] = useState<TriggerWithAgent | null>(null);
-  const router = useRouter();
-
-  // Histórico (lista de threads, mesmo conteúdo do menu lateral)
-  const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
-  const { data: threads = [], isLoading: isThreadsLoading } = useThreads();
-  const combinedThreads: ThreadWithProject[] =
-    !isProjectsLoading && !isThreadsLoading
-      ? processThreadsWithProjects(threads, projects)
-      : [];
-  const groupedThreads: GroupedThreads = groupThreadsByDate(combinedThreads);
+  const [pendingTriggerId, setPendingTriggerId] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [triggerDialogType, setTriggerDialogType] = useState<'schedule' | 'event' | null>(null);
-  const [pendingTriggerId, setPendingTriggerId] = useState<string | null>(null);
-
+  const router = useRouter();
+  
+  // Fetch threads and projects for history
+  const { data: projects = [], isLoading: isProjectsLoading } = useProjects();
+  const { data: threads = [], isLoading: isThreadsLoading } = useThreads();
+  
+  // Process and group threads
+  const processedThreads = useMemo(() => 
+    isProjectsLoading || isThreadsLoading 
+      ? [] 
+      : processThreadsWithProjects(threads, projects)
+  , [threads, projects, isProjectsLoading, isThreadsLoading]);
+  
+  const groupedThreads = useMemo(() => 
+    groupThreadsByDate(processedThreads)
+  , [processedThreads]);
+  
+  const combinedThreads = useMemo(() => {
+    return Object.values(groupedThreads).flat();
+  }, [groupedThreads]);
+  
   const sortedTriggers = useMemo(() => {
     return [...triggers].sort((a, b) => {
       if (a.is_active !== b.is_active) {
@@ -229,6 +245,7 @@ export function TriggersPage() {
     setPendingTriggerId(triggerId);
   };
 
+  // Error state
   if (error) {
     return (
       <div className="h-screen flex flex-col">
@@ -236,7 +253,7 @@ export function TriggersPage() {
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Failed to load triggers. Please try refreshing the page.
+              {t('tasks.failedToLoad')}
             </AlertDescription>
           </Alert>
         </div>
@@ -253,35 +270,35 @@ export function TriggersPage() {
             selectedTrigger ? "max-w-2xl" : "max-w-4xl"
           )}>
             <div className="flex items-center justify-between py-10">
-              <h1 className="text-xl font-semibold">Tasks</h1>
+              <h1 className="text-xl font-semibold">{t('tasks.title')}</h1>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setHistoryOpen(true)}>
                   <History className="h-4 w-4 mr-1" />
-                  Histórico
+                  {t('tasks.history')}
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm">
                       <Plus className="h-4 w-4" />
-                      New task
+                      {t('tasks.newTask')}
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-72">
                     <DropdownMenuItem onClick={() => setTriggerDialogType('schedule')} className='rounded-lg'>
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <div className="flex flex-col">
-                        <span>Scheduled Task</span>
+                        <span>{t('tasks.scheduledTask')}</span>
                         <span className="text-xs text-muted-foreground">
-                          Schedule a task to run at a specific time
+                          {t('tasks.scheduledTaskDescription')}
                         </span>
                       </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setTriggerDialogType('event')} className='rounded-lg'>
                       <PlugZap className="h-4 w-4 text-muted-foreground" />
                       <div className="flex flex-col">
-                        <span>Event-based Task</span>
+                        <span>{t('tasks.eventBasedTask')}</span>
                         <span className="text-xs text-muted-foreground">
-                          Make a task to run when an event occurs
+                          {t('tasks.eventBasedTaskDescription')}
                         </span>
                       </div>
                     </DropdownMenuItem>
@@ -289,40 +306,41 @@ export function TriggersPage() {
                 </DropdownMenu>
               </div>
             </div>
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-          <div className="flex justify-center">
-            <div className={cn(
-              "w-full px-4 pb-8 transition-all duration-300 ease-in-out",
-              selectedTrigger ? "max-w-2xl" : "max-w-4xl"
-            )}>
-              {isLoading ? (
-                <LoadingSkeleton />
-              ) : sortedTriggers.length === 0 ? (
-                <EmptyState />
-              ) : (
-                <div className="space-y-4">
-                  {sortedTriggers.map(trigger => (
-                    <TriggerListItem
-                      key={trigger.trigger_id}
-                      trigger={trigger}
-                      isSelected={selectedTrigger?.trigger_id === trigger.trigger_id}
-                      onClick={() => {
-                        if (selectedTrigger?.trigger_id === trigger.trigger_id) {
-                          setSelectedTrigger(null);
-                        } else {
-                          setSelectedTrigger(trigger);
-                        }
-                      }}
-                    />
-                  ))}
+            <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+              <div className="flex justify-center">
+                <div className={cn(
+                  "w-full px-4 pb-8 transition-all duration-300 ease-in-out",
+                  selectedTrigger ? "max-w-2xl" : "max-w-4xl"
+                )}>
+                  {isLoading ? (
+                    <LoadingSkeleton />
+                  ) : sortedTriggers.length === 0 ? (
+                    <EmptyState />
+                  ) : (
+                    <div className="space-y-4">
+                      {sortedTriggers.map(trigger => (
+                        <TriggerListItem
+                          key={trigger.trigger_id}
+                          trigger={trigger}
+                          isSelected={selectedTrigger?.trigger_id === trigger.trigger_id}
+                          onClick={() => {
+                            if (selectedTrigger?.trigger_id === trigger.trigger_id) {
+                              setSelectedTrigger(null);
+                            } else {
+                              setSelectedTrigger(trigger);
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <div className={cn(
         "h-screen transition-all duration-300 ease-in-out overflow-hidden border-l",
         selectedTrigger
@@ -336,16 +354,17 @@ export function TriggersPage() {
           />
         )}
       </div>
-      {/* Histórico de Tasks (threads) */}
+
+      {/* History Dialog */}
       <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Histórico</DialogTitle>
+            <DialogTitle>{t('tasks.historyTitle')}</DialogTitle>
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto space-y-4">
             {combinedThreads.length === 0 ? (
               <div className="text-sm text-muted-foreground">
-                Nenhuma task no histórico.
+                {t('tasks.noTasks')}
               </div>
             ) : (
               Object.entries(groupedThreads).map(([dateGroup, threadsInGroup]) => (
@@ -354,15 +373,15 @@ export function TriggersPage() {
                     {dateGroup} ({threadsInGroup.length})
                   </div>
                   <div className="space-y-1">
-                    {threadsInGroup.map((t) => (
+                    {threadsInGroup.map((thread) => (
                       <Link
-                        key={t.threadId}
-                        href={t.url}
+                        key={thread.threadId}
+                        href={thread.url}
                         prefetch={false}
                         onClick={() => setHistoryOpen(false)}
                         className="block px-3 py-2 rounded-lg hover:bg-accent text-sm"
                       >
-                        {t.projectName}
+                        {thread.projectName}
                       </Link>
                     ))}
                   </div>
