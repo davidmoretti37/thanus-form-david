@@ -652,7 +652,7 @@ export function AgentConfigurationDialog({
                       tools={formData.agentpress_tools}
                       onToolsChange={handleToolsChange}
                       disabled={!areToolsEditable}
-                      isSunaAgent={isSunaAgent}
+                      isTarsAgent={isTarsAgent}
                       isLoading={isLoading}
                     />
                   </div>
