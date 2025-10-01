@@ -141,7 +141,7 @@ export default function SubscriptionRequiredPage() {
           <p>
             Questions? Contact us at{' '}
             <a href="mailto:support@inventu.ai" className="underline hover:text-primary">
-              support@kortix.ai
+              support@tars.ai
             </a>
           </p>
         </div>
