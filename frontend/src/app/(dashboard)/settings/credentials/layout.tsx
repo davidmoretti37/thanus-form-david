@@ -1,10 +1,10 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'App Profiles | Kortix Tars',
+  title: 'App Profiles | Tars',
   description: 'Manage your connected app integrations',
   openGraph: {
-    title: 'App Profiles | Kortix Tars',
+    title: 'App Profiles | Tars',
     description: 'Manage your connected app integrations',
     type: 'website',
   },

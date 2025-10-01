@@ -45,51 +45,51 @@ async def update_agent(
         restrictions = agent_metadata.get('restrictions', {})
         
         if is_suna_agent:
-            logger.warning(f"Update attempt on Suna default agent {agent_id} by user {user_id}")
+            logger.warning(f"Update attempt on Tars default agent {agent_id} by user {user_id}")
             
             if (agent_data.name is not None and 
                 agent_data.name != existing_data.get('name') and 
                 restrictions.get('name_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted name of Suna agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted name of Tars agent {agent_id}")
                 raise HTTPException(
                     status_code=403, 
-                    detail="Suna's name cannot be modified. This restriction is managed centrally."
+                    detail="Tars's name cannot be modified. This restriction is managed centrally."
                 )
             
             if (agent_data.description is not None and
                 agent_data.description != existing_data.get('description') and 
                 restrictions.get('description_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted description of Suna agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted description of Tars agent {agent_id}")
                 raise HTTPException(
                     status_code=403, 
-                    detail="Suna's description cannot be modified."
+                    detail="Tars's description cannot be modified."
                 )
             
             if (agent_data.system_prompt is not None and 
                 restrictions.get('system_prompt_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted system prompt of Suna agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted system prompt of Tars agent {agent_id}")
                 raise HTTPException(
                     status_code=403, 
-                    detail="Suna's system prompt cannot be modified. This is managed centrally to ensure optimal performance."
+                    detail="Tars's system prompt cannot be modified. This is managed centrally to ensure optimal performance."
                 )
             
             if (agent_data.agentpress_tools is not None and 
                 restrictions.get('tools_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted tools of Suna agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted tools of Tars agent {agent_id}")
                 raise HTTPException(
                     status_code=403, 
-                    detail="Suna's default tools cannot be modified. These tools are optimized for Suna's capabilities."
+                    detail="Tars's default tools cannot be modified. These tools are optimized for Tars's capabilities."
                 )
             
             if ((agent_data.configured_mcps is not None or agent_data.custom_mcps is not None) and 
                 restrictions.get('mcps_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted MCPs of Suna agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted MCPs of Tars agent {agent_id}")
                 raise HTTPException(
                     status_code=403, 
-                    detail="Suna's integrations cannot be modified."
+                    detail="Tars's integrations cannot be modified."
                 )
             
-            logger.debug(f"Suna agent update validation passed for agent {agent_id} by user {user_id}")
+            logger.debug(f"Tars agent update validation passed for agent {agent_id} by user {user_id}")
 
         current_version_data = None
         if existing_data.get('current_version_id'):

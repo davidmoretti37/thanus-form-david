@@ -187,7 +187,7 @@ class ToolManager:
             
             if hasattr(self, 'account_id') and self.account_id:
                 self.thread_manager.add_tool(AgentCreationTool, thread_manager=self.thread_manager, db_connection=db, account_id=self.account_id)
-                logger.debug("Registered agent_creation_tool for Suna")
+                logger.debug("Registered agent_creation_tool for Tars")
             else:
                 logger.warning("Could not register agent_creation_tool: account_id not available")
     
@@ -553,10 +553,10 @@ class AgentRunner:
         logger.debug(f"Agent config check: agent_config={self.config.agent_config is not None}, is_suna_default={is_suna_agent}")
         
         if is_suna_agent:
-            logger.debug("Registering Suna-specific tools...")
+            logger.debug("Registering Tars-specific tools...")
             self._register_suna_specific_tools(disabled_tools)
         else:
-            logger.debug("Not a Suna agent, skipping Suna-specific tool registration")
+            logger.debug("Not a Tars agent, skipping Tars-specific tool registration")
     
     def _register_suna_specific_tools(self, disabled_tools: List[str]):
         if 'agent_creation_tool' not in disabled_tools:
@@ -567,7 +567,7 @@ class AgentRunner:
             
             if hasattr(self, 'account_id') and self.account_id:
                 self.thread_manager.add_tool(AgentCreationTool, thread_manager=self.thread_manager, db_connection=db, account_id=self.account_id)
-                logger.debug("Registered agent_creation_tool for Suna")
+                logger.debug("Registered agent_creation_tool for Tars")
             else:
                 logger.warning("Could not register agent_creation_tool: account_id not available")
     

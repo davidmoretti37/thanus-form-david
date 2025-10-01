@@ -34,7 +34,7 @@ export function FooterSection() {
               <Link href="/" className="flex items-center gap-2">
                 <Image
                   src={logoSrc}
-                  alt="Kortix Logo"
+                  alt="Tars Logo"
                   width={122}
                   height={22}
                   priority
@@ -46,7 +46,7 @@ export function FooterSection() {
 
               <div className="flex items-center gap-4">
             <a
-              href="https://github.com/kortix-ai/suna"
+              href="https://github.com/inventu-ai/tars"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="GitHub"

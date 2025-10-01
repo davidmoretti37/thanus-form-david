@@ -34,7 +34,7 @@ export default function IntroductionPage() {
   return (
     <>
       <DocsHeader
-        title="What is Kortix?"
+        title="What is Tars?"
         subtitle="An open source platform for building AI agents that actually get things done"
         breadcrumbs={breadcrumbs}
         lastUpdated="August 2025"
@@ -45,21 +45,21 @@ export default function IntroductionPage() {
 
       <DocsImage
         src={imageSrc}
-        alt="Kortix Platform Interface"
+        alt="Tars Platform Interface"
         size="full"
         aspect="video"
         className="mb-12"
       />
     
       <DocsBody className="mb-8">
-        <h2 id="overview">What is Kortix?</h2>
+        <h2 id="overview">What is Tars?</h2>
         <p className="text-lg mb-6">
-          Kortix is an open source platform where you can build AI agents that handle real work. Think of it as the infrastructure and tools you need to create agents that can browse the web, manage files, analyze data, and automate workflows.
+          Tars is an open source platform where you can build AI agents that handle real work. Think of it as the infrastructure and tools you need to create agents that can browse the web, manage files, analyze data, and automate workflows.
         </p>
         
         <h3 id="meet-suna">Tars - Our Flagship Agent</h3>
         <p className="mb-4">
-          Tars is our showcase agent that demonstrates what's possible with Kortix. It's a generalist AI worker that can:
+          Tars is our showcase agent that demonstrates what's possible with Tars. It's a generalist AI worker that can:
         </p>
         <ul className="list-disc pl-6 mb-6 space-y-1">
           <li>Research topics and gather information from across the web</li>
@@ -69,16 +69,16 @@ export default function IntroductionPage() {
           <li>Execute complex multi-step workflows</li>
         </ul>
         <p className="mb-6">
-          Tars is completely open source and shows you what you can build with the Kortix platform.
+          Tars is completely open source and shows you what you can build with the Tars platform.
         </p>
   
         <h3 id="build-your-own" className="mb-4">Build Your Own Agents</h3>
         <p className="mb-6">
-          The real power comes when you create agents for your specific needs. Maybe you need an agent that monitors customer support tickets, or one that processes invoices, or handles your social media posting schedule. With Kortix, you get the building blocks to create agents that work exactly how you want them to.
+          The real power comes when you create agents for your specific needs. Maybe you need an agent that monitors customer support tickets, or one that processes invoices, or handles your social media posting schedule. With Tars, you get the building blocks to create agents that work exactly how you want them to.
         </p>
 
         <h3 id="how-it-works" className="mb-4">How It Works</h3>
-        <p className="mb-4">Kortix gives you four main pieces:</p>
+        <p className="mb-4">Tars gives you four main pieces:</p>
         <ul className="list-disc pl-6 mb-6 space-y-2">
           <li><strong>Backend API</strong> - Handles the heavy lifting: talking to AI models, managing tasks, storing data</li>
           <li><strong>Web Dashboard</strong> - Where you build, test, and monitor your agents</li>

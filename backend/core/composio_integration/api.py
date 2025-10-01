@@ -804,8 +804,8 @@ async def create_composio_trigger(req: CreateComposioTriggerRequest, current_use
         if not composio_trigger_id:
             raise HTTPException(status_code=500, detail="Failed to get Composio trigger id from response")
 
-        # Build Suna trigger config
-        suna_config: Dict[str, Any] = {
+        # Build Tars trigger config
+        tars_config: Dict[str, Any] = {
             "provider_id": "composio",
             "composio_trigger_id": composio_trigger_id,
             "trigger_slug": req.slug,
@@ -825,7 +825,7 @@ async def create_composio_trigger(req: CreateComposioTriggerRequest, current_use
             if req.workflow_input:
                 suna_config["workflow_input"] = req.workflow_input
 
-        # Create Suna trigger
+        # Create Tars trigger
         trigger_service = get_trigger_service(db)
         trigger = await trigger_service.create_trigger(
             agent_id=req.agent_id,

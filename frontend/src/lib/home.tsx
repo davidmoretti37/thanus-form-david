@@ -58,17 +58,17 @@ export interface PricingTier {
 }
 
 export const siteConfig = {
-  name: 'Kortix Tars',
+  name: 'Tars',
   description: 'The Generalist AI Worker that can act on your behalf.',
   cta: 'Start Free',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   keywords: ['AI Worker', 'Generalist AI', 'Open Source AI', 'Autonomous Agent'],
   links: {
-    email: 'support@kortix.ai',
-    twitter: 'https://x.com/kortixai',
-    // discord: 'https://discord.gg/kortixai',
-    github: 'https://github.com/Kortix-ai/Tars',
-    instagram: 'https://instagram.com/kortixai',
+    email: 'support@tars.ai',
+    twitter: 'https://x.com/tarsai',
+    // discord: 'https://discord.gg/inventuai',
+    github: 'https://github.com/inventu-ai/tars',
+    instagram: 'https://instagram.com/tarsai',
   },
   nav: {
     links: [
@@ -108,10 +108,10 @@ export const siteConfig = {
       </svg>
     ),
     badge: '100% OPEN SOURCE',
-    githubUrl: 'https://github.com/kortix-ai/suna',
-    title: 'Kortix – Build, manage and train your AI Workforce.',
+    githubUrl: 'https://github.com/inventu-ai/tars',
+    title: 'Tars – Build, manage and train your AI Workforce.',
     description:
-      'Kortix – open-source platform to build, manage and train your AI Workforce.',
+      'Tars – open-source platform to build, manage and train your AI Workforce.',
     inputPlaceholder: 'Ask Tars to...',
   },
   cloudPricingItems: [
@@ -499,15 +499,15 @@ export const siteConfig = {
     ],
   },
   featureSection: {
-    title: 'How Kortix Tars Works',
+    title: 'How Tars Works',
     description:
-      'Discover how Kortix Tars transforms your commands into action in four easy steps',
+      'Discover how Tars transforms your commands into action in four easy steps',
     items: [
       {
         id: 1,
         title: 'Request an Action',
         content:
-          'Speak or type your command—let Kortix Tars capture your intent. Your request instantly sets the process in motion.',
+          'Speak or type your command—let Tars capture your intent. Your request instantly sets the process in motion.',
         image:
           'https://images.unsplash.com/photo-1720371300677-ba4838fa0678?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
@@ -538,9 +538,9 @@ export const siteConfig = {
     ],
   },
   bentoSection: {
-    title: 'Empower Your Workflow with Kortix Tars',
+    title: 'Empower Your Workflow with Tars',
     description:
-      'Let Kortix Tars act on your behalf with advanced AI capabilities, seamless integrations, and autonomous task execution.',
+      'Let Tars act on your behalf with advanced AI capabilities, seamless integrations, and autonomous task execution.',
     items: [
       {
         id: 1,
@@ -904,7 +904,7 @@ export const siteConfig = {
   },
   quoteSection: {
     quote:
-      'Kortix Tars has transformed how we approach everyday tasks. The level of automation it provides, combined with its open source nature, makes it an invaluable tool for our entire organization.',
+      'Tars has transformed how we approach everyday tasks. The level of automation it provides, combined with its open source nature, makes it an invaluable tool for our entire organization.',
     author: {
       name: 'Alex Johnson',
       role: 'CTO, Innovatech',
@@ -914,7 +914,7 @@ export const siteConfig = {
   pricing: {
     title: 'Open Source & Free Forever',
     description:
-      'Kortix Tars is 100% open source and free to use. No hidden fees, no premium features locked behind paywalls.',
+      'Tars is 100% open source and free to use. No hidden fees, no premium features locked behind paywalls.',
     pricingItems: [
       {
         name: 'Community',
@@ -1179,7 +1179,7 @@ export const siteConfig = {
   faqSection: {
     title: 'Frequently Asked Questions',
     description:
-      "Answers to common questions about Kortix Tars and its capabilities. If you have any other questions, please don't hesitate to contact us.",
+      "Answers to common questions about Tars and its capabilities. If you have any other questions, please don't hesitate to contact us.",
     faQitems: [
       {
         id: 1,
@@ -1189,33 +1189,33 @@ export const siteConfig = {
       },
       {
         id: 2,
-        question: 'How does Kortix Tars work?',
+        question: 'How does Tars work?',
         answer:
-          'Kortix Tars works by analyzing your requirements, leveraging advanced AI algorithms to understand context, and executing tasks based on your instructions. It can integrate with your workflow, learn from feedback, and continuously improve its performance.',
+          'Tars works by analyzing your requirements, leveraging advanced AI algorithms to understand context, and executing tasks based on your instructions. It can integrate with your workflow, learn from feedback, and continuously improve its performance.',
       },
       {
         id: 3,
-        question: 'Is Kortix Tars really free?',
+        question: 'Is Tars really free?',
         answer:
-          'Yes, Kortix Tars is completely free and open source. We believe in democratizing AI technology and making it accessible to everyone. You can use it, modify it, and contribute to its development without any cost.',
+          'Yes, Tars is completely free and open source. We believe in democratizing AI technology and making it accessible to everyone. You can use it, modify it, and contribute to its development without any cost.',
       },
       {
         id: 4,
         question: 'Can I integrate Tars with my existing tools?',
         answer:
-          'Yes, Kortix Tars is designed to be highly compatible with popular tools and platforms. We offer APIs and pre-built integrations for seamless connection with your existing workflow tools and systems.',
+          'Yes, Tars is designed to be highly compatible with popular tools and platforms. We offer APIs and pre-built integrations for seamless connection with your existing workflow tools and systems.',
       },
       {
         id: 5,
-        question: 'How can I contribute to Kortix Tars?',
+        question: 'How can I contribute to Tars?',
         answer:
-          'You can contribute to Kortix Tars by submitting pull requests on GitHub, reporting bugs, suggesting new features, or helping with documentation. Join our Discord community to connect with other contributors and Hire Tars.',
+          'You can contribute to Tars by submitting pull requests on GitHub, reporting bugs, suggesting new features, or helping with documentation. Join our Discord community to connect with other contributors and Hire Tars.',
       },
       {
         id: 6,
-        question: 'How does Kortix Tars save me time?',
+        question: 'How does Tars save me time?',
         answer:
-          'Kortix Tars automates repetitive tasks, streamlines workflows, and provides quick solutions to common challenges. This automation and efficiency can save hours of manual work, allowing you to focus on more strategic activities.',
+          'Tars automates repetitive tasks, streamlines workflows, and provides quick solutions to common challenges. This automation and efficiency can save hours of manual work, allowing you to focus on more strategic activities.',
       },
     ],
   },
@@ -1231,11 +1231,11 @@ export const siteConfig = {
   },
   footerLinks: [
     {
-      title: 'Kortix',
+      title: 'Tars',
       links: [
-        { id: 1, title: 'About', url: 'https://kortix.ai' },
-        { id: 3, title: 'Contact', url: 'mailto:hey@kortix.ai' },
-        { id: 4, title: 'Careers', url: 'https://kortix.ai/careers' },
+        { id: 1, title: 'About', url: 'https://tars.ai' },
+        { id: 3, title: 'Contact', url: 'mailto:hey@tars.ai' },
+        { id: 4, title: 'Careers', url: 'https://tars.ai/careers' },
       ],
     },
     {
@@ -1244,10 +1244,10 @@ export const siteConfig = {
         {
           id: 5,
           title: 'Documentation',
-          url: 'https://github.com/Kortix-ai/Tars',
+          url: 'https://github.com/inventu-ai/tars',
         },
-        { id: 7, title: 'Discord', url: 'https://discord.gg/Py6pCBUUPw' },
-        { id: 8, title: 'GitHub', url: 'https://github.com/Kortix-ai/Tars' },
+        { id: 7, title: 'Discord', url: 'https://discord.gg/inventuai' },
+        { id: 8, title: 'GitHub', url: 'https://github.com/inventu-ai/tars' },
       ],
     },
     {
@@ -1256,17 +1256,17 @@ export const siteConfig = {
         {
           id: 9,
           title: 'Privacy Policy',
-          url: 'https://suna.so/legal?tab=privacy',
+          url: 'https://tars.ai/legal?tab=privacy',
         },
         {
           id: 10,
           title: 'Terms of Service',
-          url: 'https://suna.so/legal?tab=terms',
+          url: 'https://tars.ai/legal?tab=terms',
         },
         {
           id: 11,
           title: 'License Apache 2.0',
-          url: 'https://github.com/Kortix-ai/Tars/blob/main/LICENSE',
+          url: 'https://github.com/inventu-ai/tars/blob/main/LICENSE',
         },
       ],
     },
@@ -1312,7 +1312,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/2fbf0552-87d6-4d12-be25-d54f435bc493',
+      url: 'https://tars.ai/share/2fbf0552-87d6-4d12-be25-d54f435bc493',
     },
     {
       id: 'vc-list',
@@ -1347,7 +1347,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/a172382b-aa77-42a2-a3e1-46f32a0f9c37',
+      url: 'https://tars.ai/share/a172382b-aa77-42a2-a3e1-46f32a0f9c37',
     },
     {
       id: 'candidate-search',
@@ -1389,7 +1389,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/d9e39c94-4f6f-4b5a-b1a0-b681bfe0dee8',
+      url: 'https://tars.ai/share/d9e39c94-4f6f-4b5a-b1a0-b681bfe0dee8',
     },
     {
       id: 'company-trip',
@@ -1438,7 +1438,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/23f7d904-eb66-4a9c-9247-b9704ddfd233',
+      url: 'https://tars.ai/share/23f7d904-eb66-4a9c-9247-b9704ddfd233',
     },
     {
       id: 'excel-spreadsheet',
@@ -1480,7 +1480,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/2a147a3a-3778-4624-8285-42474c8c1c9c',
+      url: 'https://tars.ai/share/2a147a3a-3778-4624-8285-42474c8c1c9c',
     },
     {
       id: 'speaker-prospecting',
@@ -1522,7 +1522,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/6830cc6d-3fbd-492a-93f8-510a5f48ce50',
+      url: 'https://tars.ai/share/6830cc6d-3fbd-492a-93f8-510a5f48ce50',
     },
     {
       id: 'scientific-papers',
@@ -1564,7 +1564,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/a106ef9f-ed97-46ee-8e51-7bfaf2ac3c29',
+      url: 'https://tars.ai/share/a106ef9f-ed97-46ee-8e51-7bfaf2ac3c29',
     },
     {
       id: 'lead-generation',
@@ -1606,13 +1606,13 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1552581234-26160f608093?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/c3472df7-adc1-4d5f-9927-4f8f513ec2fe',
+      url: 'https://tars.ai/share/c3472df7-adc1-4d5f-9927-4f8f513ec2fe',
     },
     {
       id: 'seo-analysis',
       title: 'SEO Analysis',
       description:
-        "Based on my website suna.so, generate an SEO report analysis, find top-ranking pages by keyword clusters, and identify topics I'm missing.",
+        "Based on my website tars.ai, generate an SEO report analysis, find top-ranking pages by keyword clusters, and identify topics I'm missing.",
       category: 'marketing',
       featured: true,
       icon: (
@@ -1655,7 +1655,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/cf756e02-fee9-4281-a0e4-76ac850f1ac9',
+      url: 'https://tars.ai/share/cf756e02-fee9-4281-a0e4-76ac850f1ac9',
     },
     {
       id: 'personal-trip',
@@ -1704,7 +1704,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/8442cc76-ac8b-438c-b539-4b93909a2218',
+      url: 'https://tars.ai/share/8442cc76-ac8b-438c-b539-4b93909a2218',
     },
     {
       id: 'funded-startups',
@@ -1739,7 +1739,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1444653614773-995cb1ef9efa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/f04c871c-6bf5-4464-8e9c-5351c9cf5a60',
+      url: 'https://tars.ai/share/f04c871c-6bf5-4464-8e9c-5351c9cf5a60',
     },
     {
       id: 'scrape-forums',
@@ -1781,7 +1781,7 @@ export const siteConfig = {
       ),
       image:
         'https://images.unsplash.com/photo-1523580494863-6f3031224c94?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2400&q=80',
-      url: 'https://suna.so/share/53bcd4c7-40d6-4293-9f69-e2638ddcfad8',
+      url: 'https://tars.ai/share/53bcd4c7-40d6-4293-9f69-e2638ddcfad8',
     },
   ],
 };

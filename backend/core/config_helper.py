@@ -27,7 +27,7 @@ def _extract_suna_agent_config(agent_data: Dict[str, Any], version_data: Optiona
     from core.suna_config import SUNA_CONFIG
     
     agent_id = agent_data.get('agent_id', 'Unknown')
-    logger.debug(f"Using Suna central config for agent {agent_id}")
+    logger.debug(f"Using Tars central config for agent {agent_id}")
     
     # Start with central Suna config
     config = {

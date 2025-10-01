@@ -4,14 +4,14 @@ import { siteConfig } from '@/lib/site';
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
-  keywords: ['Kortix Tars', 'Kortix', 'Tars', 'AI', 'Agent', 'Open Source'],
+  keywords: ['Tars', 'Tars AI', 'AI', 'Agent', 'Open Source'],
   authors: [
     {
-      name: 'Kortix AI Corp',
-      url: 'https://kortix.ai',
+      name: 'Tars Team',
+      url: 'https://tars.ai',
     },
   ],
-  creator: 'Kortix AI Corp',
+  creator: 'Tars Team',
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: siteConfig.name,
     description: siteConfig.description,
-    creator: '@kortixai',
+    creator: '@inventuai',
     images: ['/banner.png'],
   },
   robots: {

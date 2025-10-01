@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 
 // Configuration exports
 export const runtime = 'edge';
-export const alt = 'Kortix Tars';
+export const alt = 'Tars';
 export const size = {
   width: 1200,
   height: 630,

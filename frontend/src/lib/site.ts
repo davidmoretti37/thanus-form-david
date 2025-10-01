@@ -1,11 +1,11 @@
 export const siteConfig = {
-  name: 'Kortix Tars',
-  url: 'https://suna.so/',
-  description: 'Kortix AI',
+  name: 'Tars',
+  url: 'https://tars.ai/',
+  description: 'Tars AI',
   links: {
-    twitter: 'https://x.com/kortixai',
-    github: 'https://github.com/kortix-ai/',
-    linkedin: 'https://www.linkedin.com/company/kortix/',
+    twitter: 'https://x.com/tarsai',
+    github: 'https://github.com/inventu-ai/tars/',
+    linkedin: 'https://www.linkedin.com/company/inventuai/',
   },
 };
 

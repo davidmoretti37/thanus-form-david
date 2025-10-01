@@ -87,8 +87,8 @@ dependencies = [
 ]
 
 [project.urls]
-homepage = "https://www.suna.so/"
-repository = "https://github.com/kortix-ai/suna"
+homepage = "https://www.tars.ai/"
+repository = "https://github.com/InventuAI/tars"
 
 [tool.uv]
 package = false

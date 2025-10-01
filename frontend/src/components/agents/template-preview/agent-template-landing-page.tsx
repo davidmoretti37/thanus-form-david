@@ -182,7 +182,7 @@ export const AgentTemplateLandingPage: React.FC<AgentTemplateLandingPageProps> =
                 variants={fadeInUp}
               >
                 <Badge variant="secondary" className="px-3 py-1 text-white">
-                  Built by Kortix
+                  Built by Tars
                 </Badge>
               </motion.div>
             )}

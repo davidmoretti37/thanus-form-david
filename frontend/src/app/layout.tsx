@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     template: `%s - ${siteConfig.name}`,
   },
   description:
-    'Kortix is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Kortix becomes your digital companion for research, data analysis, and everyday challenges.',
+    'Tars is an AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Tars becomes your digital companion for research, data analysis, and everyday challenges.',
   keywords: [
     'AI',
     'artificial intelligence',
@@ -46,11 +46,11 @@ export const metadata: Metadata = {
     'research',
     'data analysis',
   ],
-  authors: [{ name: 'Kortix Team', url: 'https://suna.so' }],
+  authors: [{ name: 'Tars Team', url: 'https://tars.ai' }],
   creator:
-    'Kortix Team',
+    'Tars Team',
   publisher:
-    'Kortix Team',
+    'Tars Team',
   category: 'Technology',
   applicationName: 'Tars',
   formatDetection: {
@@ -88,9 +88,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Tars - Open Source Generalist AI Worker',
     description:
-      'Tars is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
-    creator: '@kortixai',
-    site: '@kortixai',
+      'Tars is an AI assistant that helps you accomplish real-world tasks with ease through natural conversation.',
+    creator: '@tarsai',
+    site: '@tarsai',
     images: [
       {
         url: '/banner.png',

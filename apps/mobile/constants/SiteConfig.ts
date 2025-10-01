@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: "Suna",
-  url: "https://suna.so",
-  description: "Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Suna becomes your digital companion for research, data analysis, and everyday challenges.",
+  name: "Tars",
+  url: "https://tars.so",
+  description: "Tars is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Suna becomes your digital companion for research, data analysis, and everyday challenges.",
   keywords: [
     'AI',
     'artificial intelligence',
@@ -13,18 +13,18 @@ export const siteConfig = {
     'research',
     'data analysis',
   ],
-  authors: [{ name: 'Kortix Team', url: 'https://suna.so' }],
-  creator: 'Kortix Team - Adam Cohen Hillel, Marko Kraemer, Domenico Gagliardi, and Quoc Dat Le',
-  publisher: 'Kortix Team - Adam Cohen Hillel, Marko Kraemer, Domenico Gagliardi, and Quoc Dat Le',
+  authors: [{ name: 'InventuAI Team', url: 'https://tars.ai' }],
+  creator: 'InventuAI Team - Adam Cohen Hillel, Marko Kraemer, Domenico Gagliardi, and Quoc Dat Le',
+  publisher: 'InventuAI Team - Adam Cohen Hillel, Marko Kraemer, Domenico Gagliardi, and Quoc Dat Le',
   category: 'Technology',
-  applicationName: 'Suna',
-  twitterHandle: '@kortixai',
-  githubUrl: 'https://github.com/kortix-ai/suna',
+  applicationName: 'Tars',
+  twitterHandle: '@InventuAI',
+  githubUrl: 'https://github.com/InventuAI-ai/tars',
   
   // Mobile-specific configurations
   bundleId: {
-    ios: 'com.kortix.suna',
-    android: 'com.kortix.suna'
+    ios: 'com.InventuAI.tars',
+    android: 'com.InventuAI.tars'
   },
   
   // Theme colors
@@ -54,7 +54,7 @@ export const mobileMetadata = {
     address: false,
   },
   openGraph: {
-    title: 'Suna - Open Source Generalist AI Agent',
+    title: 'Tars - Generalist AI Agent',
     description: siteConfig.description,
     url: siteConfig.url,
     siteName: siteConfig.name,
@@ -63,7 +63,7 @@ export const mobileMetadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Suna - Open Source Generalist AI Agent',
+        alt: 'Tars - Generalist AI Agent',
         type: 'image/png',
       },
     ],
@@ -72,7 +72,7 @@ export const mobileMetadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Suna - Open Source Generalist AI Agent',
+    title: 'Tars - Generalist AI Agent',
     description: siteConfig.description,
     creator: siteConfig.twitterHandle,
     site: siteConfig.twitterHandle,
@@ -81,7 +81,7 @@ export const mobileMetadata = {
         url: '/banner.png',
         width: 1200,
         height: 630,
-        alt: 'Suna - Open Source Generalist AI Agent',
+        alt: 'Tars - Generalist AI Agent',
       },
     ],
   },

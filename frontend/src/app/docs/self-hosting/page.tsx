@@ -61,8 +61,8 @@ export default function QuickStartPage() {
             data={[{
               language: "bash",
               filename: "terminal",
-              code: `git clone https://github.com/kortix-ai/suna.git
-cd suna`
+              code: `git clone https://github.com/inventu-ai/tars.git
+cd tars`
             }]}
             defaultValue="bash"
           >
@@ -212,7 +212,7 @@ cd suna`
       </DocsBody>
 
       <DocsBody className="mb-8">
-        <h2 id="step-5-start">Step 5: Start Kortix</h2>
+        <h2 id="step-5-start">Step 5: Start Tars</h2>
         
         <h3 className="mb-4">If you chose Docker setup:</h3>
         <p className="mb-4">The wizard automatically starts everything for you! After setup completes:</p>

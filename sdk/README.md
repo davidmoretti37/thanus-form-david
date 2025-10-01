@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://python.org)
 
-A Python SDK that enables you to create, manage, and interact with AI Workers on [Suna](https://suna.so).
+A Python SDK that enables you to create, manage, and interact with AI Workers on [Suna](https://tars.ai).
 
 ## 📦 Installation
 
@@ -59,7 +59,7 @@ if __name__ == "__main__":
 
 ## 🔑 Environment Setup
 
-Get your API key from [https://suna.so/settings/api-keys](https://suna.so/settings/api-keys)
+Get your API key from [https://tars.ai/settings/api-keys](https://tars.ai/settings/api-keys)
 
 ## 🧪 Running Examples
 

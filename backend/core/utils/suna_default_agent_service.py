@@ -38,10 +38,10 @@ class SunaDefaultAgentService:
                 return {
                     "installed_count": 0,
                     "failed_count": 0,
-                    "details": ["All users already have Suna agents"]
+                    "details": ["All users already have Tars agents"]
                 }
             
-            logger.debug(f"📦 Installing Suna for {len(missing_accounts)} users")
+            logger.debug(f"📦 Installing Tars for {len(missing_accounts)} users")
             
             success_count = 0
             failed_count = 0
@@ -51,7 +51,7 @@ class SunaDefaultAgentService:
                 try:
                     await self._create_suna_agent_for_user(account_id)
                     success_count += 1
-                    logger.debug(f"✅ Installed Suna for user {account_id}")
+                    logger.debug(f"✅ Installed Tars for user {account_id}")
                 except Exception as e:
                     failed_count += 1
                     error_msg = f"Failed to install for user {account_id}: {str(e)}"
@@ -75,12 +75,12 @@ class SunaDefaultAgentService:
     
     async def install_suna_agent_for_user(self, account_id: str, replace_existing: bool = False) -> Optional[str]:
         """Install Suna agent for a specific user."""
-        logger.debug(f"🔄 Installing Suna agent for user: {account_id}")
+        logger.debug(f"🔄 Installing Tars agent for user: {account_id}")
         
         try:
             client = await self._db.client
             
-            # Check for existing Suna agent
+            # Check for existing Tars agent
             existing_result = await client.table('agents').select('agent_id').eq('account_id', account_id).eq('metadata->>is_suna_default', 'true').execute()
             
             if existing_result.data:
@@ -89,14 +89,14 @@ class SunaDefaultAgentService:
                 if replace_existing:
                     # Delete existing agent
                     await self._delete_agent(existing_agent_id)
-                    logger.debug(f"Deleted existing Suna agent for replacement")
+                    logger.debug(f"Deleted existing Tars agent for replacement")
                 else:
-                    logger.debug(f"User {account_id} already has Suna agent: {existing_agent_id}")
+                    logger.debug(f"User {account_id} already has Tars agent: {existing_agent_id}")
                     return existing_agent_id
 
             # Create new agent
             agent_id = await self._create_suna_agent_for_user(account_id)
-            logger.debug(f"Successfully installed Suna agent {agent_id} for user {account_id}")
+            logger.debug(f"Successfully installed Tars agent {agent_id} for user {account_id}")
             return agent_id
                 
         except Exception as e:
@@ -121,7 +121,7 @@ class SunaDefaultAgentService:
             return {
                 "total_agents": total_count,
                 "recent_installs": recent_count,
-                "note": "Suna agents always use current central configuration"
+                "note": "Tars agents always use current central configuration"
             }
             
         except Exception as e:
@@ -179,13 +179,13 @@ class SunaDefaultAgentService:
                 agentpress_tools=SUNA_CONFIG["agentpress_tools"],
                 model=SUNA_CONFIG["model"],
                 version_name="v1",
-                change_description="Initial Suna agent installation"
+                change_description="Initial Tars agent installation"
             )
             
-            logger.debug(f"Created initial version for Suna agent {agent_id}")
+            logger.debug(f"Created initial version for Tars agent {agent_id}")
             
         except Exception as e:
-            logger.error(f"Failed to create initial version for Suna agent {agent_id}: {e}")
+            logger.error(f"Failed to create initial version for Tars agent {agent_id}: {e}")
             raise
     
     async def _delete_agent(self, agent_id: str) -> bool:

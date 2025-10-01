@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "Suna",
-    "slug": "suna-mobile",
+    "name": "Tars",
+    "slug": "tars-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "owner": "kortix",
-    "scheme": "sunamobile",
+    "owner": "InventuAI",
+    "scheme": "tarsmobile",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "description": "Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Suna becomes your digital companion for research, data analysis, and everyday challenges.",
@@ -28,10 +28,10 @@
       "research",
       "data analysis"
     ],
-    "githubUrl": "https://github.com/kortix-ai/suna",
+    "githubUrl": "https://github.com/InventuAI/tars",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kortix.suna",
+      "bundleIdentifier": "com.inventuai.tars",
       "buildNumber": "1.0.0",
       "infoPlist": {
         "CFBundleDisplayName": "Suna",
@@ -46,7 +46,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.kortix.suna",
+      "package": "com.inventuai.tars",
       "versionCode": 1,
       "permissions": [
         "INTERNET",
@@ -58,9 +58,9 @@
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/images/favicon.png",
-      "name": "Suna - Open Source Generalist AI Agent",
-      "shortName": "Suna",
-      "description": "Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.",
+      "name": "Tars - Generalist AI Agent",
+      "shortName": "Tars",
+      "description": "Tars is a fully open source AI assistant that helps you accomplish real-world tasks with ease through natural conversation.",
       "startUrl": "/",
       "display": "standalone",
       "orientation": "portrait",
@@ -89,13 +89,13 @@
     },
     "extra": {
       "metadata": {
-        "applicationName": "Suna",
-        "authors": "Kortix Team",
-        "creator": "Kortix Team",
-        "publisher": "Kortix Team",
+        "applicationName": "Tars",
+        "authors": "InventuAI Team",
+        "creator": "InventuAI Team",
+        "publisher": "InventuAI Team",
         "category": "Technology",
-        "siteUrl": "https://suna.so",
-        "twitterHandle": "@kortixai"
+        "siteUrl": "https://tars.ai",
+        "twitterHandle": "@InventuAI"
       }
     }
   }

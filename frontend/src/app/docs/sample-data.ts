@@ -26,7 +26,7 @@ export const sampleNavigation: DocsNavigationSection[] = [
     items: [
       {
         id: 'introduction',
-        title: 'What is Kortix?',
+        title: 'What is Tars?',
         href: '#introduction',
         icon: BookOpen,
         isActive: true
@@ -152,7 +152,7 @@ export const sampleNavigation: DocsNavigationSection[] = [
 
 export const sampleBreadcrumbs = [
   { title: 'Documentation', onClick: () => console.log('Navigate to docs') },
-  { title: 'Kortix Platform Guide' }
+  { title: 'Tars Platform Guide' }
 ];
 
 export const kortixFeatures = [

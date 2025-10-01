@@ -33,13 +33,13 @@ import { useTheme } from "next-themes"
 
 const data = {
   user: {
-    name: "Kortix User",
-    email: "docs@kortix.ai",
+    name: "Tars User",
+    email: "docs@inventua.ai",
     avatar: "/favicon.png",
   },
   teams: [
     {
-      name: "Kortix AI",
+      name: "Tars AI",
       logo: GalleryVerticalEnd,
       plan: "Open Source",
     },
@@ -49,7 +49,7 @@ const data = {
       title: "Getting Started",
       items: [
         {
-          title: "What is Kortix?",
+          title: "What is Tars?",
           url: "/docs/introduction",
         },
         {
@@ -81,7 +81,7 @@ const data = {
       items: [
         {
           title: "GitHub Repository",
-          url: "https://github.com/kortix-ai/suna",
+          url: "https://github.com/inventu-ai/suna",
           external: true,
         },
         {
@@ -119,7 +119,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader className="bg-transparent p-6 px-2">
         <Image
           src={logoSrc}
-          alt="Kortix Logo"
+          alt="Tars Logo"
           width={80}
           height={14}
           className="md:w-[100px] md:h-[18px]"
