@@ -24,6 +24,7 @@ import { useAgents } from '@/hooks/react-query/agents/use-agents';
 import { AnimatedTooltip } from '@/components/ui/animated-tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import MiniCalendar from '@/components/ui/mini-calendar';
+import { t } from '@/lib/i18n';
 
 const ICON_CLOUD_SLUGS: string[] = [
   "react",
@@ -362,10 +363,10 @@ export default function HomePage() {
         style={{ gridTemplateRows: '4fr 1.6fr 3.4fr 56px' }}>
         {/* Left column: Agents (2 rows) */}
         <BentoCard
-          name="Criar  Worker"
-          description=" Crie seus proprio funcionarios Virtuais com a Criar  Worker"
+          name={t('home.createWorker.title')}
+          description={t('home.createWorker.description')}
           href="/construtor"
-          cta="Abrir Agents"
+          cta={t('home.createWorker.cta')}
           className="col-start-1 row-start-1 row-span-2"
           background={
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
@@ -398,10 +399,10 @@ export default function HomePage() {
 
         {/* Center column: Workers (3 rows - principal) */}
         <BentoCard
-          name="Workers"
-          description="Seus funcionários virtuais especializados"
+          name={t('home.workers.title')}
+          description={t('home.workers.description')}
           href="/agents?tab=marketplace"
-          cta="Abrir Workers"
+          cta={t('home.workers.cta')}
           className="col-start-2 row-start-1 row-span-3"
           background={
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
@@ -442,10 +443,10 @@ export default function HomePage() {
 
         {/* Right column - top: Artefato (1 row) */}
         <BentoCard
-          name="Artefatos"
-          description="Itens Criativos e Criações Originais"
+          name={t('home.artifacts.title')}
+          description={t('home.artifacts.description')}
           href="/artefatos"
-          cta="Ver Artefatos"
+          cta={t('home.artifacts.cta')}
           className="col-start-3 row-start-1 row-span-2"
           background={
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
@@ -482,10 +483,10 @@ export default function HomePage() {
 
         {/* Right column - bottom: My Workspace (2 rows) */}
         <BentoCard
-          name="Tasks"
-          description="Lista de Tarefas"
+          name={t('home.tasks.title')}
+          description={t('home.tasks.description')}
           href="/tasks"
-          cta="Abrir Tasks"
+          cta={t('home.tasks.cta')}
           className="col-start-3 row-start-3 row-span-1"
           background={
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
@@ -518,10 +519,10 @@ export default function HomePage() {
 
         {/* Left column - bottom: Integrações (1 row) */}
         <BentoCard
-          name="Integrações"
-          description="Pilha tecnológica integrada"
+          name={t('home.integrations.title')}
+          description={t('home.integrations.description')}
           href="/settings/credentials"
-          cta="Gerenciar Credenciais"
+          cta={t('home.integrations.cta')}
           className="col-start-1 row-start-3 row-span-1"
           background={
             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
@@ -651,7 +652,7 @@ export default function HomePage() {
                   handleHomeSubmit();
                 }
               }}
-              placeholder={selectedAgent ? 'Digite sua tarefa…' : 'Use @ para chamar um agent…'}
+              placeholder={selectedAgent ? t('home.chat.placeholder.agent') : t('home.chat.placeholder.noAgent')}
               disabled={isSubmitting}
               className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
             />

@@ -42,6 +42,8 @@ import { getAgents } from '@/hooks/react-query/agents/utils';
 import { AgentRunLimitDialog } from '@/components/thread/agent-run-limit-dialog';
 import { Examples } from '@/components/dashboard/examples';
 import { useAgentSelection } from '@/lib/stores/agent-selection-store';
+import { t } from '@/lib/i18n';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Custom dialog overlay with blur effect
 const BlurredDialogOverlay = () => (
@@ -85,11 +87,20 @@ const RotatingText = ({
   );
 };
 
-// Constant for localStorage key to ensure consistency
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
 
-export function HeroSection() {
-  const { hero } = siteConfig;
+interface HeroSectionProps {
+  hero: {
+    badge: string;
+    title: string;
+    description: string;
+    inputPlaceholder: string;
+  };
+  cta: string;
+}
+
+export function HeroSection({ hero, cta }: HeroSectionProps) {
+  const { t } = useLanguage();
   const tablet = useMediaQuery('(max-width: 1024px)');
   const [mounted, setMounted] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -377,24 +388,23 @@ export function HeroSection() {
           </Link> */}
           <div className="flex flex-col items-center justify-center gap-3 sm:gap-4 pt-8 sm:pt-12 max-w-4xl mx-auto">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tighter text-balance text-center px-2">
-              <span className="text-primary">Hire Tars for </span>
+              <span className="text-primary">{t('home.hero.title.prefix')}</span>
               <RotatingText 
-                texts={['Research', 'Presentations', 'Docs', 'Spreadsheets', 'Design', 'Data Analysis', 'Email Management', 'Social Media', 'SEO', 'Lead Generation', 'Customer Support', 'Content Creation', 'Project Management', 'Sales', 'Marketing', 'Analytics']}
+                texts={t('home.hero.title.rotatingTexts').split(',')}
                 className="text-secondary"
               />
             </h1>
             <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight max-w-2xl px-2">
-            Deploy AI Workers that run your business autonomously.
+              {t('home.hero.subtitle')}
             </p>
           </div>
 
           <div className="flex flex-col items-center w-full max-w-3xl mx-auto gap-2 flex-wrap justify-center px-2 sm:px-0">
             <div className="w-full relative">
-              <div className="relative z-10">
                 <ChatInput
                   ref={chatInputRef}
                   onSubmit={handleChatInputSubmit}
-                  placeholder="Give Tars a task to complete..."
+                  placeholder={t('home.hero.chatPlaceholder')}
                   loading={isSubmitting}
                   disabled={isSubmitting}
                   value={inputValue}
@@ -415,104 +425,101 @@ export function HeroSection() {
               <Examples onSelectPrompt={setInputValue} count={tablet ? 2 : 4} />
             </div>
           </div>
-
         </div>
 
-      </div>
-        <div className="mb-8 sm:mb-16 sm:mt-32 mx-auto"></div>
+        {/* Auth Dialog */}
+        <Dialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
+          <BlurredDialogOverlay />
+          <DialogContent className="sm:max-w-md rounded-xl bg-background border border-border">
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-xl font-medium">
+                  {t('home.auth.signInTitle')}
+                </DialogTitle>
+                {/* <button 
+                  onClick={() => setAuthDialogOpen(false)}
+                  className="rounded-full p-1 hover:bg-muted transition-colors"
+                >
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button> */}
+              </div>
+            </DialogHeader>
 
-      {/* Auth Dialog */}
-      <Dialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
-        <BlurredDialogOverlay />
-        <DialogContent className="sm:max-w-md rounded-xl bg-background border border-border">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl font-medium">
-                Sign in to continue
-              </DialogTitle>
-              {/* <button 
-                onClick={() => setAuthDialogOpen(false)}
-                className="rounded-full p-1 hover:bg-muted transition-colors"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button> */}
-            </div>
             <DialogDescription className="text-muted-foreground">
-              Sign in or create an account to talk with Tars
+              {t('home.auth.signInDescription')}
             </DialogDescription>
-          </DialogHeader>
 
 
 
-          {/* OAuth Sign In */}
-          <div className="w-full">
-            <GoogleSignIn returnUrl="/dashboard" />
-            <GitHubSignIn returnUrl="/dashboard" />
-          </div>
-
-          {/* Divider */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
+            {/* OAuth Sign In */}
+            <div className="w-full">
+              <GoogleSignIn returnUrl="/dashboard" />
+              <GitHubSignIn returnUrl="/dashboard" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02] text-muted-foreground">
-                or continue with email
-              </span>
+
+            {/* Divider */}
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-[#F3F4F6] dark:bg-[#F9FAFB]/[0.02] text-muted-foreground">
+                  {t('home.auth.orContinueWith')}
+                </span>
+              </div>
             </div>
-          </div>
 
-          {/* Sign in options */}
-          <div className="space-y-4 pt-4">
-            <Link
-              href={`/auth?returnUrl=${encodeURIComponent('/dashboard')}`}
-              className="flex h-12 items-center justify-center w-full text-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
-              onClick={() => setAuthDialogOpen(false)}
-            >
-              Sign in with email
-            </Link>
+            {/* Sign in options */}
+            <div className="space-y-4 pt-4">
+              <Link
+                href={`/auth?returnUrl=${encodeURIComponent('/dashboard')}`}
+                className="flex h-12 items-center justify-center w-full text-center rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md"
+                onClick={() => setAuthDialogOpen(false)}
+              >
+                {t('home.auth.signInWithEmail')}
+              </Link>
 
-            <Link
-              href={`/auth?mode=signup&returnUrl=${encodeURIComponent('/dashboard')}`}
-              className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all"
-              onClick={() => setAuthDialogOpen(false)}
-            >
-              Create new account
-            </Link>
-          </div>
+              <Link
+                href={`/auth?mode=signup&returnUrl=${encodeURIComponent('/dashboard')}`}
+                className="flex h-12 items-center justify-center w-full text-center rounded-full border border-border bg-background hover:bg-accent/20 transition-all"
+                onClick={() => setAuthDialogOpen(false)}
+              >
+                {t('home.auth.createNewAccount')}
+              </Link>
+            </div>
 
-          <div className="mt-4 text-center text-xs text-muted-foreground">
-            By continuing, you agree to our{' '}
-            <Link href="/terms" className="text-primary hover:underline">
-              Terms of Service
-            </Link>{' '}
-            and{' '}
-            <Link href="/privacy" className="text-primary hover:underline">
-              Privacy Policy
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <div className="mt-4 text-center text-xs text-muted-foreground">
+              {t('home.auth.termsPrefix')}{' '}
+              <Link href="/terms" className="text-primary hover:underline">
+                {t('home.auth.terms')}
+              </Link>{' '}
+              {t('home.auth.and')}{' '}
+              <Link href="/privacy" className="text-primary hover:underline">
+                {t('home.auth.privacyPolicy')}
+              </Link>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-      {/* Add Billing Error Alert here */}
-      <BillingErrorAlert
-        message={billingError?.message}
-        currentUsage={billingError?.currentUsage}
-        limit={billingError?.limit}
-        accountId={personalAccount?.account_id}
-        onDismiss={clearBillingError}
-        isOpen={!!billingError}
-      />
-
-      {agentLimitData && (
-        <AgentRunLimitDialog
-          open={showAgentLimitDialog}
-          onOpenChange={setShowAgentLimitDialog}
-          runningCount={agentLimitData.runningCount}
-          runningThreadIds={agentLimitData.runningThreadIds}
-          projectId={undefined} // Hero section doesn't have a specific project context
+        {/* Add Billing Error Alert here */}
+        <BillingErrorAlert
+          message={billingError?.message}
+          currentUsage={billingError?.currentUsage}
+          limit={billingError?.limit}
+          accountId={personalAccount?.account_id}
+          onDismiss={clearBillingError}
+          isOpen={!!billingError}
         />
-      )}
+
+        {agentLimitData && (
+          <AgentRunLimitDialog
+            open={showAgentLimitDialog}
+            onOpenChange={setShowAgentLimitDialog}
+            runningCount={agentLimitData.runningCount}
+            runningThreadIds={agentLimitData.runningThreadIds}
+            projectId={undefined} // Hero section doesn't have a specific project context
+          />
+        )}
     </section>
   );
 }

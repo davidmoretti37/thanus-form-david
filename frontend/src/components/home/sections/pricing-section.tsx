@@ -601,6 +601,8 @@ interface PricingSectionProps {
   showInfo?: boolean;
   noPadding?: boolean;
   onSubscriptionUpdate?: () => void;
+  title?: string;
+  description?: string;
 }
 
 export function PricingSection({
@@ -611,6 +613,8 @@ export function PricingSection({
   showInfo = true,
   noPadding = false,
   onSubscriptionUpdate,
+  title = 'Pricing',
+  description = 'Simple, transparent pricing. No hidden fees.'
 }: PricingSectionProps) {
   const { user } = useAuth();
   const isUserAuthenticated = !!user;
@@ -684,18 +688,23 @@ export function PricingSection({
   return (
     <section
       id="pricing"
-      className={cn("flex flex-col items-center justify-center gap-10 w-full relative", noPadding ? "pb-0" : "pb-12")}
+      className={cn(
+        'w-full',
+        !noPadding && 'py-10 md:py-16',
+        insideDialog ? 'px-0' : 'px-6',
+        !insideDialog && 'bg-muted/20'
+      )}
     >
-      <div className="w-full max-w-6xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto">
         {showTitleAndTabs && (
-          <SectionHeader>
-            <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-center text-balance">
-              Choose the right plan for your needs
+          <div className="text-center pb-12 md:pb-16">
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              {title}
             </h2>
-            <p className="text-muted-foreground text-center text-balance font-medium">
-              Start with our free plan or upgrade for more AI token credits
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              {description}
             </p>
-          </SectionHeader>
+          </div>
         )}
 
         <div className="flex justify-center mb-8">

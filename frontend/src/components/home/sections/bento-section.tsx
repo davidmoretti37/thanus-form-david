@@ -4,28 +4,29 @@ import { SectionHeader } from '@/components/home/section-header';
 import { FirstBentoAnimation } from '@/components/home/first-bento-animation';
 import { SecondBentoAnimation } from '@/components/home/second-bento-animation';
 import { ThirdBentoAnimation } from '@/components/home/third-bento-animation';
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export function BentoSection() {
+  const { t } = useLanguage();
+  
   const bentoItems = [
     {
       id: 1,
       content: <FirstBentoAnimation />,
-      title: 'Describe your needs',
-      description:
-        'Tell Tars what you need and customize your AI worker for your use cases.',
+      title: t('home.bento.items.0.title'),
+      description: t('home.bento.items.0.description'),
     },
     {
       id: 2,
       content: <SecondBentoAnimation />,
-      title: 'Connect 100s of tools',
-      description:
-        'Connect to your favorite tools and services with our extensive library of integrations.',
+      title: t('home.bento.items.1.title'),
+      description: t('home.bento.items.1.description'),
     },
     {
       id: 3,
       content: <ThirdBentoAnimation />,
-      title: 'Deploy and personalize',
-      description:
-        'Watch your agent handle complex tasks and workflows with advanced AI reasoning.',
+      title: t('home.bento.items.2.title'),
+      description: t('home.bento.items.2.description'),
     },
   ];
 
@@ -38,10 +39,10 @@ export function BentoSection() {
         <div className="max-w-6xl mx-auto border-l border-r border-border">
           <SectionHeader>
             <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-center text-balance pb-1">
-              Create a New AI Worker in 3 Simple Steps
+              {t('home.bento.title')}
             </h2>
             <p className="text-muted-foreground text-center text-balance font-medium">
-              Customize powerful AI Workers to work on your tailored use cases.
+              {t('home.bento.subtitle')}
             </p>
           </SectionHeader>
 

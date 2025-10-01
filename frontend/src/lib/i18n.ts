@@ -19,6 +19,30 @@ export const LANGUAGE_COOKIE_NAME = 'thanus-lang';
 // Translation dictionaries
 export const translations = {
   en: {
+    // Home Page
+    'home.createWorker.title': 'Create Worker',
+    'home.createWorker.description': 'Create your own Virtual Employees with Create Worker',
+    'home.createWorker.cta': 'Open Agents',
+    'home.workers.title': 'Workers',
+    'home.workers.description': 'Your specialized virtual employees',
+    'home.workers.cta': 'Open Workers',
+    'home.artifacts.title': 'Artifacts',
+    'home.artifacts.description': 'Creative and Original Creations',
+    'home.artifacts.cta': 'View Artifacts',
+    'home.tasks.title': 'Tasks',
+    'home.tasks.description': 'Task List',
+    'home.tasks.cta': 'Open Tasks',
+    'home.integrations.title': 'Integrations',
+    'home.integrations.description': 'Integrated technology stack',
+    'home.integrations.cta': 'Manage Credentials',
+    'home.chat.placeholder.agent': 'Type your task...',
+    'home.chat.placeholder.noAgent': 'Use @ to call an agent...',
+    'home.chat.buttons.integrations': 'Integrations',
+    'home.chat.buttons.instructions': 'Instructions',
+    'home.chat.buttons.knowledge': 'Knowledge',
+    'home.chat.buttons.triggers': 'Triggers',
+    'home.chat.buttons.playbooks': 'Playbooks',
+    
     // Common UI elements
     'common.hello': 'Hello',
     'common.welcome': 'Welcome to Thanus',
@@ -136,6 +160,61 @@ export const translations = {
     'dashboard.expectedCompletion': 'Expected completion',
     'dashboard.duration': 'Duration',
     'dashboard.dismissMaintenance': 'Dismiss maintenance notice',
+    
+    // Dashboard Examples
+    'dashboard.examples.findBakeries.title': 'Find best bakeries map',
+    'dashboard.examples.findBakeries.query': '1. Search Google Maps for "best bakeries in {{city}}"\n2. Create a custom list with top {{number}} bakeries\n3. For each bakery, gather:\n   - Customer ratings and popular items\n   - Hours, location, and specialties\n   - Price range and must-try pastries\n4. Generate a summary with recommendations',
+    
+    'dashboard.examples.researchEducation.title': 'Research education data',
+    'dashboard.examples.researchEducation.query': '1. Access UNESCO database for {{topic}} education statistics\n2. Compile data on:\n   - Student enrollment ratios by region\n   - Teacher-to-student ratios globally\n   - Education spending as % of GDP\n3. Create structured spreadsheet with trends\n4. Generate executive summary with key insights',
+    
+    'dashboard.examples.planTravel.title': 'Plan travel itinerary',
+    'dashboard.examples.planTravel.query': '1. Research {{destination}} on TripAdvisor for {{duration}} day trip\n2. Find top attractions, restaurants, and activities\n3. Optimize daily schedule by location and hours\n4. Include transportation, weather, and backup plans\n5. Create day-by-day itinerary with time blocks',
+    
+    'dashboard.examples.analyzeNews.title': 'Analyze news coverage',
+    'dashboard.examples.analyzeNews.query': '1. Search {{news_outlet}} for {{topic}} articles from past {{time_period}}\n2. Categorize coverage and identify key themes\n3. Track expert sources and data points\n4. Create timeline of major developments\n5. Generate report with insights and coverage gaps',
+    
+    'dashboard.examples.buildFinancialModel.title': 'Build financial model',
+    'dashboard.examples.buildFinancialModel.query': '1. Create {{model_type}} model for {{company_type}} business\n2. Gather historical data and industry benchmarks\n3. Build revenue forecasts and expense projections\n4. Include DCF, LTV/CAC, or NPV analysis\n5. Design Excel dashboard with scenarios',
+    
+    'dashboard.examples.developMarketStrategy.title': 'Develop market strategy',
+    'dashboard.examples.developMarketStrategy.query': '1. Create go-to-market strategy for {{product_type}} launch\n2. Analyze target market and competitive landscape\n3. Design market entry and pricing strategy\n4. Build financial projections and timeline\n5. Create presentation with recommendations',
+    
+    'dashboard.examples.researchCompany.title': 'Research company intelligence',
+    'dashboard.examples.researchCompany.query': '1. Research {{company_name}} comprehensively\n2. Gather recent news, funding, and leadership info\n3. Analyze competitive position and market share\n4. Research key personnel background\n5. Create detailed profile with actionable insights',
+    
+    'dashboard.examples.auditCalendar.title': 'Audit calendar productivity',
+    'dashboard.examples.auditCalendar.query': '1. Analyze {{calendar_app}} data from past {{months}} months\n2. Assess meeting frequency and focus time\n3. Identify optimization opportunities\n4. Analyze meeting effectiveness patterns\n5. Generate recommendations and implementation plan',
+    
+    'dashboard.examples.researchIndustryTrends.title': 'Research industry trends',
+    'dashboard.examples.researchIndustryTrends.query': '1. Research {{industry}} trends from {{data_sources}}\n2. Gather investment activity and technology developments\n3. Analyze market drivers and opportunities\n4. Identify emerging themes and gaps\n5. Create comprehensive report with recommendations',
+    
+    'dashboard.examples.automateSupportTickets.title': 'Automate support tickets',
+    'dashboard.examples.automateSupportTickets.query': '1. Monitor {{support_platform}} for incoming tickets\n2. Categorize issues and assess urgency\n3. Search {{knowledge_base}} for solutions\n4. Auto-respond or escalate based on confidence\n5. Track metrics and generate daily reports',
+    
+    'dashboard.examples.researchLegalCompliance.title': 'Research legal compliance',
+    'dashboard.examples.researchLegalCompliance.query': '1. Research {{legal_topic}} across {{jurisdictions}}\n2. Compare state requirements and fees\n3. Analyze decision factors and implications\n4. Gather practical implementation details\n5. Create comparison spreadsheet with recommendations',
+    
+    'dashboard.examples.compileDataAnalysis.title': 'Compile data analysis',
+    'dashboard.examples.compileDataAnalysis.query': '1. Gather {{data_topic}} from {{data_sources}}\n2. Clean and standardize datasets\n3. Analyze patterns and calculate trends\n4. Create spreadsheet with visualizations\n5. Provide strategic recommendations',
+    
+    'dashboard.examples.planSocialMedia.title': 'Plan social media content',
+    'dashboard.examples.planSocialMedia.query': '1. Create {{duration}} social strategy for {{brand}}\n2. Research trending topics and competitor content\n3. Develop content calendar with {{posts_per_week}} posts\n4. Create platform-specific content and scheduling\n5. Set up analytics and monthly reporting',
+    
+    'dashboard.examples.compareProducts.title': 'Compare products',
+    'dashboard.examples.compareProducts.query': '1. Research {{product_category}} options comprehensively\n2. Gather scientific studies and expert opinions\n3. Analyze benefits, drawbacks, and costs\n4. Research current expert consensus\n5. Create comparison report with personalized recommendations',
+    
+    'dashboard.examples.analyzeMarketOpportunities.title': 'Analyze market opportunities',
+    'dashboard.examples.analyzeMarketOpportunities.query': '1. Research {{market_topic}} for investment opportunities\n2. Analyze market size, growth, and key players\n3. Identify investment themes and risks\n4. Assess market challenges and barriers\n5. Create investment presentation with recommendations',
+    
+    'dashboard.examples.processInvoices.title': 'Process invoices & documents',
+    'dashboard.examples.processInvoices.query': '1. Scan {{document_folder}} for PDF invoices\n2. Extract key data: numbers, dates, amounts, vendors\n3. Organize data with standardized fields\n4. Build comprehensive tracking spreadsheet\n5. Generate monthly financial reports',
+    
+    'dashboard.examples.sourceTalent.title': 'Source talent & candidates',
+    'dashboard.examples.sourceTalent.query': '1. Search for {{job_title}} candidates in {{location}}\n2. Use LinkedIn, GitHub, and job boards\n3. Evaluate skills, experience, and culture fit\n4. Create ranked candidate pipeline\n5. Develop personalized outreach strategy',
+    
+    'dashboard.examples.buildWebsite.title': 'Build professional website',
+    'dashboard.examples.buildWebsite.query': '1. Research {{person_name}} online comprehensively\n2. Analyze professional brand and achievements\n3. Design website structure and content\n4. Create optimized pages with portfolio\n5. Implement SEO and performance features',
     
     // Error messages
     'error.generic': 'Something went wrong',
@@ -714,6 +793,184 @@ export const translations = {
     'workflowDefinitions.toolsDescription': 'Use specific tools and integrations',
     'workflowDefinitions.use': 'Use',
     
+  // Home Page - Site Config
+  'home.site.name': 'Tars',
+  'home.site.description': 'The Generalist AI Worker that can act on your behalf.',
+  'home.site.cta': 'Start Free',
+
+  // Navigation
+  'home.nav.home': 'Home',
+  'home.nav.process': 'Process',
+  'home.nav.openSource': 'Open Source',
+  'home.nav.pricing': 'Pricing',
+  'home.nav.enterprise': 'Enterprise',
+
+  // Hero Section
+  'home.hero.badge': '100% OPEN SOURCE',
+  'home.hero.title': 'Tars – Build, manage and train your AI Workforce.',
+  'home.hero.description': 'Tars – open-source platform to build, manage and train your AI Workforce.',
+  'home.hero.inputPlaceholder': 'Ask Tars to...',
+
+  // Pricing Section
+  'home.pricing.title': 'Pricing',
+  'home.pricing.description': 'Simple, transparent pricing. No hidden fees.',
+  'home.pricing.plus.name': 'Plus',
+  'home.pricing.plus.description': 'Best for individuals and small teams',
+  'home.pricing.plus.buttonText': 'Get started',
+  'home.pricing.plus.features.0': '$20 AI token credits/m',
+  'home.pricing.plus.features.1': '5 custom agents',
+  'home.pricing.plus.features.2': 'Private projects',
+  'home.pricing.plus.features.3': 'Custom abilities',
+  'home.pricing.plus.features.4': '100+ integrations',
+  'home.pricing.plus.features.5': 'Premium AI Models',
+  'home.pricing.plus.features.6': 'Advanced AI Capabilities',
+
+  'home.pricing.pro.name': 'Pro',
+  'home.pricing.pro.description': 'Ideal for growing businesses',
+  'home.pricing.pro.buttonText': 'Get started',
+  'home.pricing.pro.features.0': '$50 AI token credits/m',
+  'home.pricing.pro.features.1': '20 custom agents',
+  'home.pricing.pro.features.2': 'Private projects',
+  'home.pricing.pro.features.3': 'Custom abilities',
+  'home.pricing.pro.features.4': '100+ integrations',
+  'home.pricing.pro.features.5': 'Premium AI Models',
+  'home.pricing.pro.features.6': 'Advanced AI Capabilities',
+
+  'home.pricing.business.name': 'Business',
+  'home.pricing.business.description': 'For established businesses',
+  'home.pricing.business.buttonText': 'Get started',
+  'home.pricing.business.features.0': '$100 AI token credits/m',
+  'home.pricing.business.features.1': '20 custom agents',
+  'home.pricing.business.features.2': 'Private projects',
+  'home.pricing.business.features.3': 'Custom abilities',
+  'home.pricing.business.features.4': '100+ integrations',
+  'home.pricing.business.features.5': 'Premium AI Models',
+  'home.pricing.business.features.6': 'Advanced AI Capabilities',
+
+  'home.pricing.ultra.name': 'Ultra',
+  'home.pricing.ultra.description': 'For power users',
+  'home.pricing.ultra.buttonText': 'Get started',
+  'home.pricing.ultra.features.0': '$200 AI token credits/m',
+  'home.pricing.ultra.features.1': '100 custom agents',
+  'home.pricing.ultra.features.2': 'Private projects',
+  'home.pricing.ultra.features.3': 'Custom abilities',
+  'home.pricing.ultra.features.4': '100+ integrations',
+  'home.pricing.ultra.features.5': 'Premium AI Models',
+  'home.pricing.ultra.features.6': 'Priority Support',
+  'home.pricing.ultra.features.7': 'Advanced AI Capabilities',
+
+  // Companies Section
+  'home.companies.title': 'Trusted by innovative teams',
+  'home.companies.description': 'Join companies using Tars to power their AI workforce',
+
+  // CTA Section
+  'home.ctaSection.title': 'Launch Your First AI Worker Today',
+  'home.ctaSection.button.text': 'Get Started for free',
+  'home.ctaSection.subtext': 'Build, manage and train your AI Workforce',
+  'home.cta.title': 'Ready to get started?',
+  'home.cta.button.text': 'Get Started',
+  'home.cta.subtext': 'No credit card required',
+
+  // Footer
+  'home.footer.tars': 'Tars',
+  'home.footer.about': 'About',
+  'home.footer.contact': 'Contact',
+  'home.footer.careers': 'Careers',
+  'home.footer.resources': 'Resources',
+  'home.footer.documentation': 'Documentation',
+  'home.footer.discord': 'Discord',
+  'home.footer.github': 'GitHub',
+  'home.footer.legal': 'Legal',
+  'home.footer.privacyPolicy': 'Privacy Policy',
+  'home.footer.termsOfService': 'Terms of Service',
+  'home.footer.license': 'License',
+
+  // FAQ Section
+  'home.faq.title': 'Frequently Asked Questions',
+  'home.faq.items.1.question': 'What is Tars?',
+  'home.faq.items.1.answer': 'Tars is an open-source platform to build, manage and train your AI Workforce.',
+  'home.faq.items.6.question': 'How do I get started?',
+  'home.faq.items.6.answer': 'Sign up for a free account and start building your AI workforce in minutes.',
+
+  // Open Source Section
+  'home.opensource.title': '100% Open AI',
+  'home.opensource.subtitle': 'Open source, self-hosted, and ready to be customized.',
+  'home.opensource.secure_deployment.title': 'Secure Private Deployment',
+  'home.opensource.secure_deployment.description': 'Deploy 100% on-premises with complete data sovereignty. Your AI workers run entirely on your infrastructure with no external dependencies.',
+  'home.opensource.enterprise_security.title': 'Enterprise-Grade Security',
+  'home.opensource.enterprise_security.description': 'Open source transparency meets enterprise security. Deploy behind your firewall with full control over models, data, and integrations.',
+  'home.opensource.community.title': 'Community',
+  'home.opensource.community.subtitle': 'Join our developers',
+  'home.opensource.license.title': 'Apache 2.0',
+  'home.opensource.license.subtitle': 'Free to use and modify',
+  'home.opensource.view_github': 'View on GitHub',
+
+  // Home Page - Hero Section
+  'home.hero.title.prefix': 'Hire Tars for ',
+  'home.hero.title.rotatingTexts': 'Research,Presentations,Docs,Spreadsheets,Design,Data Analysis,Email Management,Social Media,SEO,Lead Generation,Customer Support,Content Creation,Project Management,Sales,Marketing,Analytics',
+  'home.hero.subtitle': 'Deploy AI Workers that run your business autonomously.',
+  'home.hero.chatPlaceholder': 'Give Tars a task to complete...',
+  
+  // Home Page - Bento Section
+  'home.bento.title': 'Create a New AI Worker in 3 Simple Steps',
+  'home.bento.subtitle': 'Customize powerful AI Workers to work on your tailored use cases.',
+  'home.bento.items.0.title': 'Describe your needs',
+  'home.bento.items.0.description': 'Tell Tars what you need and customize your AI worker for your use cases.',
+  'home.bento.items.1.title': 'Connect 100s of tools',
+  'home.bento.items.1.description': 'Connect to your favorite tools and services with our extensive library of integrations.',
+  'home.bento.items.2.title': 'Deploy and personalize',
+  'home.bento.items.2.description': 'Watch your agent handle complex tasks and workflows with advanced AI reasoning.',
+
+  // Home Page - Capabilities Section
+  'home.capabilities.title': 'What Can Tars Do For You?',
+  'home.capabilities.subtitle': 'From content creation to data analysis, Tars handles the work that takes you hours in just minutes.',
+  'home.capabilities.documents.title': 'Create Professional Documents',
+  'home.capabilities.documents.description': 'Generate reports, proposals, contracts, and presentations that look like they came from a top agency. PDF, Word, PowerPoint - any format you need.',
+  'home.capabilities.design.title': 'Design Graphics & Visuals',
+  'home.capabilities.design.description': 'Create logos, social media graphics, infographics, and custom images from just a text description. No design skills required.',
+  'home.capabilities.presentations.title': 'Build Stunning Presentations',
+  'home.capabilities.presentations.description': 'Turn your ideas into polished slide decks with professional layouts, charts, and images sourced automatically.',
+  'home.capabilities.research.title': 'Research Anything Online',
+  'home.capabilities.research.description': 'Get comprehensive research reports on competitors, markets, trends, or any topic with verified sources and current data.',
+  'home.capabilities.analytics.title': 'Analyze Your Data',
+  'home.capabilities.analytics.description': 'Upload spreadsheets, sales data, or any files and get insights, trends, forecasts, and beautiful charts in minutes.',
+  'home.capabilities.automation.title': 'Automate Online Tasks',
+  'home.capabilities.automation.description': 'Fill out forms, collect data from websites, monitor prices, schedule posts, and handle repetitive web tasks while you sleep.',
+  'home.capabilities.workflows.title': 'Manage Your Workflows',
+  'home.capabilities.workflows.description': 'Set up automated processes for lead generation, customer follow-ups, content creation, and daily business operations.',
+  'home.capabilities.availability.title': 'Work Around the Clock',
+  'home.capabilities.availability.description': 'Tars never sleeps. Schedule tasks to run overnight, on weekends, or whenever you need work done without being there.',
+  'home.auth.signInTitle': 'Sign in to continue',
+  'home.auth.signInDescription': 'Sign in or create an account to talk with Tars',
+  'home.auth.orContinueWith': 'or continue with email',
+  'home.auth.signInWithEmail': 'Sign in with email',
+  'home.auth.createNewAccount': 'Create new account',
+  'home.auth.termsPrefix': 'By continuing, you agree to our',
+  'home.auth.terms': 'Terms of Service',
+  'home.auth.privacyPolicy': 'Privacy Policy',
+  'home.auth.and': 'and',
+
+  // Maintenance
+  'maintenance.title': 'Scheduled Maintenance',
+  'maintenance.description': 'We\'re performing scheduled maintenance to improve our systems. Some features may be temporarily unavailable.',
+  'maintenance.almostDone': 'Almost done!',
+  'maintenance.completed': 'Maintenance completed',
+  'maintenance.expectedCompletion': 'Expected completion',
+  'maintenance.timeRemaining.hours': '{hours}h {minutes}m remaining',
+  'maintenance.timeRemaining.minutes': '{minutes}m remaining',
+  'maintenance.startingNow': 'starting now',
+  'maintenance.startingIn.days': 'starting in {days}d {hours}h',
+  'maintenance.startingIn.hours': 'starting in {hours}h {minutes}m',
+  'maintenance.startingIn.minutes': 'starting in {minutes}m',
+  'maintenance.banner.inProgress': 'Scheduled maintenance in progress',
+  'maintenance.banner.scheduled': 'Scheduled maintenance',
+  'maintenance.starts': 'Starts',
+  'maintenance.ends': 'Ends',
+  'maintenance.duration.label': 'Duration',
+  'maintenance.duration.hours': '{hours}h {minutes}m',
+  'maintenance.duration.minutes': '{minutes}m',
+  'maintenance.dismiss': 'Dismiss maintenance notice',
+
   // Tool Call Side Panel
   'toolCallSidePanel.computer': 'Computer',
   'toolCallSidePanel.minimizeToFloating': 'Minimize to floating preview',
@@ -764,8 +1021,66 @@ export const translations = {
     'plans.basic.feature4': 'Community support',
   },
   pt: {
+    // Home Page
+    'home.createWorker.title': 'Criar Worker',
+    'home.createWorker.description': 'Crie seus próprios funcionários virtuais com o Criar Worker',
+    'home.createWorker.cta': 'Abrir Agents',
+    'home.workers.title': 'Workers',
+    'home.workers.description': 'Seus funcionários virtuais especializados',
+    'home.workers.cta': 'Abrir Workers',
+    'home.artifacts.title': 'Artefatos',
+    'home.artifacts.description': 'Itens Criativos e Criações Originais',
+    'home.artifacts.cta': 'Ver Artefatos',
+    'home.tasks.title': 'Tarefas',
+    'home.tasks.description': 'Lista de Tarefas',
+    'home.tasks.cta': 'Abrir Tarefas',
+    'home.integrations.title': 'Integrações',
+    'home.integrations.description': 'Pilha tecnológica integrada',
+    'home.integrations.cta': 'Gerenciar Credenciais',
+    'home.chat.placeholder.agent': 'Digite sua tarefa...',
+    'home.chat.placeholder.noAgent': 'Use @ para chamar um agente...',
+    'home.chat.buttons.integrations': 'Integrações',
+    'home.chat.buttons.instructions': 'Instruções',
+    'home.chat.buttons.knowledge': 'Conhecimento',
+    'home.chat.buttons.triggers': 'Gatilhos',
+    'home.chat.buttons.playbooks': 'Playbooks',
+    
     // Common UI elements
     'common.hello': 'Olá',
+    
+    // Pricing Section
+    'home.pricing.title': 'Preços',
+    'home.pricing.description': 'Preços simples e transparentes. Sem taxas ocultas.',
+    
+    // Home Page - Bento Section
+    'home.bento.title': 'Crie um Novo Trabalhador de IA em 3 Passos Simples',
+    'home.bento.subtitle': 'Personalize Trabalhadores de IA poderosos para atender às suas necessidades específicas.',
+    'home.bento.items.0.title': 'Descreva suas necessidades',
+    'home.bento.items.0.description': 'Diga ao Tars o que você precisa e personalize seu trabalhador de IA para seus casos de uso.',
+    'home.bento.items.1.title': 'Conecte centenas de ferramentas',
+    'home.bento.items.1.description': 'Conecte-se às suas ferramentas e serviços favoritos com nossa extensa biblioteca de integrações.',
+    'home.bento.items.2.title': 'Implante e personalize',
+    'home.bento.items.2.description': 'Veja seu agente lidar com tarefas e fluxos de trabalho complexos com raciocínio de IA avançado.',
+    
+    // Home Page - Capabilities Section
+    'home.capabilities.title': 'O que o Tars pode fazer por você?',
+    'home.capabilities.subtitle': 'Da criação de conteúdo à análise de dados, o Tars realiza em minutos o que levaria horas do seu tempo.',
+    'home.capabilities.documents.title': 'Crie Documentos Profissionais',
+    'home.capabilities.documents.description': 'Gere relatórios, propostas, contratos e apresentações com qualidade de agência. PDF, Word, PowerPoint - no formato que você precisar.',
+    'home.capabilities.design.title': 'Design de Gráficos e Visuais',
+    'home.capabilities.design.description': 'Crie logos, artes para mídias sociais, infográficos e imagens personalizadas a partir de uma simples descrição. Sem precisar de habilidades em design.',
+    'home.capabilities.presentations.title': 'Crie Apresentações Incríveis',
+    'home.capabilities.presentations.description': 'Transforme suas ideias em apresentações profissionais com layouts, gráficos e imagens selecionados automaticamente.',
+    'home.capabilities.research.title': 'Pesquise Qualquer Coisa Online',
+    'home.capabilities.research.description': 'Obtenha relatórios de pesquisa detalhados sobre concorrentes, mercados, tendências ou qualquer tópico com fontes verificadas e dados atuais.',
+    'home.capabilities.analytics.title': 'Analise Seus Dados',
+    'home.capabilities.analytics.description': 'Faça upload de planilhas, dados de vendas ou qualquer arquivo e obtenha insights, tendências, previsões e gráficos impressionantes em minutos.',
+    'home.capabilities.automation.title': 'Automatize Tarefas Online',
+    'home.capabilities.automation.description': 'Preencha formulários, colete dados de sites, monitore preços, agende postagens e automatize tarefas repetitivas enquanto você dorme.',
+    'home.capabilities.workflows.title': 'Gerencie Seus Fluxos de Trabalho',
+    'home.capabilities.workflows.description': 'Configure processos automatizados para geração de leads, acompanhamento de clientes, criação de conteúdo e operações diárias do negócio.',
+    'home.capabilities.availability.title': 'Trabalhe 24 Horas por Dia',
+    'home.capabilities.availability.description': 'O Tars nunca dorme. Agende tarefas para executar durante a noite, finais de semana ou sempre que precisar que o trabalho seja feito sem sua presença.',
     'common.welcome': 'Bem-vindo ao Thanus',
     'common.signIn': 'Entrar',
     'common.signUp': 'Cadastrar',
@@ -881,6 +1196,61 @@ export const translations = {
     'dashboard.expectedCompletion': 'Conclusão esperada',
     'dashboard.duration': 'Duração',
     'dashboard.dismissMaintenance': 'Dispensar aviso de manutenção',
+    
+    // Dashboard Examples
+    'dashboard.examples.findBakeries.title': 'Encontrar melhores padarias',
+    'dashboard.examples.findBakeries.query': '1. Pesquise no Google Maps por "melhores padarias em {{city}}"\n2. Crie uma lista personalizada com as top {{number}} padarias\n3. Para cada padaria, colete:\n   - Avaliações dos clientes e itens populares\n   - Horário de funcionamento, localização e especialidades\n   - Faixa de preço e itens imperdíveis\n4. Gere um resumo com recomendações',
+    
+    'dashboard.examples.researchEducation.title': 'Pesquisar dados educacionais',
+    'dashboard.examples.researchEducation.query': '1. Acesse o banco de dados da UNESCO para estatísticas de educação em {{topic}}\n2. Compile dados sobre:\n   - Taxas de matrícula por região\n   - Proporção aluno-professor globalmente\n   - Gastos com educação como % do PIB\n3. Crie uma planilha estruturada com tendências\n4. Gere um resumo executivo com insights-chave',
+    
+    'dashboard.examples.planTravel.title': 'Planejar roteiro de viagem',
+    'dashboard.examples.planTravel.query': '1. Pesquise sobre {{destination}} no TripAdvisor para uma viagem de {{duration}} dias\n2. Encontre as melhores atrações, restaurantes e atividades\n3. Otimize o cronograma diário por localização e horários\n4. Inclua transporte, clima e planos alternativos\n5. Crie um roteiro dia a dia com horários',
+    
+    'dashboard.examples.analyzeNews.title': 'Analisar cobertura de notícias',
+    'dashboard.examples.analyzeNews.query': '1. Pesquise no {{news_outlet}} por artigos sobre {{topic}} dos últimos {{time_period}}\n2. Categorize a cobertura e identifique os principais temas\n3. Acompanhe fontes especializadas e dados\n4. Crie uma linha do tempo dos principais acontecimentos\n5. Gere um relatório com insights e lacunas na cobertura',
+    
+    'dashboard.examples.buildFinancialModel.title': 'Criar modelo financeiro',
+    'dashboard.examples.buildFinancialModel.query': '1. Crie um modelo {{model_type}} para negócios do tipo {{company_type}}\n2. Colete dados históricos e benchmarks do setor\n3. Construa previsões de receita e projeções de despesas\n4. Inclua análise DCF, LTV/CAC ou VPL\n5. Projete um painel no Excel com cenários',
+    
+    'dashboard.examples.developMarketStrategy.title': 'Desenvolver estratégia de mercado',
+    'dashboard.examples.developMarketStrategy.query': '1. Crie uma estratégia de entrada no mercado para o lançamento de {{product_type}}\n2. Analise o mercado-alvo e a concorrência\n3. Projete estratégia de entrada e precificação\n4. Construa projeções financeiras e cronograma\n5. Crie uma apresentação com recomendações',
+    
+    'dashboard.examples.researchCompany.title': 'Pesquisar inteligência empresarial',
+    'dashboard.examples.researchCompany.query': '1. Pesquise {{company_name}} de forma abrangente\n2. Colete notícias recentes, financiamentos e informações de liderança\n3. Analise posição competitiva e participação de mercado\n4. Pesquise histórico de pessoal-chave\n5. Crie um perfil detalhado com insights acionáveis',
+    
+    'dashboard.examples.auditCalendar.title': 'Auditar produtividade da agenda',
+    'dashboard.examples.auditCalendar.query': '1. Analise dados do {{calendar_app}} dos últimos {{months}} meses\n2. Avalie frequência de reuniões e tempo focado\n3. Identifique oportunidades de otimização\n4. Analise padrões de eficácia das reuniões\n5. Gere recomendações e plano de implementação',
+    
+    'dashboard.examples.researchIndustryTrends.title': 'Pesquisar tendências do setor',
+    'dashboard.examples.researchIndustryTrends.query': '1. Pesquise tendências de {{industry}} em {{data_sources}}\n2. Colete atividades de investimento e desenvolvimentos tecnológicos\n3. Analise fatores de mercado e oportunidades\n4. Identifique temas emergentes e lacunas\n5. Crie um relatório abrangente com recomendações',
+    
+    'dashboard.examples.automateSupportTickets.title': 'Automatizar chamados de suporte',
+    'dashboard.examples.automateSupportTickets.query': '1. Monitore o {{support_platform}} em busca de chamados recebidos\n2. Categorize problemas e avalie urgência\n3. Consulte a {{knowledge_base}} em busca de soluções\n4. Responda automaticamente ou escale com base na confiança\n5. Acompanhe métricas e gere relatórios diários',
+    
+    'dashboard.examples.researchLegalCompliance.title': 'Pesquisar conformidade legal',
+    'dashboard.examples.researchLegalCompliance.query': '1. Pesquise {{legal_topic}} em {{jurisdictions}}\n2. Compare requisitos e taxas estaduais\n3. Analise fatores de decisão e implicações\n4. Colete detalhes práticos de implementação\n5. Crie uma planilha comparativa com recomendações',
+    
+    'dashboard.examples.compileDataAnalysis.title': 'Compilar análise de dados',
+    'dashboard.examples.compileDataAnalysis.query': '1. Colete {{data_topic}} de {{data_sources}}\n2. Limpe e padronize conjuntos de dados\n3. Analise padrões e calcule tendências\n4. Crie planilhas com visualizações\n5. Forneça recomendações estratégicas',
+    
+    'dashboard.examples.planSocialMedia.title': 'Planejar conteúdo para mídias sociais',
+    'dashboard.examples.planSocialMedia.query': '1. Crie uma estratégia de {{duration}} para {{brand}}\n2. Pesquise tópicos em alta e conteúdo da concorrência\n3. Desenvolva um calendário de conteúdo com {{posts_per_week}} posts\n4. Crie conteúdo específico para cada plataforma e agendamento\n5. Configure análises e relatórios mensais',
+    
+    'dashboard.examples.compareProducts.title': 'Comparar produtos',
+    'dashboard.examples.compareProducts.query': '1. Pesquise opções de {{product_category}} de forma abrangente\n2. Colete estudos científicos e opiniões de especialistas\n3. Analise benefícios, desvantagens e custos\n4. Pesquise o consenso atual de especialistas\n5. Crie um relatório comparativo com recomendações personalizadas',
+    
+    'dashboard.examples.analyzeMarketOpportunities.title': 'Analisar oportunidades de mercado',
+    'dashboard.examples.analyzeMarketOpportunities.query': '1. Pesquise {{market_topic}} em busca de oportunidades de investimento\n2. Analise tamanho do mercado, crescimento e principais players\n3. Identifique temas e riscos de investimento\n4. Avalie desafios e barreiras de mercado\n5. Crie uma apresentação de investimento com recomendações',
+    
+    'dashboard.examples.processInvoices.title': 'Processar faturas e documentos',
+    'dashboard.examples.processInvoices.query': '1. Digitalize a pasta {{document_folder}} em busca de faturas em PDF\n2. Extraia dados-chave: números, datas, valores, fornecedores\n3. Organize os dados com campos padronizados\n4. Construa uma planilha abrangente de acompanhamento\n5. Gere relatórios financeiros mensais',
+    
+    'dashboard.examples.sourceTalent.title': 'Recrutar talentos e candidatos',
+    'dashboard.examples.sourceTalent.query': '1. Busque candidatos para {{job_title}} em {{location}}\n2. Use LinkedIn, GitHub e sites de emprego\n3. Avalie habilidades, experiência e adequação cultural\n4. Crie um pipeline de candidatos classificados\n5. Desenvolva uma estratégia personalizada de abordagem',
+    
+    'dashboard.examples.buildWebsite.title': 'Construir site profissional',
+    'dashboard.examples.buildWebsite.query': '1. Pesquise {{person_name}} online de forma abrangente\n2. Analise marca pessoal e conquistas profissionais\n3. Projete estrutura e conteúdo do site\n4. Crie páginas otimizadas com portfólio\n5. Implemente SEO e recursos de desempenho',
     
     // Error messages
     'error.generic': 'Algo deu errado',
@@ -1419,8 +1789,154 @@ export const translations = {
     'workflowDefinitions.integrationsDescription': 'Conectar a serviços externos e APIs',
     'workflowDefinitions.tools': 'Ferramentas',
     'workflowDefinitions.toolsDescription': 'Usar ferramentas e integrações específicas',
+    
+    // Home Page - Site Config
+    'home.site.name': 'Tars',
+    'home.site.description': 'O Trabalhador de IA Generalista que pode agir em seu nome.',
+    'home.site.cta': 'Comece Grátis',
+
+    // Navigation
+    'home.nav.home': 'Início',
+    'home.nav.process': 'Processo',
+    'home.nav.openSource': 'Código Aberto',
+    'home.nav.pricing': 'Preços',
+    'home.nav.enterprise': 'Empresas',
+
+    // Hero Section
+    'home.hero.badge': '100% CÓDIGO ABERTO',
+    'home.hero.title': 'Tars – Construa, gerencie e treine sua Força de Trabalho de IA.',
+    'home.hero.description': 'Tars – plataforma de código aberto para construir, gerenciar e treinar sua Força de Trabalho de IA.',
+    'home.hero.inputPlaceholder': 'Pergunte ao Tars...',
+
+    // Pricing Section
+    'home.pricing.plus.name': 'Plus',
+    'home.pricing.plus.description': 'Melhor para indivíduos e pequenas equipes',
+    'home.pricing.plus.buttonText': 'Começar',
+    'home.pricing.plus.features.0': 'US$ 20 em créditos de IA/mês',
+    'home.pricing.plus.features.1': '5 agentes personalizados',
+    'home.pricing.plus.features.2': 'Projetos privados',
+    'home.pricing.plus.features.3': 'Habilidades personalizadas',
+    'home.pricing.plus.features.4': 'Mais de 100 integrações',
+    'home.pricing.plus.features.5': 'Modelos de IA Premium',
+    'home.pricing.plus.features.6': 'Recursos avançados de IA',
+
+    'home.pricing.pro.name': 'Pro',
+    'home.pricing.pro.description': 'Ideal para negócios em crescimento',
+    'home.pricing.pro.buttonText': 'Começar',
+    'home.pricing.pro.features.0': 'US$ 50 em créditos de IA/mês',
+    'home.pricing.pro.features.1': '20 agentes personalizados',
+    'home.pricing.pro.features.2': 'Projetos privados',
+    'home.pricing.pro.features.3': 'Habilidades personalizadas',
+    'home.pricing.pro.features.4': 'Mais de 100 integrações',
+    'home.pricing.pro.features.5': 'Modelos de IA Premium',
+    'home.pricing.pro.features.6': 'Recursos avançados de IA',
+
+    'home.pricing.business.name': 'Business',
+    'home.pricing.business.description': 'Para negócios estabelecidos',
+    'home.pricing.business.buttonText': 'Começar',
+    'home.pricing.business.features.0': 'US$ 100 em créditos de IA/mês',
+    'home.pricing.business.features.1': '20 agentes personalizados',
+    'home.pricing.business.features.2': 'Projetos privados',
+    'home.pricing.business.features.3': 'Habilidades personalizadas',
+    'home.pricing.business.features.4': 'Mais de 100 integrações',
+    'home.pricing.business.features.5': 'Modelos de IA Premium',
+    'home.pricing.business.features.6': 'Recursos avançados de IA',
+
+    'home.pricing.ultra.name': 'Ultra',
+    'home.pricing.ultra.description': 'Para usuários avançados',
+    'home.pricing.ultra.buttonText': 'Começar',
+    'home.pricing.ultra.features.0': 'US$ 200 em créditos de IA/mês',
+    'home.pricing.ultra.features.1': '100 agentes personalizados',
+    'home.pricing.ultra.features.2': 'Projetos privados',
+    'home.pricing.ultra.features.3': 'Habilidades personalizadas',
+    'home.pricing.ultra.features.4': 'Mais de 100 integrações',
+    'home.pricing.ultra.features.5': 'Modelos de IA Premium',
+    'home.pricing.ultra.features.6': 'Suporte Prioritário',
+    'home.pricing.ultra.features.7': 'Recursos avançados de IA',
+
+    // Companies Section
+    'home.companies.title': 'Confiado por equipes inovadoras',
+    'home.companies.description': 'Junte-se a empresas que usam Tars para potencializar sua força de trabalho de IA',
+
+    // CTA Section
+    'home.ctaSection.title': 'Lance Seu Primeiro Trabalhador de IA Hoje',
+    'home.ctaSection.button.text': 'Comece de graça',
+    'home.ctaSection.subtext': 'Construa, gerencie e treine sua Força de Trabalho de IA',
+    'home.cta.title': 'Pronto para começar?',
+    'home.cta.button.text': 'Comece Agora',
+    'home.cta.subtext': 'Sem necessidade de cartão de crédito',
+
+    // Footer
+    'home.footer.tars': 'Tars',
+    'home.footer.about': 'Sobre',
+    'home.footer.contact': 'Contato',
+    'home.footer.careers': 'Carreiras',
+    'home.footer.resources': 'Recursos',
+    'home.footer.documentation': 'Documentação',
+    'home.footer.discord': 'Discord',
+    'home.footer.github': 'GitHub',
+    'home.footer.legal': 'Legal',
+    'home.footer.privacyPolicy': 'Política de Privacidade',
+    'home.footer.termsOfService': 'Termos de Serviço',
+    'home.footer.license': 'Licença',
+
+    // FAQ Section
+    'home.faq.title': 'Perguntas Frequentes',
+    'home.faq.items.1.question': 'O que é o Tars?',
+    'home.faq.items.1.answer': 'Tars é uma plataforma de código aberto para construir, gerenciar e treinar sua Força de Trabalho de IA.',
+    'home.faq.items.6.question': 'Como eu começo?',
+    'home.faq.items.6.answer': 'Crie uma conta gratuita e comece a construir sua força de trabalho de IA em minutos.',
+
+    // Open Source Section
+    'home.opensource.title': '100% Open AI',
+    'home.opensource.subtitle': 'Código aberto, auto-hospedado e pronto para personalização.',
+    'home.opensource.secure_deployment.title': 'Implantação Privada Segura',
+    'home.opensource.secure_deployment.description': 'Implante 100% local com soberania total de dados. Seus trabalhadores de IA rodam inteiramente em sua infraestrutura sem dependências externas.',
+    'home.opensource.enterprise_security.title': 'Segurança Corporativa',
+    'home.opensource.enterprise_security.description': 'Transparência de código aberto com segurança corporativa. Implante atrás de seu firewall com controle total sobre modelos, dados e integrações.',
+    'home.opensource.community.title': 'Comunidade',
+    'home.opensource.community.subtitle': 'Junte-se aos nossos desenvolvedores',
+    'home.opensource.license.title': 'Apache 2.0',
+    'home.opensource.license.subtitle': 'Livre para usar e modificar',
+    'home.opensource.view_github': 'Ver no GitHub',
     'workflowDefinitions.use': 'Usar',
     
+    // Página Inicial
+    'home.hero.title.prefix': 'Contrate o Tars para ',
+    'home.hero.title.rotatingTexts': 'Pesquisa,Apresentações,Documentos,Planilhas,Design,Análise de Dados,Gestão de E-mails,Mídias Sociais,SEO,Geração de Leads,Atendimento ao Cliente,Criação de Conteúdo,Gestão de Projetos,Vendas,Marketing,Análises',
+    'home.hero.subtitle': 'Implante Trabalhadores de IA que gerenciam seu negócio de forma autônoma.',
+    'home.hero.chatPlaceholder': 'Dê uma tarefa para o Tars completar...',
+    'home.auth.signInTitle': 'Faça login para continuar',
+    'home.auth.signInDescription': 'Faça login ou crie uma conta para conversar com o Tars',
+    'home.auth.orContinueWith': 'ou continue com e-mail',
+    'home.auth.signInWithEmail': 'Entrar com e-mail',
+    'home.auth.createNewAccount': 'Criar nova conta',
+    'home.auth.termsPrefix': 'Ao continuar, você concorda com nossos',
+    'home.auth.terms': 'Termos de Serviço',
+    'home.auth.privacyPolicy': 'Política de Privacidade',
+    'home.auth.and': 'e',
+
+    // Manutenção
+    'maintenance.title': 'Manutenção Programada',
+    'maintenance.description': 'Estamos realizando uma manutenção programada para melhorar nossos sistemas. Alguns recursos podem estar temporariamente indisponíveis.',
+    'maintenance.almostDone': 'Quase pronto!',
+    'maintenance.completed': 'Manutenção concluída',
+    'maintenance.expectedCompletion': 'Conclusão esperada',
+    'maintenance.timeRemaining.hours': 'Faltam {hours}h {minutes}min',
+    'maintenance.timeRemaining.minutes': 'Faltam {minutes}min',
+    'maintenance.startingNow': 'iniciando agora',
+    'maintenance.startingIn.days': 'iniciando em {days}d {hours}h',
+    'maintenance.startingIn.hours': 'iniciando em {hours}h {minutes}min',
+    'maintenance.startingIn.minutes': 'iniciando em {minutes}min',
+    'maintenance.banner.inProgress': 'Manutenção programada em andamento',
+    'maintenance.banner.scheduled': 'Manutenção programada',
+    'maintenance.starts': 'Início',
+    'maintenance.ends': 'Término',
+    'maintenance.duration.label': 'Duração',
+    'maintenance.duration.hours': '{hours}h {minutes}min',
+    'maintenance.duration.minutes': '{minutes}min',
+    'maintenance.dismiss': 'Dispensar aviso de manutenção',
+
     // Tool Call Side Panel
     'toolCallSidePanel.computer': 'Computador',
     'toolCallSidePanel.minimizeToFloating': 'Minimizar para visualização flutuante',
@@ -1471,8 +1987,66 @@ export const translations = {
     'plans.basic.feature4': 'Suporte da comunidade',
   },
   es: {
+    // Home Page
+    'home.createWorker.title': 'Crear Worker',
+    'home.createWorker.description': 'Crea tus propios empleados virtuales con Crear Worker',
+    'home.createWorker.cta': 'Abrir Agentes',
+    'home.workers.title': 'Workers',
+    'home.workers.description': 'Tus empleados virtuales especializados',
+    'home.workers.cta': 'Abrir Workers',
+    'home.artifacts.title': 'Artefactos',
+    'home.artifacts.description': 'Elementos creativos y creaciones originales',
+    'home.artifacts.cta': 'Ver Artefactos',
+    'home.tasks.title': 'Tareas',
+    'home.tasks.description': 'Lista de Tareas',
+    'home.tasks.cta': 'Abrir Tareas',
+    'home.integrations.title': 'Integraciones',
+    'home.integrations.description': 'Pila tecnológica integrada',
+    'home.integrations.cta': 'Gestionar Credenciales',
+    'home.chat.placeholder.agent': 'Escribe tu tarea...',
+    'home.chat.placeholder.noAgent': 'Usa @ para llamar a un agente...',
+    'home.chat.buttons.integrations': 'Integraciones',
+    'home.chat.buttons.instructions': 'Instrucciones',
+    'home.chat.buttons.knowledge': 'Conocimiento',
+    'home.chat.buttons.triggers': 'Disparadores',
+    'home.chat.buttons.playbooks': 'Playbooks',
+    
     // Common UI elements
     'common.hello': 'Hola',
+    
+    // Pricing Section
+    'home.pricing.title': 'Precios',
+    'home.pricing.description': 'Precios simples y transparentes. Sin cargos ocultos.',
+    
+    // Home Page - Bento Section
+    'home.bento.title': 'Crea un Nuevo Trabajador de IA en 3 Sencillos Pasos',
+    'home.bento.subtitle': 'Personaliza potentes Trabajadores de IA para que trabajen en tus casos de uso específicos.',
+    'home.bento.items.0.title': 'Describe tus necesidades',
+    'home.bento.items.0.description': 'Dile a Tars lo que necesitas y personaliza tu trabajador de IA para tus casos de uso.',
+    'home.bento.items.1.title': 'Conecta cientos de herramientas',
+    'home.bento.items.1.description': 'Conéctate a tus herramientas y servicios favoritos con nuestra extensa biblioteca de integraciones.',
+    'home.bento.items.2.title': 'Despliega y personaliza',
+    'home.bento.items.2.description': 'Observa a tu agente manejar tareas y flujos de trabajo complejos con razonamiento de IA avanzado.',
+    
+    // Home Page - Capabilities Section
+    'home.capabilities.title': '¿Qué puede hacer Tars por ti?',
+    'home.capabilities.subtitle': 'Desde la creación de contenido hasta el análisis de datos, Tars maneja en minutos el trabajo que te tomaría horas.',
+    'home.capabilities.documents.title': 'Crea Documentos Profesionales',
+    'home.capabilities.documents.description': 'Genera informes, propuestas, contratos y presentaciones que parecen salidos de una agencia de primer nivel. PDF, Word, PowerPoint - cualquier formato que necesites.',
+    'home.capabilities.design.title': 'Diseña Gráficos y Visuales',
+    'home.capabilities.design.description': 'Crea logotipos, gráficos para redes sociales, infografías e imágenes personalizadas a partir de una simple descripción. No se requieren habilidades de diseño.',
+    'home.capabilities.presentations.title': 'Crea Presentaciones Impresionantes',
+    'home.capabilities.presentations.description': 'Convierte tus ideas en presentaciones pulidas con diseños profesionales, gráficos e imágenes seleccionadas automáticamente.',
+    'home.capabilities.research.title': 'Investiga Cualquier Tema en Línea',
+    'home.capabilities.research.description': 'Obtén informes de investigación completos sobre competidores, mercados, tendencias o cualquier tema con fuentes verificadas y datos actuales.',
+    'home.capabilities.analytics.title': 'Analiza Tus Datos',
+    'home.capabilities.analytics.description': 'Sube hojas de cálculo, datos de ventas o cualquier archivo y obtén información, tendencias, pronósticos y gráficos hermosos en minutos.',
+    'home.capabilities.automation.title': 'Automatiza Tareas en Línea',
+    'home.capabilities.automation.description': 'Completa formularios, recopila datos de sitios web, monitorea precios, programa publicaciones y maneja tareas web repetitivas mientras duermes.',
+    'home.capabilities.workflows.title': 'Gestiona Tus Flujos de Trabajo',
+    'home.capabilities.workflows.description': 'Configura procesos automatizados para generación de leads, seguimiento de clientes, creación de contenido y operaciones comerciales diarias.',
+    'home.capabilities.availability.title': 'Trabaja las 24 Horas',
+    'home.capabilities.availability.description': 'Tars nunca duerme. Programa tareas para que se ejecuten durante la noche, los fines de semana o cuando necesites que el trabajo se haga sin que estés presente.',
     'common.welcome': 'Bienvenido a Thanus',
     'common.signIn': 'Iniciar Sesión',
     'common.signUp': 'Registrarse',
@@ -1588,6 +2162,61 @@ export const translations = {
     'dashboard.expectedCompletion': 'Finalización esperada',
     'dashboard.duration': 'Duración',
     'dashboard.dismissMaintenance': 'Descartar aviso de mantenimiento',
+    
+    // Dashboard Examples
+    'dashboard.examples.findBakeries.title': 'Encontrar mapa de las mejores panaderías',
+    'dashboard.examples.findBakeries.query': '1. Busca en Google Maps "mejores panaderías en {{city}}"\n2. Crea una lista personalizada con las {{number}} mejores panaderías\n3. Para cada panadería, recopila:\n   - Calificaciones de clientes y artículos populares\n   - Horario, ubicación y especialidades\n   - Rango de precios y productos que debes probar\n4. Genera un resumen con recomendaciones',
+    
+    'dashboard.examples.researchEducation.title': 'Investigar datos educativos',
+    'dashboard.examples.researchEducation.query': '1. Accede a la base de datos de la UNESCO para estadísticas de educación en {{topic}}\n2. Recopila datos sobre:\n   - Tasas de matrícula por región\n   - Proporciones alumno-docente a nivel global\n   - Gasto en educación como % del PIB\n3. Crea una hoja de cálculo estructurada con tendencias\n4. Genera un resumen ejecutivo con conclusiones clave',
+    
+    'dashboard.examples.planTravel.title': 'Planificar itinerario de viaje',
+    'dashboard.examples.planTravel.query': '1. Investiga sobre {{destination}} en TripAdvisor para un viaje de {{duration}} días\n2. Encuentra las principales atracciones, restaurantes y actividades\n3. Optimiza el horario diario por ubicación y horarios\n4. Incluye transporte, clima y planes de respaldo\n5. Crea un itinerario día por día con bloques de tiempo',
+    
+    'dashboard.examples.analyzeNews.title': 'Analizar cobertura de noticias',
+    'dashboard.examples.analyzeNews.query': '1. Busca en {{news_outlet}} artículos sobre {{topic}} de los últimos {{time_period}}\n2. Categoriza la cobertura e identifica temas clave\n3. Haz seguimiento de fuentes expertas y datos\n4. Crea una línea de tiempo de los principales acontecimientos\n5. Genera un informe con conclusiones y brechas en la cobertura',
+    
+    'dashboard.examples.buildFinancialModel.title': 'Crear modelo financiero',
+    'dashboard.examples.buildFinancialModel.query': '1. Crea un modelo {{model_type}} para un negocio de tipo {{company_type}}\n2. Recopila datos históricos y puntos de referencia de la industria\n3. Construye pronósticos de ingresos y proyecciones de gastos\n4. Incluye análisis DCF, LTV/CAC o VPN\n5. Diseña un panel de control en Excel con escenarios',
+    
+    'dashboard.examples.developMarketStrategy.title': 'Desarrollar estrategia de mercado',
+    'dashboard.examples.developMarketStrategy.query': '1. Crea una estrategia de lanzamiento para {{product_type}}\n2. Analiza el mercado objetivo y la competencia\n3. Diseña estrategia de entrada y precios\n4. Construye proyecciones financieras y cronograma\n5. Crea una presentación con recomendaciones',
+    
+    'dashboard.examples.researchCompany.title': 'Investigar inteligencia empresarial',
+    'dashboard.examples.researchCompany.query': '1. Investiga {{company_name}} de manera integral\n2. Recopila noticias recientes, financiamiento e información de liderazgo\n3. Analiza posición competitiva y participación de mercado\n4. Investiga antecedentes del personal clave\n5. Crea un perfil detallado con información procesable',
+    
+    'dashboard.examples.auditCalendar.title': 'Auditar productividad del calendario',
+    'dashboard.examples.auditCalendar.query': '1. Analiza datos de {{calendar_app}} de los últimos {{months}} meses\n2. Evalúa frecuencia de reuniones y tiempo enfocado\n3. Identifica oportunidades de optimización\n4. Analiza patrones de efectividad de reuniones\n5. Genera recomendaciones y plan de implementación',
+    
+    'dashboard.examples.researchIndustryTrends.title': 'Investigar tendencias de la industria',
+    'dashboard.examples.researchIndustryTrends.query': '1. Investiga tendencias de {{industry}} en {{data_sources}}\n2. Recopila actividad de inversión y desarrollos tecnológicos\n3. Analiza impulsores del mercado y oportunidades\n4. Identifica temas emergentes y brechas\n5. Crea un informe integral con recomendaciones',
+    
+    'dashboard.examples.automateSupportTickets.title': 'Automatizar tickets de soporte',
+    'dashboard.examples.automateSupportTickets.query': '1. Monitorea {{support_platform}} en busca de tickets entrantes\n2. Categoriza problemas y evalúa urgencia\n3. Busca en {{knowledge_base}} soluciones\n4. Responde automáticamente o escala según confianza\n5. Realiza seguimiento de métricas y genera informes diarios',
+    
+    'dashboard.examples.researchLegalCompliance.title': 'Investigar cumplimiento legal',
+    'dashboard.examples.researchLegalCompliance.query': '1. Investiga {{legal_topic}} en {{jurisdictions}}\n2. Compara requisitos y tarifas estatales\n3. Analiza factores de decisión e implicaciones\n4. Recopila detalles prácticos de implementación\n5. Crea hoja de cálculo comparativa con recomendaciones',
+    
+    'dashboard.examples.compileDataAnalysis.title': 'Compilar análisis de datos',
+    'dashboard.examples.compileDataAnalysis.query': '1. Recopila {{data_topic}} de {{data_sources}}\n2. Limpia y estandariza conjuntos de datos\n3. Analiza patrones y calcula tendencias\n4. Crea hojas de cálculo con visualizaciones\n5. Proporciona recomendaciones estratégicas',
+    
+    'dashboard.examples.planSocialMedia.title': 'Planificar contenido para redes sociales',
+    'dashboard.examples.planSocialMedia.query': '1. Crea una estrategia de {{duration}} para {{brand}}\n2. Investiga temas de tendencia y contenido de la competencia\n3. Desarrolla un calendario de contenido con {{posts_per_week}} publicaciones\n4. Crea contenido específico por plataforma y programa\n5. Configura análisis e informes mensuales',
+    
+    'dashboard.examples.compareProducts.title': 'Comparar productos',
+    'dashboard.examples.compareProducts.query': '1. Investiga opciones de {{product_category}} de manera integral\n2. Recopila estudios científicos y opiniones de expertos\n3. Analiza beneficios, desventajas y costos\n4. Investiga el consenso actual de expertos\n5. Crea un informe comparativo con recomendaciones personalizadas',
+    
+    'dashboard.examples.analyzeMarketOpportunities.title': 'Analizar oportunidades de mercado',
+    'dashboard.examples.analyzeMarketOpportunities.query': '1. Investiga {{market_topic}} en busca de oportunidades de inversión\n2. Analiza tamaño del mercado, crecimiento y actores clave\n3. Identifica temas y riesgos de inversión\n4. Evalúa desafíos y barreras del mercado\n5. Crea una presentación de inversión con recomendaciones',
+    
+    'dashboard.examples.processInvoices.title': 'Procesar facturas y documentos',
+    'dashboard.examples.processInvoices.query': '1. Escanea {{document_folder}} en busca de facturas PDF\n2. Extrae datos clave: números, fechas, montos, proveedores\n3. Organiza datos con campos estandarizados\n4. Construye una hoja de cálculo integral de seguimiento\n5. Genera informes financieros mensuales',
+    
+    'dashboard.examples.sourceTalent.title': 'Buscar talento y candidatos',
+    'dashboard.examples.sourceTalent.query': '1. Busca candidatos para {{job_title}} en {{location}}\n2. Usa LinkedIn, GitHub y bolsas de empleo\n3. Evalúa habilidades, experiencia y adaptación cultural\n4. Crea un pipeline de candidatos clasificados\n5. Desarrolla una estrategia de contacto personalizada',
+    
+    'dashboard.examples.buildWebsite.title': 'Construir sitio web profesional',
+    'dashboard.examples.buildWebsite.query': '1. Investiga a {{person_name}} en línea de manera integral\n2. Analiza marca personal y logros profesionales\n3. Diseña estructura y contenido del sitio web\n4. Crea páginas optimizadas con portafolio\n5. Implementa SEO y características de rendimiento',
     
     // Error messages
     'error.generic': 'Algo salió mal',
@@ -2040,6 +2669,116 @@ export const translations = {
     'knowledgeBase.sourceTypeGitRepo': 'Git',
     'knowledgeBase.sourceTypeZipExtracted': 'ZIP',
     'knowledgeBase.tabManual': 'Escribir Conocimiento',
+    
+    // Home Page - Site Config
+    'home.site.name': 'Tars',
+    'home.site.description': 'El Trabajador de IA Generalista que puede actuar en tu nombre.',
+    'home.site.cta': 'Comenzar Gratis',
+
+    // Navigation
+    'home.nav.home': 'Inicio',
+    'home.nav.process': 'Proceso',
+    'home.nav.openSource': 'Código Abierto',
+    'home.nav.pricing': 'Precios',
+    'home.nav.enterprise': 'Empresas',
+
+    // Hero Section
+    'home.hero.badge': '100% CÓDIGO ABIERTO',
+    'home.hero.title': 'Tars – Construye, gestiona y entrena tu Fuerza Laboral de IA.',
+    'home.hero.description': 'Tars – plataforma de código abierto para construir, gestionar y entrenar tu Fuerza Laboral de IA.',
+    'home.hero.inputPlaceholder': 'Pregunta a Tars...',
+
+    // Pricing Section
+    'home.pricing.plus.name': 'Plus',
+    'home.pricing.plus.description': 'Ideal para individuos y pequeños equipos',
+    'home.pricing.plus.buttonText': 'Comenzar',
+    'home.pricing.plus.features.0': 'US$ 20 en créditos de IA/mes',
+    'home.pricing.plus.features.1': '5 agentes personalizados',
+    'home.pricing.plus.features.2': 'Proyectos privados',
+    'home.pricing.plus.features.3': 'Habilidades personalizadas',
+    'home.pricing.plus.features.4': 'Más de 100 integraciones',
+    'home.pricing.plus.features.5': 'Modelos de IA Premium',
+    'home.pricing.plus.features.6': 'Capacidades avanzadas de IA',
+
+    'home.pricing.pro.name': 'Pro',
+    'home.pricing.pro.description': 'Ideal para negocios en crecimiento',
+    'home.pricing.pro.buttonText': 'Comenzar',
+    'home.pricing.pro.features.0': 'US$ 50 en créditos de IA/mes',
+    'home.pricing.pro.features.1': '20 agentes personalizados',
+    'home.pricing.pro.features.2': 'Proyectos privados',
+    'home.pricing.pro.features.3': 'Habilidades personalizadas',
+    'home.pricing.pro.features.4': 'Más de 100 integraciones',
+    'home.pricing.pro.features.5': 'Modelos de IA Premium',
+    'home.pricing.pro.features.6': 'Capacidades avanzadas de IA',
+
+    'home.pricing.business.name': 'Business',
+    'home.pricing.business.description': 'Para negocios establecidos',
+    'home.pricing.business.buttonText': 'Comenzar',
+    'home.pricing.business.features.0': 'US$ 100 en créditos de IA/mes',
+    'home.pricing.business.features.1': '20 agentes personalizados',
+    'home.pricing.business.features.2': 'Proyectos privados',
+    'home.pricing.business.features.3': 'Habilidades personalizadas',
+    'home.pricing.business.features.4': 'Más de 100 integraciones',
+    'home.pricing.business.features.5': 'Modelos de IA Premium',
+    'home.pricing.business.features.6': 'Capacidades avanzadas de IA',
+
+    'home.pricing.ultra.name': 'Ultra',
+    'home.pricing.ultra.description': 'Para usuarios avanzados',
+    'home.pricing.ultra.buttonText': 'Comenzar',
+    'home.pricing.ultra.features.0': 'US$ 200 en créditos de IA/mes',
+    'home.pricing.ultra.features.1': '100 agentes personalizados',
+    'home.pricing.ultra.features.2': 'Proyectos privados',
+    'home.pricing.ultra.features.3': 'Habilidades personalizadas',
+    'home.pricing.ultra.features.4': 'Más de 100 integraciones',
+    'home.pricing.ultra.features.5': 'Modelos de IA Premium',
+    'home.pricing.ultra.features.6': 'Soporte Prioritario',
+    'home.pricing.ultra.features.7': 'Capacidades avanzadas de IA',
+
+    // Companies Section
+    'home.companies.title': 'Confiado por equipos innovadores',
+    'home.companies.description': 'Únete a empresas que usan Tars para potenciar su fuerza laboral de IA',
+
+    // CTA Section
+    'home.ctaSection.title': 'Lanza Tu Primer Trabajador de IA Hoy',
+    'home.ctaSection.button.text': 'Comienza Gratis',
+    'home.ctaSection.subtext': 'Construye, gestiona y entrena tu Fuerza Laboral de IA',
+    'home.cta.title': '¿Listo para comenzar?',
+    'home.cta.button.text': 'Comenzar Ahora',
+    'home.cta.subtext': 'Sin necesidad de tarjeta de crédito',
+
+    // Footer
+    'home.footer.tars': 'Tars',
+    'home.footer.about': 'Acerca de',
+    'home.footer.contact': 'Contacto',
+    'home.footer.careers': 'Carreras',
+    'home.footer.resources': 'Recursos',
+    'home.footer.documentation': 'Documentación',
+    'home.footer.discord': 'Discord',
+    'home.footer.github': 'GitHub',
+    'home.footer.legal': 'Legal',
+    'home.footer.privacyPolicy': 'Política de Privacidad',
+    'home.footer.termsOfService': 'Términos de Servicio',
+    'home.footer.license': 'Licencia',
+
+    // FAQ Section
+    'home.faq.title': 'Preguntas Frecuentes',
+    'home.faq.items.1.question': '¿Qué es Tars?',
+    'home.faq.items.1.answer': 'Tars es una plataforma de código abierto para construir, gestionar y entrenar tu Fuerza Laboral de IA.',
+    'home.faq.items.6.question': '¿Cómo empiezo?',
+    'home.faq.items.6.answer': 'Crea una cuenta gratuita y comienza a construir tu fuerza laboral de IA en minutos.',
+
+    // Open Source Section
+    'home.opensource.title': '100% Open AI',
+    'home.opensource.subtitle': 'Código abierto, autoalojado y listo para personalizar.',
+    'home.opensource.secure_deployment.title': 'Despliegue Privado Seguro',
+    'home.opensource.secure_deployment.description': 'Despliega 100% en tus instalaciones con soberanía total de datos. Tus trabajadores de IA funcionan completamente en tu infraestructura sin dependencias externas.',
+    'home.opensource.enterprise_security.title': 'Seguridad Empresarial',
+    'home.opensource.enterprise_security.description': 'Transparencia de código abierto con seguridad empresarial. Despliega detrás de tu firewall con control total sobre modelos, datos e integraciones.',
+    'home.opensource.community.title': 'Comunidad',
+    'home.opensource.community.subtitle': 'Únete a nuestros desarrolladores',
+    'home.opensource.license.title': 'Apache 2.0',
+    'home.opensource.license.subtitle': 'Libre de usar y modificar',
+    'home.opensource.view_github': 'Ver en GitHub',
     'knowledgeBase.tabFiles': 'Subir Archivos',
     'knowledgeBase.tabRepo': 'Repositorio Git',
     'knowledgeBase.uploadFilesTabTitle': 'Subir Archivos',
@@ -2145,6 +2884,21 @@ export const translations = {
     'workflowSidePanel.mcpServer': 'MCP {name}',
     'workflowSidePanel.mcpDescription': 'Configuración del servidor MCP para {name}',
     
+    // Página de Inicio
+    'home.hero.title.prefix': 'Contrata a Tars para ',
+    'home.hero.title.rotatingTexts': 'Investigación,Presentaciones,Documentos,Hojas de Cálculo,Diseño,Análisis de Datos,Gestión de Correos,Redes Sociales,SEO,Generación de Leads,Atención al Cliente,Creación de Contenido,Gestión de Proyectos,Ventas,Marketing,Análisis',
+    'home.hero.subtitle': 'Despliega Trabajadores de IA que gestionan tu negocio de forma autónoma.',
+    'home.hero.chatPlaceholder': 'Dale una tarea a Tars para completar...',
+    'home.auth.signInTitle': 'Inicia sesión para continuar',
+    'home.auth.signInDescription': 'Inicia sesión o crea una cuenta para hablar con Tars',
+    'home.auth.orContinueWith': 'o continúa con correo electrónico',
+    'home.auth.signInWithEmail': 'Iniciar sesión con correo',
+    'home.auth.createNewAccount': 'Crear nueva cuenta',
+    'home.auth.termsPrefix': 'Al continuar, aceptas nuestros',
+    'home.auth.terms': 'Términos de Servicio',
+    'home.auth.privacyPolicy': 'Política de Privacidad',
+    'home.auth.and': 'y',
+
     // Workflow Definitions
     'workflowDefinitions.instruction': 'Instrucción',
     'workflowDefinitions.instructionDescription': 'Agregar un paso de instrucción personalizada',
@@ -2166,6 +2920,28 @@ export const translations = {
     'workflowDefinitions.toolsDescription': 'Usar herramientas e integraciones específicas',
     'workflowDefinitions.use': 'Usar',
     
+    // Tool Call Side Panel
+    // Maintenance
+    'maintenance.title': 'Mantenimiento Programado',
+    'maintenance.description': 'Estamos realizando un mantenimiento programado para mejorar nuestros sistemas. Algunas funciones pueden no estar disponibles temporalmente.',
+    'maintenance.almostDone': '¡Casi listo!',
+    'maintenance.completed': 'Mantenimiento completado',
+    'maintenance.expectedCompletion': 'Finalización esperada',
+    'maintenance.timeRemaining.hours': 'Faltan {hours}h {minutes}min',
+    'maintenance.timeRemaining.minutes': 'Faltan {minutes}min',
+    'maintenance.startingNow': 'comenzando ahora',
+    'maintenance.startingIn.days': 'comenzando en {days}d {hours}h',
+    'maintenance.startingIn.hours': 'comenzando en {hours}h {minutes}min',
+    'maintenance.startingIn.minutes': 'comenzando en {minutes}min',
+    'maintenance.banner.inProgress': 'Mantenimiento programado en curso',
+    'maintenance.banner.scheduled': 'Mantenimiento programado',
+    'maintenance.starts': 'Comienza',
+    'maintenance.ends': 'Termina',
+    'maintenance.duration.label': 'Duración',
+    'maintenance.duration.hours': '{hours}h {minutes}min',
+    'maintenance.duration.minutes': '{minutes}min',
+    'maintenance.dismiss': 'Descartar aviso de mantenimiento',
+
     // Tool Call Side Panel
     'toolCallSidePanel.computer': 'Computadora',
     'toolCallSidePanel.minimizeToFloating': 'Minimizar a vista previa flotante',

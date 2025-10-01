@@ -5,8 +5,11 @@ import { FlickeringGrid } from '@/components/home/ui/flickering-grid';
 import { Globe } from '@/components/home/ui/globe';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function OpenSourceSection() {
+  const { t } = useLanguage();
+  
   const items = [
     {
       id: 1,
@@ -285,8 +288,8 @@ export function OpenSourceSection() {
           </motion.div>
         </div>
       ),
-      title: 'Secure Private Deployment',
-      description: 'Deploy 100% on-premises with complete data sovereignty. Your AI workers run entirely on your infrastructure with no external dependencies.',
+      title: t('home.opensource.secure_deployment.title'),
+      description: t('home.opensource.secure_deployment.description'),
       showGitHubInfo: true,
     },
     {
@@ -296,8 +299,8 @@ export function OpenSourceSection() {
           <Globe className="top-28" />
         </div>
       ),
-      title: 'Enterprise-Grade Security',
-      description: 'Open source transparency meets enterprise security. Deploy behind your firewall with full control over models, data, and integrations.',
+      title: t('home.opensource.enterprise_security.title'),
+      description: t('home.opensource.enterprise_security.description'),
       showFeatures: true,
     },
   ];
@@ -312,10 +315,10 @@ export function OpenSourceSection() {
           {/* Section Header */}
           <SectionHeader>
             <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-center text-balance">
-              100% Open AI
+              {t('home.opensource.title')}
             </h2>
             <p className="text-muted-foreground text-center text-balance font-medium">
-              Deploy securely on your own infrastructure with complete control over your data and AI workflows.
+              {t('home.opensource.subtitle')}
             </p>
           </SectionHeader>
 
@@ -412,9 +415,9 @@ export function OpenSourceSection() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-medium">Community</h4>
+                      <h4 className="font-medium">{t('home.opensource.community.title')}</h4>
                       <p className="text-muted-foreground text-sm">
-                        Join our developers
+                        {t('home.opensource.community.subtitle')}
                       </p>
                     </div>
                   </div>
@@ -445,9 +448,9 @@ export function OpenSourceSection() {
                       </svg>
                     </div>
                     <div>
-                      <h4 className="font-medium">Apache 2.0</h4>
+                      <h4 className="font-medium">{t('home.opensource.license.title')}</h4>
                       <p className="text-muted-foreground text-sm">
-                        Free to use and modify
+                        {t('home.opensource.license.subtitle')}
                       </p>
                     </div>
                   </div>
@@ -466,7 +469,7 @@ export function OpenSourceSection() {
                   rel="noopener noreferrer"
                   className="group inline-flex h-10 items-center justify-center gap-2 text-sm font-medium tracking-wide rounded-full text-primary-foreground dark:text-black px-6 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] bg-primary dark:bg-white hover:bg-primary/90 dark:hover:bg-white/90 transition-all duration-200 w-fit mt-4"
                 >
-                  <span>View on GitHub</span>
+                  <span>{t('home.opensource.view_github')}</span>
                   <span className="inline-flex items-center justify-center size-5 rounded-full bg-white/20 dark:bg-black/10 group-hover:bg-white/30 dark:group-hover:bg-black/20 transition-colors duration-200">
                     <svg
                       width="12"

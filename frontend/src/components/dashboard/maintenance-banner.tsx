@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useEffect, useState } from 'react';
+import { t, type LanguageCode } from '@/lib/i18n';
 
 interface MaintenanceBannerProps {
   startTime: string; // ISO string
@@ -23,6 +24,13 @@ export function MaintenanceBanner({
   const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
+
+  // Initialize language
+  useEffect(() => {
+    const lang = (navigator.language.split('-')[0] as LanguageCode) || 'en';
+    setCurrentLang(['en', 'pt', 'es'].includes(lang) ? lang as LanguageCode : 'en');
+  }, []);
 
   // Create a unique key for this maintenance window
   const maintenanceKey = `maintenance-dismissed-${startTime}-${endTime}`;
@@ -48,7 +56,7 @@ export function MaintenanceBanner({
         const diffToEnd = end.getTime() - now.getTime();
 
         if (diffToEnd <= 0) {
-          setTimeDisplay('Maintenance completed');
+          setTimeDisplay(t('maintenance.completed', currentLang));
           return;
         }
 
@@ -58,9 +66,16 @@ export function MaintenanceBanner({
         );
 
         if (hours > 0) {
-          setTimeDisplay(`${hours}h ${minutes}m remaining`);
+          setTimeDisplay(
+            t('maintenance.timeRemaining.hours', currentLang)
+              .replace('{hours}', hours.toString())
+              .replace('{minutes}', minutes.toString())
+          );
         } else {
-          setTimeDisplay(`${minutes}m remaining`);
+          setTimeDisplay(
+            t('maintenance.timeRemaining.minutes', currentLang)
+              .replace('{minutes}', minutes.toString())
+          );
         }
       } else if (now < start) {
         // Maintenance hasn't started yet
@@ -68,7 +83,7 @@ export function MaintenanceBanner({
         const diffToStart = start.getTime() - now.getTime();
 
         if (diffToStart <= 0) {
-          setTimeDisplay('starting now');
+          setTimeDisplay(t('maintenance.startingNow', currentLang));
           return;
         }
 
@@ -81,11 +96,22 @@ export function MaintenanceBanner({
         );
 
         if (days > 0) {
-          setTimeDisplay(`starting in ${days}d ${hours}h`);
+          setTimeDisplay(
+            t('maintenance.startingIn.days', currentLang)
+              .replace('{days}', days.toString())
+              .replace('{hours}', hours.toString())
+          );
         } else if (hours > 0) {
-          setTimeDisplay(`starting in ${hours}h ${minutes}m`);
+          setTimeDisplay(
+            t('maintenance.startingIn.hours', currentLang)
+              .replace('{hours}', hours.toString())
+              .replace('{minutes}', minutes.toString())
+          );
         } else {
-          setTimeDisplay(`starting in ${minutes}m`);
+          setTimeDisplay(
+            t('maintenance.startingIn.minutes', currentLang)
+              .replace('{minutes}', minutes.toString())
+          );
         }
       } else {
         // Maintenance is over
@@ -106,14 +132,17 @@ export function MaintenanceBanner({
 
   const formatDateTime = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleString(undefined, {
+    const options: Intl.DateTimeFormatOptions = {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
       timeZoneName: 'short',
-    });
+    };
+    
+    // Format date according to the current language
+    return date.toLocaleString(currentLang, options);
   };
 
   const getDuration = () => {
@@ -124,9 +153,12 @@ export function MaintenanceBanner({
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      return t('maintenance.duration.hours', currentLang)
+        .replace('{hours}', hours.toString())
+        .replace('{minutes}', minutes.toString());
     } else {
-      return `${minutes}m`;
+      return t('maintenance.duration.minutes', currentLang)
+        .replace('{minutes}', minutes.toString());
     }
   };
 
@@ -167,8 +199,8 @@ export function MaintenanceBanner({
       >
         <span className="font-medium">
           {isMaintenanceActive
-            ? 'Scheduled maintenance in progress'
-            : 'Scheduled maintenance'}
+            ? t('maintenance.banner.inProgress', currentLang)
+            : t('maintenance.banner.scheduled', currentLang)}
         </span>
         {timeDisplay && (
           <>
@@ -185,13 +217,14 @@ export function MaintenanceBanner({
           <TooltipContent side="top" className="max-w-xs">
             <div className="space-y-1 text-xs">
               {!isMaintenanceActive && (
-                <div>Starts: {formatDateTime(startTime)}</div>
+                <div>{t('maintenance.starts', currentLang)}: {formatDateTime(startTime)}</div>
               )}
               <div>
-                {isMaintenanceActive ? 'Expected completion' : 'Ends'}:{' '}
-                {formatDateTime(endTime)}
+                {isMaintenanceActive 
+                  ? `${t('maintenance.expectedCompletion', currentLang)}: ${formatDateTime(endTime)}`
+                  : `${t('maintenance.ends', currentLang)}: ${formatDateTime(endTime)}`}
               </div>
-              <div>Duration: {getDuration()}</div>
+              <div>{t('maintenance.duration.label', currentLang)}: {getDuration()}</div>
             </div>
           </TooltipContent>
         </Tooltip>
@@ -207,7 +240,7 @@ export function MaintenanceBanner({
             : 'text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200'
         }`}
         onClick={handleDismiss}
-        aria-label="Dismiss maintenance notice"
+        aria-label={t('maintenance.dismiss', currentLang)}
       >
         <X className="h-3 w-3" />
       </Button>

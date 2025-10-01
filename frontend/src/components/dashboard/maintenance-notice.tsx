@@ -2,6 +2,7 @@
 
 import { Clock, AlertTriangle, Server } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { t, type LanguageCode } from '@/lib/i18n';
 
 interface MaintenanceNoticeProps {
   endTime: string; // ISO string
@@ -9,6 +10,13 @@ interface MaintenanceNoticeProps {
 
 export function MaintenanceNotice({ endTime }: MaintenanceNoticeProps) {
   const [timeRemaining, setTimeRemaining] = useState<string>('');
+  const [currentLang, setCurrentLang] = useState<LanguageCode>('en');
+
+  // Initialize language
+  useEffect(() => {
+    const lang = (navigator.language.split('-')[0] as LanguageCode) || 'en';
+    setCurrentLang(['en', 'pt', 'es'].includes(lang) ? lang as LanguageCode : 'en');
+  }, []);
 
   useEffect(() => {
     const updateTimeRemaining = () => {
@@ -17,7 +25,7 @@ export function MaintenanceNotice({ endTime }: MaintenanceNoticeProps) {
       const diff = end.getTime() - now.getTime();
 
       if (diff <= 0) {
-        setTimeRemaining('Almost done!');
+        setTimeRemaining(t('maintenance.almostDone', currentLang));
         return;
       }
 
@@ -25,9 +33,16 @@ export function MaintenanceNotice({ endTime }: MaintenanceNoticeProps) {
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
       if (hours > 0) {
-        setTimeRemaining(`${hours}h ${minutes}m remaining`);
+        setTimeRemaining(
+          t('maintenance.timeRemaining.hours', currentLang)
+            .replace('{hours}', hours.toString())
+            .replace('{minutes}', minutes.toString())
+        );
       } else {
-        setTimeRemaining(`${minutes}m remaining`);
+        setTimeRemaining(
+          t('maintenance.timeRemaining.minutes', currentLang)
+            .replace('{minutes}', minutes.toString())
+        );
       }
     };
 
@@ -39,14 +54,17 @@ export function MaintenanceNotice({ endTime }: MaintenanceNoticeProps) {
 
   const formatEndTime = (isoString: string) => {
     const date = new Date(isoString);
-    return date.toLocaleString(undefined, {
+    const options: Intl.DateTimeFormatOptions = {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
       timeZoneName: 'short',
-    });
+    };
+    
+    // Format date according to the current language
+    return date.toLocaleString(currentLang, options);
   };
 
   return (
@@ -62,18 +80,17 @@ export function MaintenanceNotice({ endTime }: MaintenanceNoticeProps) {
           <div className="flex-1 space-y-4">
             <div>
               <h3 className="text-lg font-semibold text-foreground">
-                Scheduled Maintenance
+                {t('maintenance.title', currentLang)}
               </h3>
               <p className="text-muted-foreground mt-1">
-                We're performing scheduled maintenance to improve our systems.
-                Some features may be temporarily unavailable.
+                {t('maintenance.description', currentLang)}
               </p>
             </div>
 
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 flex-shrink-0" />
-                <span>Expected completion: {formatEndTime(endTime)}</span>
+                <span>{t('maintenance.expectedCompletion', currentLang)}: {formatEndTime(endTime)}</span>
               </div>
 
               {timeRemaining && (

@@ -1,9 +1,8 @@
-import Image from 'next/image';
-import { siteConfig } from '@/lib/home';
 import Link from 'next/link';
-import { HeroVideoSection } from './hero-video-section';
+import { useHomeContent } from '@/hooks/use-home-content';
 
 export function CTASection() {
+  const { siteConfig } = useHomeContent();
   const { ctaSection } = siteConfig;
 
   return (

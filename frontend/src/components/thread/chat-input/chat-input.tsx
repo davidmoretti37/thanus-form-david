@@ -21,6 +21,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ToolCallInput } from './floating-tool-preview';
 import { ChatSnack } from './chat-snack';
 import { Brain, Zap, Workflow, Database, ArrowDown } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useComposioToolkitIcon } from '@/hooks/react-query/composio/use-composio';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -90,58 +91,60 @@ export interface UploadedFile {
 
 
 
-export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
-  (
-    {
-      onSubmit,
-      placeholder = 'Describe what you need help with...',
-      loading = false,
-      disabled = false,
-      isAgentRunning = false,
-      onStopAgent,
-      autoFocus = true,
-      value: controlledValue,
-      onChange: controlledOnChange,
-      onFileBrowse,
-      sandboxId,
-      hideAttachments = false,
-      selectedAgentId,
-      onAgentSelect,
-      agentName,
-      messages = [],
-      bgColor = 'bg-card',
-      toolCalls = [],
-      toolCallIndex = 0,
-      showToolPreview = false,
-      onExpandToolPreview,
-      isLoggedIn = true,
-      enableAdvancedConfig = false,
-      onConfigureAgent,
-      hideAgentSelection = false,
-      evaMode,
-      defaultShowSnackbar = false,
-      showToLowCreditUsers = true,
-      agentMetadata,
-      showScrollToBottomIndicator = false,
-      onScrollToBottom,
+export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>((
+  {
+    onSubmit,
+    placeholder = 'Describe what you need help with...',
+    loading = false,
+    disabled = false,
+    isAgentRunning = false,
+    onStopAgent,
+    autoFocus = true,
+    value: controlledValue,
+    onChange: controlledOnChange,
+    onFileBrowse,
+    sandboxId,
+    hideAttachments = false,
+    selectedAgentId,
+    onAgentSelect,
+    agentName,
+    messages = [],
+    bgColor = 'bg-card',
+    toolCalls = [],
+    toolCallIndex = 0,
+    showToolPreview = false,
+    onExpandToolPreview,
+    isLoggedIn = true,
+    enableAdvancedConfig = false,
+    onConfigureAgent,
+    hideAgentSelection = false,
+    evaMode,
+    defaultShowSnackbar = false,
+    showToLowCreditUsers = true,
+    agentMetadata,
+    showScrollToBottomIndicator = false,
+    onScrollToBottom,
     },
     ref,
   ) => {
-    const isControlled =
-      controlledValue !== undefined && controlledOnChange !== undefined;
+    const isControlled = controlledValue !== undefined && controlledOnChange !== undefined;
+    const value = isControlled ? controlledValue : '';
+    const onChange = isControlled ? controlledOnChange : () => {};
 
     const [uncontrolledValue, setUncontrolledValue] = useState('');
-    const value = isControlled ? controlledValue : uncontrolledValue;
-
     const isTarsAgent = agentMetadata?.is_suna_default || false;
 
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-    const [isUploading, setIsUploading] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+    
+    const { t } = useLanguage();
 
     const [registryDialogOpen, setRegistryDialogOpen] = useState(false);
-    const [showSnackbar, setShowSnackbar] = useState(defaultShowSnackbar);
+    const [showSnackbar, setShowSnackbar] = useState<false | 'tokens' | 'upgrade'>(defaultShowSnackbar || false);
     const [userDismissedUsage, setUserDismissedUsage] = useState(false);
     const [billingModalOpen, setBillingModalOpen] = useState(false);
     const [agentConfigDialog, setAgentConfigDialog] = useState<{ open: boolean; tab: 'general' | 'instructions' | 'knowledge' | 'triggers' | 'playbooks' | 'tools' | 'integrations' }>({ open: false, tab: 'general' });
@@ -228,8 +231,10 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
 
     const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+      const currentValue = isControlled ? value : uncontrolledValue;
+      
       if (
-        (!value.trim() && uploadedFiles.length === 0) ||
+        (!currentValue.trim() && uploadedFiles.length === 0) ||
         loading ||
         (disabled && !isAgentRunning)
       )
@@ -240,7 +245,7 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
         return;
       }
 
-      let message = value;
+      let message = isControlled ? value : uncontrolledValue;
 
       if (uploadedFiles.length > 0) {
         const fileInfo = uploadedFiles
@@ -473,35 +478,35 @@ export const ChatInput = forwardRef<ChatInputHandles, ChatInputProps>(
                         </>
                       )}
                     </div>
-                    <span className="text-xs font-medium">Integrations</span>
+                    <span className="text-xs font-medium">{t('home.chat.buttons.integrations' as any)}</span>
                   </button>
                   <button
                     onClick={() => setAgentConfigDialog({ open: true, tab: 'instructions' })}
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Brain className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Instructions</span>
+                    <span className="text-xs font-medium">{t('home.chat.buttons.instructions' as any)}</span>
                   </button>
                   <button
                     onClick={() => setAgentConfigDialog({ open: true, tab: 'knowledge' })}
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Database className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Knowledge</span>
+                    <span className="text-xs font-medium">{t('home.chat.buttons.knowledge' as any)}</span>
                   </button>
                   <button
                     onClick={() => setAgentConfigDialog({ open: true, tab: 'triggers' })}
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Zap className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Triggers</span>
+                    <span className="text-xs font-medium">{t('home.chat.buttons.triggers' as any)}</span>
                   </button>
                   <button
                     onClick={() => setAgentConfigDialog({ open: true, tab: 'playbooks' })}
                     className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-all duration-200 px-2.5 py-1.5 rounded-lg hover:bg-muted/50 border border-transparent hover:border-border/30 flex-shrink-0 cursor-pointer relative pointer-events-auto"
                   >
                     <Workflow className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span className="text-xs font-medium">Playbooks</span>
+                    <span className="text-xs font-medium">{t('home.chat.buttons.playbooks' as any)}</span>
                   </button>
                 </div>
               </div>

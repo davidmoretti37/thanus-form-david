@@ -1221,13 +1221,13 @@ export const siteConfig = {
   },
   ctaSection: {
     id: 'cta',
-    title: 'Launch Your First AI Worker Today',
+    title: 'home.ctaSection.title',
     backgroundImage: '/holo.png',
     button: {
-      text: 'Get Started for free',
+      text: 'home.ctaSection.button.text',
       href: '/auth',
     },
-    subtext: 'Build, manage and train your AI Workforce',
+    subtext: 'home.ctaSection.subtext',
   },
   footerLinks: [
     {
