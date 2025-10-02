@@ -237,17 +237,26 @@ class AgentCallTool(Tool):
                 except Exception as e:
                     logger.warning(f"Could not load configuration for agent {agent_id}: {e}")
 
-            # TODO: Implement actual agent switching logic
-            # This would involve updating the thread manager's agent context
-            # For now, we'll provide a success response indicating the switch
+            # Update the thread manager's agent configuration
+            if agent_config:
+                # Ensure agent_id is included in the config
+                agent_config['agent_id'] = agent_id
+                agent_config['agent_name'] = agent_name
 
-            # In a full implementation, this would be something like:
-            # self.thread_manager.update_agent_context(
-            #     agent_id=agent_id,
-            #     agent_config=agent_config,
-            #     preserve_thread=True,
-            #     preserve_workspace=True
-            # )
+                # Update the agent configuration in the thread manager
+                old_config = self.thread_manager.agent_config
+                old_agent_id = old_config.get('agent_id') if old_config else None
+
+                self.thread_manager.agent_config = agent_config
+
+                # Update the response processor with new agent config
+                self.thread_manager.response_processor.agent_config = agent_config
+
+                logger.info(f"Successfully switched agent configuration from '{old_agent_id}' to '{agent_id}' ({agent_name})")
+
+                # TODO: Consider re-registering tools based on new agent configuration
+                # This would require a more complex tool registry update mechanism
+                # For now, tools registered remain the same but agent config is updated
 
             success_message = f"✅ Successfully switched to **{agent_name}**!\n\n"
 
@@ -319,31 +328,91 @@ class AgentCallTool(Tool):
     async def get_current_agent_info(self, include_tools: bool = True) -> ToolResult:
         """Get information about the currently active agent."""
         try:
-            # TODO: Implement logic to get current agent from thread manager
-            # For now, we'll return a placeholder response
+            # Get current agent from thread manager
+            current_config = self.thread_manager.agent_config
 
-            # In a full implementation, this would be something like:
-            # current_agent_id = self.thread_manager.get_current_agent_id()
-            # if not current_agent_id:
-            #     return self.fail_response("No agent currently active")
+            if not current_config or not current_config.get('agent_id'):
+                message = "**No Specific Agent Active**\n\n"
+                message += "Currently using default system configuration.\n\n"
+                message += "**Available Actions:**\n"
+                message += "• Use `list_available_agents` to see all your agents\n"
+                message += "• Use `switch_to_agent` to activate a specific agent\n"
+                message += "• All agent switches preserve your workspace and conversation history"
 
-            # For demonstration, we'll show how to query agent info
+                return self.success_response({
+                    "message": message,
+                    "current_agent": None,
+                    "is_default": True
+                })
+
+            current_agent_id = current_config['agent_id']
+            current_agent_name = current_config.get('agent_name', 'Unknown Agent')
+
             account_id = self.account_id
             if not account_id:
                 return self.fail_response("Unable to determine current account ID")
 
-            # This is a placeholder implementation
-            # In reality, we'd get the current agent ID from the thread manager
-            message = "**Current Agent Information:**\n\n"
-            message += "ℹ️  To see detailed agent information, use `list_available_agents` and then `switch_to_agent` to select a specific agent.\n\n"
-            message += "**Available Actions:**\n"
-            message += "• Use `list_available_agents` to see all your agents\n"
+            client = await self.db.client
+
+            # Get current agent details from database
+            agent_result = await client.table('agents').select(
+                'agent_id, name, description, icon_name, icon_color, icon_background, is_default, created_at, updated_at'
+            ).eq('agent_id', current_agent_id).eq('account_id', account_id).single().execute()
+
+            if not agent_result.data:
+                # Agent config exists but agent not found in DB
+                message = f"**Current Agent: {current_agent_name}**\n\n"
+                message += "⚠️  Agent configuration is loaded but agent details not found in database.\n"
+                message += f"Agent ID: `{current_agent_id}`\n\n"
+                message += "This may indicate the agent was deleted or access was revoked."
+
+                return self.success_response({
+                    "message": message,
+                    "current_agent": {"agent_id": current_agent_id, "name": current_agent_name},
+                    "warning": "Agent not found in database"
+                })
+
+            agent = agent_result.data
+            message = f"**Current Agent: {agent['name']}**\n\n"
+            message += f"• Description: {agent.get('description', 'No description')}\n"
+            message += f"• Agent ID: `{agent['agent_id']}`\n"
+            message += f"• Icon: {agent.get('icon_name', 'bot')} ({agent.get('icon_color', '#4F46E5')})\n"
+            message += f"• Default Agent: {'Yes' if agent.get('is_default') else 'No'}\n"
+
+            if include_tools and current_config:
+                tools_config = current_config.get('tools', {})
+                agentpress_tools = tools_config.get('agentpress', {})
+                enabled_tools = [tool for tool, enabled in agentpress_tools.items() if enabled]
+
+                message += f"• Model: {current_config.get('model', 'Unknown')}\n"
+                message += f"• Enabled Tools: {len(enabled_tools)}"
+                if enabled_tools:
+                    message += f" ({', '.join(enabled_tools[:5])}{'...' if len(enabled_tools) > 5 else ''})"
+                message += f"\n"
+
+                mcp_integrations = len(tools_config.get('mcp', []))
+                custom_integrations = len(tools_config.get('custom_mcp', []))
+                if mcp_integrations > 0:
+                    message += f"• MCP Integrations: {mcp_integrations}\n"
+                if custom_integrations > 0:
+                    message += f"• Custom Integrations: {custom_integrations}\n"
+
+            message += f"\n**Available Actions:**\n"
+            message += "• Use `list_available_agents` to see all available agents\n"
             message += "• Use `switch_to_agent` to change to a different agent\n"
-            message += "• All agent switches preserve your workspace and conversation history"
+            message += "• Use `search_agents` to find specific agents"
 
             return self.success_response({
                 "message": message,
-                "note": "Current agent tracking will be implemented when integrated with thread manager"
+                "current_agent": {
+                    "agent_id": agent['agent_id'],
+                    "name": agent['name'],
+                    "description": agent.get('description'),
+                    "is_default": agent.get('is_default', False),
+                    "model": current_config.get('model', 'Unknown'),
+                    "enabled_tools": enabled_tools if include_tools else None
+                },
+                "is_default": False
             })
 
         except Exception as e:
