@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { 
@@ -16,176 +16,109 @@ import {
 } from '@/components/ui/dialog';
 import { 
   Loader2, 
+  Settings, 
   CheckCircle2, 
   XCircle, 
   Zap, 
   Info,
-  RefreshCw,
-  Save
+  RefreshCw
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePipedreamToolsData } from '@/hooks/react-query/agents/use-pipedream-tools';
+import type { PipedreamTool } from '@/hooks/react-query/agents/use-pipedream-tools';
+import { ToolsLoader } from '../mcp/tools-loader';
 
-import { usePipedreamToolsData, useUpdatePipedreamToolsForAgent } from '@/hooks/react-query/agents/use-pipedream-tools';
-import { useCustomMCPToolsData } from '@/hooks/react-query/agents/use-custom-mcp-tools';
-import { ToolsLoader } from './tools-loader';
-
-interface BaseToolsManagerProps {
+interface AgentPipedreamToolsManagerProps {
   agentId: string;
+  profileId: string;
+  appName: string;
+  profileName: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onToolsUpdate?: (enabledTools: string[]) => void;
-  versionData?: {
-    configured_mcps?: any[];
-    custom_mcps?: any[];
-    system_prompt?: string;
-    agentpress_tools?: any;
-  };
-  saveMode?: 'direct' | 'callback';
-  versionId?: string;
-  initialEnabledTools?: string[];
 }
 
-interface PipedreamToolsManagerProps extends BaseToolsManagerProps {
-  mode: 'pipedream';
-  profileId: string;
-  appName: string;
-  profileName?: string;
-}
-
-interface CustomToolsManagerProps extends BaseToolsManagerProps {
-  mode: 'custom';
-  mcpConfig: any;
-  mcpName: string;
-}
-
-type ToolsManagerProps = PipedreamToolsManagerProps | CustomToolsManagerProps;
-
-export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
-  const { agentId, open, onOpenChange, onToolsUpdate, mode, versionData, saveMode = 'direct', versionId, initialEnabledTools } = props;
-  
-  const updatePipedreamTools = useUpdatePipedreamToolsForAgent();
-  
-  // Hook para buscar dados dependendo do modo
-  const pipedreamResult = usePipedreamToolsData(
-    mode === 'pipedream' ? agentId : '',
-    mode === 'pipedream' ? (props as PipedreamToolsManagerProps).profileId : '',
-    versionId
-  );
-  
-  const customResult = useCustomMCPToolsData(
-    mode === 'custom' ? agentId : '',
-    mode === 'custom' ? (props as CustomToolsManagerProps).mcpConfig : undefined
-  );
-
-  const result = mode === 'pipedream' ? pipedreamResult : customResult;
-  const { data, isLoading, error, updateMutation, isUpdating, refetch } = result;
-  
+export const AgentPipedreamToolsManager: React.FC<AgentPipedreamToolsManagerProps> = ({
+  agentId,
+  profileId,
+  appName,
+  profileName,
+  open,
+  onOpenChange,
+  onToolsUpdate
+}) => {
+  const { data, isLoading, error, isUpdating, refetch } = usePipedreamToolsData(agentId, profileId);
   const [localTools, setLocalTools] = useState<Record<string, boolean>>({});
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handleUpdateTools = async (enabledTools: string[]) => {
-    if (mode === 'pipedream') {
-      const { agentId, profileId, appName } = props as PipedreamToolsManagerProps;
-      // Use appName as appSlug if not available in props
-      const appSlug = (props as PipedreamToolsManagerProps).appName || appName;
-      return updatePipedreamTools.mutateAsync({ 
-        agentId, 
-        profileId, 
-        enabledTools,
-        appName,
-        appSlug
-      });
-    } else {
-      const customMutation = updateMutation as any;
-      return customMutation.mutateAsync(enabledTools);
-    }
-  };
-
+  // Initialize local state when data loads
   React.useEffect(() => {
     if (data?.tools) {
-      const toolsMap: Record<string, boolean> = {};
-      data.tools.forEach((tool: { name: string; enabled: boolean }) => {
-        toolsMap[tool.name] = tool.enabled;
-      });
-      
+      const toolsMap = data.tools.reduce((acc, tool) => {
+        acc[tool.name] = tool.enabled;
+        return acc;
+      }, {} as Record<string, boolean>);
       setLocalTools(toolsMap);
       setHasChanges(false);
     }
-  }, [data, initialEnabledTools]);
+  }, [data]);
 
   const enabledCount = useMemo(() => {
     return Object.values(localTools).filter(Boolean).length;
   }, [localTools]);
 
   const totalCount = data?.tools?.length || 0;
-  
-  const displayName = mode === 'pipedream' ? (props as PipedreamToolsManagerProps).appName : (props as CustomToolsManagerProps).mcpName;
-  const contextName = mode === 'pipedream' ? (props as PipedreamToolsManagerProps).profileName || 'Profile' : 'Server';
 
   const handleToolToggle = (toolName: string) => {
     setLocalTools(prev => {
       const newValue = !prev[toolName];
       const updated = { ...prev, [toolName]: newValue };
-      const comparisonState: Record<string, boolean> = {};
-      data?.tools?.forEach((tool: any) => {
-        if (initialEnabledTools && initialEnabledTools.length > 0) {
-          comparisonState[tool.name] = initialEnabledTools.includes(tool.name);
-        } else {
-          comparisonState[tool.name] = tool.enabled;
-        }
-      });
-      const hasChanges = Object.keys(updated).some(key => updated[key] !== comparisonState[key]);
+      
+      // Check if there are changes compared to server data
+      const serverTools = data?.tools?.reduce((acc, tool) => {
+        acc[tool.name] = tool.enabled;
+        return acc;
+      }, {} as Record<string, boolean>) || {};
+      
+      const hasChanges = Object.keys(updated).some(key => updated[key] !== serverTools[key]);
       setHasChanges(hasChanges);
+      
       return updated;
     });
   };
 
   const handleSelectAll = () => {
     if (!data?.tools) return;
-    const allEnabled = data.tools.every((tool: any) => !!localTools[tool.name]);
-    const newState: Record<string, boolean> = {};
-    data.tools.forEach((tool: any) => {
-      newState[tool.name] = !allEnabled;
-    });
+    
+    const allEnabled = data.tools.every(tool => localTools[tool.name]);
+    const newState = data.tools.reduce((acc, tool) => {
+      acc[tool.name] = !allEnabled;
+      return acc;
+    }, {} as Record<string, boolean>);
+    
     setLocalTools(newState);
     setHasChanges(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     const enabledTools = Object.entries(localTools)
       .filter(([_, enabled]) => enabled)
       .map(([name]) => name);
-    
-    if (saveMode === 'callback') {
-      if (onToolsUpdate) {
-        onToolsUpdate(enabledTools);
-      }
-      setHasChanges(false);
-      onOpenChange(false);
-    } else {
-      try {
-        await handleUpdateTools(enabledTools);
-        setHasChanges(false);
-        if (onToolsUpdate) {
-          onToolsUpdate(enabledTools);
-        }
-      } catch (error) {
-        console.error('Failed to save tools:', error);
-      }
+    setHasChanges(false);
+
+    if (onToolsUpdate) {
+      onToolsUpdate(enabledTools);
     }
   };
 
   const handleCancel = () => {
+    // Reset to server state
     if (data?.tools) {
-      const resetState: Record<string, boolean> = {};
-      data.tools.forEach((tool: any) => {
-        if (initialEnabledTools && initialEnabledTools.length > 0) {
-          resetState[tool.name] = initialEnabledTools.includes(tool.name);
-        } else {
-          resetState[tool.name] = tool.enabled;
-        }
-      });
-      setLocalTools(resetState);
+      const serverState = data.tools.reduce((acc, tool) => {
+        acc[tool.name] = tool.enabled;
+        return acc;
+      }, {} as Record<string, boolean>);
+      setLocalTools(serverState);
       setHasChanges(false);
     }
   };
@@ -200,7 +133,7 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
               Error Loading Tools
             </DialogTitle>
             <DialogDescription>
-              Failed to load {displayName} tools
+              Failed to load {appName} tools for {profileName}
             </DialogDescription>
           </DialogHeader>
           
@@ -230,21 +163,11 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
       <DialogContent className="sm:max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <div className="flex items-center gap-2 rounded-xl bg-muted p-2">
-              <Zap className="h-5 w-5 text-primary" />
-            </div>
-            Configure {displayName} Tools
+            <Zap className="h-5 w-5 text-primary" />
+            Configure {appName} Tools
           </DialogTitle>
           <DialogDescription>
-            {versionData ? (
-              <span className="flex items-center gap-2 text-amber-600">
-                Changes will make a new version of the agent.
-              </span>
-            ) : saveMode === 'callback' ? (
-              <span>Choose which {displayName} tools are available to your agent. Changes will be saved when you save the agent configuration.</span>
-            ) : (
-              <span>Choose which {displayName} tools are available to your agent. Changes will be saved immediately.</span>
-            )}
+            Choose which {appName} tools are available to your agent via the "{profileName}" profile
           </DialogDescription>
         </DialogHeader>
 
@@ -256,27 +179,27 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
               <div className="text-center">
                 <Info className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  No tools available for this {displayName} {mode === 'pipedream' ? 'profile' : 'server'}
+                  No tools available for this {appName} profile
                 </p>
               </div>
             </div>
           ) : (
             <>
-              <div className="flex items-center justify-between pb-4">
+              <div className="flex items-center justify-between p-4 border-b">
                 <div className="flex items-center gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium">
+                      <span className="font-medium">
                         {enabledCount} of {totalCount} tools enabled
                       </span>
                       {hasChanges && (
-                        <Badge className="text-xs bg-primary/10 text-primary">
+                        <Badge variant="secondary" className="text-xs">
                           Unsaved changes
                         </Badge>
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {contextName}: {mode === 'pipedream' ? (props as PipedreamToolsManagerProps).profileName : displayName}
+                      Profile: {profileName}
                     </p>
                   </div>
                 </div>
@@ -287,29 +210,33 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
                   onClick={handleSelectAll}
                   disabled={isUpdating}
                 >
-                  {data.tools.every((tool: any) => localTools[tool.name]) ? 'Deselect All' : 'Select All'}
+                  {data.tools.every(tool => localTools[tool.name]) ? 'Deselect All' : 'Select All'}
                 </Button>
               </div>
 
-              <div className="flex-1 overflow-y-auto space-y-3">
-                {data.tools.map((tool: any) => (
+              {/* Tools list */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {data.tools.map((tool) => (
                   <Card 
                     key={tool.name}
                     className={cn(
                       "transition-colors cursor-pointer",
-                      localTools[tool.name] ? "bg-muted/50" : "hover:bg-muted/20"
+                      localTools[tool.name] ? "bg-muted/50 border-primary/20" : "hover:bg-muted/20"
                     )}
                     onClick={() => handleToolToggle(tool.name)}
                   >
-                    <CardContent>
+                    <CardContent className="p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mb-1">
                             <h4 className="font-medium text-sm">{tool.name}</h4>
                             {localTools[tool.name] && (
                               <CheckCircle2 className="h-4 w-4 text-green-500" />
                             )}
                           </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {tool.description}
+                          </p>
                         </div>
                         <Switch
                           checked={localTools[tool.name] || false}
@@ -326,18 +253,19 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="border-t p-4">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
-              {!data?.has_mcp_config && data?.tools?.length > 0 && saveMode === 'direct' && (
+              {!data?.has_mcp_config && data?.tools?.length > 0 && (
                 <Alert className="p-2">
                   <Info className="h-3 w-3" />
                   <AlertDescription className="text-xs">
-                    This will {mode === 'pipedream' ? 'create a new' : 'update the'} MCP configuration for your agent
+                    This will create a new MCP configuration for your agent
                   </AlertDescription>
                 </Alert>
               )}
             </div>
+            
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -357,14 +285,9 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                       Saving...
                     </>
-                  ) : saveMode === 'callback' ? (
-                    <>
-                      <Save className="h-4 w-4" />
-                      Apply Changes
-                    </>
                   ) : (
                     <>
-                      <Save className="h-4 w-4" />
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
                       Save Changes
                     </>
                   )}
@@ -376,4 +299,4 @@ export const ToolsManager: React.FC<ToolsManagerProps> = (props) => {
       </DialogContent>
     </Dialog>
   );
-};
+}; 

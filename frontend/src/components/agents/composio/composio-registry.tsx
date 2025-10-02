@@ -1,22 +1,27 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Search, Zap, X, Settings, ChevronDown, ChevronUp, Loader2, Server } from 'lucide-react';
+import { Search, Zap, X, Settings, ChevronDown, ChevronUp, Loader2, Server, List, Sparkles } from 'lucide-react';
 import { useComposioCategories, useComposioToolkitsInfinite } from '@/hooks/react-query/composio/use-composio';
 import { useComposioProfiles } from '@/hooks/react-query/composio/use-composio-profiles';
 import { useAgent } from '@/hooks/react-query/agents/use-agents';
 import { useUpdateAgentMCPs } from '@/hooks/react-query/agents/use-update-agent-mcps';
+import { usePipedreamPopularApps } from '@/hooks/react-query/pipedream/use-pipedream';
 import { ComposioConnector } from './composio-connector';
 import { ComposioToolsManager } from './composio-tools-manager';
 import type { ComposioToolkit, ComposioProfile } from '@/hooks/react-query/composio/utils';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { CustomMCPDialog } from '../mcp/custom-mcp-dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { pipedreamApi } from '@/hooks/react-query/pipedream/utils';
+import { PipedreamConnector } from '../pipedream/pipedream-connector';
+import { ToolsManager } from '../mcp/tools-manager';
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   'popular': '🔥',
@@ -187,8 +192,34 @@ const ConnectedAppCard = ({
   );
 };
 
+interface PipedreamApp {
+  id: string;
+  name: string;
+  description?: string;
+  img_src: string;
+  // Add other Pipedream app properties as needed
+}
+
+// Type guard to check if an app is a PipedreamApp
+function isPipedreamApp(app: any): app is PipedreamApp {
+  return 'img_src' in app;
+}
+
+// Type guard to check if an app is a ComposioToolkit
+function isComposioToolkit(app: any): app is ComposioToolkit {
+  return 'logo' in app || 'tags' in app; // Assuming these are unique to ComposioToolkit
+}
+
+// Type for the fallback case
+interface BasicAppInfo {
+  name: string;
+  description?: string;
+}
+
+type AppCardApp = ComposioToolkit | PipedreamApp | BasicAppInfo;
+
 const AppCard = ({ app, profiles, onConnect, onConfigure, isConnectedToAgent, currentAgentId, mode }: {
-  app: ComposioToolkit; 
+  app: AppCardApp; 
   profiles: ComposioProfile[];
   onConnect: () => void;
   onConfigure: (profile: ComposioProfile) => void;
@@ -199,6 +230,8 @@ const AppCard = ({ app, profiles, onConnect, onConfigure, isConnectedToAgent, cu
   const connectedProfiles = profiles.filter(p => p.is_connected);
   const canConnect = mode === 'profile-only' ? true : (!isConnectedToAgent && currentAgentId);
   
+  // Use type guard to check app type
+  
   return (
     <div 
       onClick={canConnect ? (connectedProfiles.length > 0 ? () => onConfigure(connectedProfiles[0]) : onConnect) : undefined}
@@ -208,11 +241,45 @@ const AppCard = ({ app, profiles, onConnect, onConfigure, isConnectedToAgent, cu
       )}
     >
       <div className="flex items-start gap-3 mb-3">
-        {app.logo ? (
-          <img src={app.logo} alt={app.name} className="w-10 h-10 rounded-lg object-cover p-2 bg-muted rounded-xl border" />
+        {/* Render Pipedream app icon */}
+        {isPipedreamApp(app) ? (
+          <>
+            {app.img_src && (
+              <img 
+                src={app.img_src} 
+                alt={app.name} 
+                className="w-10 h-10 rounded-lg object-contain p-1"
+                onError={(e) => {
+                  // Fallback to default icon if image fails to load
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+            )}
+            {/* Hidden fallback div that shows if Pipedream image fails to load */}
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center hidden">
+              <span className="text-primary text-sm font-medium">{app.name.charAt(0)}</span>
+            </div>
+          </>
+        ) : isComposioToolkit(app) ? (
+          // Render Composio app icon
+          app.logo ? (
+            <img 
+              src={app.logo} 
+              alt={app.name} 
+              className="w-10 h-10 rounded-lg object-cover p-2 bg-muted rounded-xl border" 
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <span className="text-primary text-sm font-medium">{app.name.charAt(0)}</span>
+            </div>
+          )
         ) : (
+          // Fallback for any other type that has at least a name
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span className="text-primary text-sm font-medium">{app.name.charAt(0)}</span>
+            <span className="text-primary text-sm font-medium">
+              {app.name?.charAt(0) || 'A'}
+            </span>
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -223,7 +290,8 @@ const AppCard = ({ app, profiles, onConnect, onConfigure, isConnectedToAgent, cu
         </div>
       </div>
       
-      {app.tags.length > 0 && (
+      {/* Render tags for Composio apps */}
+      {isComposioToolkit(app) && app.tags && app.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-3">
           {app.tags.slice(0, 2).map((tag, index) => (
             <Badge key={index} variant="secondary" className="text-xs px-1.5 py-0.5 h-auto">
@@ -273,6 +341,8 @@ const AppCard = ({ app, profiles, onConnect, onConfigure, isConnectedToAgent, cu
   );
 };
 
+type TabType = 'composio' | 'pipedream';
+
 export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
   onToolsSelected,
   onAppSelected,
@@ -284,27 +354,137 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
 }) => {
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedApp, setSelectedApp] = useState<ComposioToolkit | null>(null);
-  const [showConnector, setShowConnector] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabType>('composio');
   const [showConnectedApps, setShowConnectedApps] = useState(true);
-  const [showToolsManager, setShowToolsManager] = useState(false);
-  const [selectedConnectedApp, setSelectedConnectedApp] = useState<ConnectedApp | null>(null);
   const [showCustomMCPDialog, setShowCustomMCPDialog] = useState(false);
-  
+  const [showConnector, setShowConnector] = useState(false);
+  const [showPipedreamConnector, setShowPipedreamConnector] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<ComposioToolkit | null>(null);
+  const [selectedPipedreamApp, setSelectedPipedreamApp] = useState<any>(null);
+  const [selectedConnectedApp, setSelectedConnectedApp] = useState<ConnectedApp | null>(null);
+  const [showToolsManager, setShowToolsManager] = useState(false);
   const [internalSelectedAgentId, setInternalSelectedAgentId] = useState<string | undefined>(selectedAgentId);
+  const [selectedToolsProfile, setSelectedToolsProfile] = useState<{
+    profileId: string;
+    appName: string;
+    profileName: string;
+  } | null>(null);
+
+  // Pipedream apps state
+  const [pipedreamApps, setPipedreamApps] = useState<any[]>([]);
+  const [showAllPipedreamApps, setShowAllPipedreamApps] = useState(false);
+  const [pipedreamSearch, setPipedreamSearch] = useState('');
   const queryClient = useQueryClient();
   
+  // Pipedream apps data - popular apps
+  const { 
+    data: popularAppsData, 
+    isLoading: isLoadingPopular, 
+    refetch: refetchPopularApps 
+  } = usePipedreamPopularApps();
+  
+  // Track if we've manually triggered the popular apps fetch
+  const [hasTriggeredPopularFetch, setHasTriggeredPopularFetch] = useState(false);
+  
+  // Handle search and all apps toggle
+  const shouldFetchAllApps = showAllPipedreamApps || pipedreamSearch.trim() !== '';
+  
+  // All apps query with search
+  const { 
+    data: allAppsData, 
+    isLoading: isLoadingAll, 
+    refetch: refetchAllApps 
+  } = useQuery({
+    queryKey: ['pipedream', 'apps', pipedreamSearch],
+    queryFn: async () => {
+      const result = await pipedreamApi.getApps(undefined, pipedreamSearch);
+      return result;
+    },
+    enabled: false, // We'll trigger this manually
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  // Track if we've loaded Pipedream data
+  const [hasLoadedPipedream, setHasLoadedPipedream] = useState(false);
+
+  // Load data when tab changes or search/filter changes
+  useEffect(() => {
+    if (activeTab === 'pipedream') {
+      if (!hasLoadedPipedream) {
+        setHasLoadedPipedream(true);
+        
+        if (shouldFetchAllApps) {
+          refetchAllApps().catch(console.error);
+        } else if (!hasTriggeredPopularFetch) {
+          setHasTriggeredPopularFetch(true);
+          refetchPopularApps().catch(console.error);
+        }
+      }
+    }
+  }, [activeTab, shouldFetchAllApps, hasLoadedPipedream, hasTriggeredPopularFetch]);
+
+  // Also load when search or showAll changes
+  useEffect(() => {
+    if (activeTab === 'pipedream' && hasLoadedPipedream) {
+      if (shouldFetchAllApps) {
+        refetchAllApps().catch(console.error);
+      } else if (!popularAppsData && !hasTriggeredPopularFetch) {
+        setHasTriggeredPopularFetch(true);
+        refetchPopularApps().catch(console.error);
+      }
+    }
+  }, [activeTab, shouldFetchAllApps, hasLoadedPipedream, popularAppsData, hasTriggeredPopularFetch]);
+
+  // Determine which apps to show
+  const displayPipedreamApps = useMemo(() => {
+    if (pipedreamSearch.trim() || showAllPipedreamApps) {
+      return allAppsData?.apps || [];
+    }
+    return popularAppsData?.apps || [];
+  }, [pipedreamSearch, showAllPipedreamApps, allAppsData?.apps, popularAppsData?.apps]);
+
+  // Update pipedreamApps when displayPipedreamApps changes or when tab changes to pipedream
+  useEffect(() => {
+    if (activeTab === 'pipedream') {
+      if (displayPipedreamApps.length > 0) {
+        setPipedreamApps(displayPipedreamApps);
+      } else if (allAppsData?.apps?.length > 0) {
+        // If displayPipedreamApps is empty but we have allAppsData, use that
+        setPipedreamApps(allAppsData.apps);
+      } else if (popularAppsData?.apps?.length > 0) {
+        // Fall back to popular apps if available
+        setPipedreamApps(popularAppsData.apps);
+      }
+    }
+  }, [displayPipedreamApps, activeTab, allAppsData?.apps, popularAppsData?.apps]);
+
+  // Loading state for Pipedream apps
+  const handlePipedreamSearch = (value: string) => {
+    setPipedreamSearch(value);
+    if (value.trim() === '') {
+      setShowAllPipedreamApps(false);
+    } else {
+      // When searching, ensure we're showing all apps
+      setShowAllPipedreamApps(true);
+    }
+  };
+
+  const handleClearPipedreamSearch = () => {
+    setPipedreamSearch('');
+    setShowAllPipedreamApps(false);
+  };
+
   const { data: categoriesData, isLoading: isLoadingCategories } = useComposioCategories();
-  const {
-    data: toolkitsInfiniteData,
-    isLoading,
+  const { data: toolkitsInfiniteData,
+    isLoading: isLoadingComposio,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
     isError
   } = useComposioToolkitsInfinite(search, selectedCategory);
   const { data: profiles, isLoading: isLoadingProfiles } = useComposioProfiles();
-  
+
   const allToolkits = useMemo(() => {
     if (!toolkitsInfiniteData?.pages) return [];
     return toolkitsInfiniteData.pages.flatMap(page => page.toolkits || []);
@@ -312,7 +492,111 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
 
   const currentAgentId = selectedAgentId ?? internalSelectedAgentId;
   const { data: agent, isLoading: isLoadingAgent } = useAgent(currentAgentId || '');
-  const { mutate: updateAgent, isPending: isUpdatingAgent } = useUpdateAgentMCPs(); // Use the MCP-specific hook
+  const { mutate: updateAgent, isPending: isUpdatingAgent } = useUpdateAgentMCPs();
+  
+  const effectiveVersionData = useMemo(() => ({
+    configured_mcps: [],
+    custom_mcps: [],
+    system_prompt: '',
+    agentpress_tools: {}
+  }), []);
+
+  // Search and filter state for Composio apps
+  const { data: composioAppsData, isLoading: isLoadingComposioApps } = useQuery({
+    queryKey: ['composio', 'apps', search],
+    queryFn: async () => {
+      // This is a placeholder - replace with actual Composio apps API call if needed
+      return { apps: [] };
+    },
+    enabled: activeTab === 'composio',
+    staleTime: 5 * 60 * 1000,
+    retry: 2,
+  });
+
+  // Determine which apps to show for Composio and Pipedream tabs
+  const displayApps = useMemo(() => {
+    if (activeTab === 'pipedream') {
+      let appsToShow = [];
+      
+      if (pipedreamSearch.trim() || showAllPipedreamApps) {
+        appsToShow = allAppsData?.apps || [];
+      } else {
+        appsToShow = popularAppsData?.apps || [];
+      }
+      
+      // Filter by search term if present
+      if (pipedreamSearch.trim()) {
+        const searchLower = pipedreamSearch.toLowerCase();
+        appsToShow = appsToShow.filter(app => 
+          app.name.toLowerCase().includes(searchLower) ||
+          (app.description && app.description.toLowerCase().includes(searchLower))
+        );
+      }
+      
+      return appsToShow;
+    } else {
+      // Handle Composio apps filtering
+      return allToolkits || [];
+    }
+  }, [
+    activeTab, 
+    pipedreamSearch, 
+    showAllPipedreamApps, 
+    allAppsData?.apps, 
+    popularAppsData?.apps,
+    allToolkits
+  ]);
+
+  // Update pipedreamApps when displayApps changes or when tab changes
+  useEffect(() => {
+    if (activeTab === 'pipedream' && displayApps.length > 0) {
+      setPipedreamApps(displayApps);
+    }
+  }, [displayApps, activeTab]);
+
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    const newTab = value as TabType;
+    setActiveTab(newTab);
+    
+    // Reset search and filters when changing tabs
+    if (newTab === 'pipedream') {
+      setSearch('');
+      setPipedreamSearch('');
+      setShowAllPipedreamApps(false);
+      
+      // Reset the loaded state to force a refetch
+      setHasLoadedPipedream(false);
+      setHasTriggeredPopularFetch(false);
+    } else {
+      // Reset Composio tab state if needed
+      setSearch('');
+    }
+  };
+  // Set loading state for the current tab
+  const currentIsLoading = activeTab === 'pipedream' 
+    ? (pipedreamSearch.trim() || showAllPipedreamApps ? isLoadingAll : isLoadingPopular)
+    : isLoadingComposio;
+
+  const handleSearch = (value: string) => {
+    if (activeTab === 'pipedream') {
+      setPipedreamSearch(value);
+      if (value.trim() === '') {
+        setShowAllPipedreamApps(false);
+      }
+    } else {
+      setSearch(value);
+    }
+  };
+
+  const handleClearSearch = () => {
+    if (activeTab === 'pipedream') {
+      setPipedreamSearch('');
+      setShowAllPipedreamApps(false);
+    } else {
+      setSearch('');
+    }
+  };
 
   const handleAgentSelect = (agentId: string | undefined) => {
     if (onAgentChange) {
@@ -322,50 +606,90 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
     }
   };
 
-  const profilesByToolkit = useMemo(() => {
-    const grouped: Record<string, ComposioProfile[]> = {};
-    profiles?.forEach(profile => {
-      if (profile.is_connected) {
-        if (!grouped[profile.toolkit_slug]) {
-          grouped[profile.toolkit_slug] = [];
-        }
-        grouped[profile.toolkit_slug].push(profile);
-      }
-    });
-    return grouped;
-  }, [profiles]);
-
   const connectedApps = useMemo(() => {
     if (!currentAgentId || !agent) return [];
     return getAgentConnectedApps(agent, profiles || [], allToolkits);
   }, [agent, profiles, allToolkits, currentAgentId]);
+  
+  const profilesByToolkit = useMemo(() => {
+    if (!profiles) return {};
+    return profiles.reduce((acc, profile) => {
+      const toolkitId = (profile as any).toolkit || 'default';
+      if (!acc[toolkitId]) {
+        acc[toolkitId] = [];
+      }
+      acc[toolkitId].push(profile);
+      return acc;
+    }, {} as Record<string, any[]>);
+  }, [profiles]);
 
-  const isLoadingConnectedApps = currentAgentId && (isLoadingAgent || isLoadingProfiles || isLoading);
+  const isLoading = currentIsLoading;
 
   const filteredToolkits = useMemo(() => {
+    if (activeTab === 'pipedream') {
+      // Return Pipedream apps directly
+      return pipedreamApps;
+    }
+
+    // For Composio tab, filter the Composio toolkits
     if (!allToolkits) return [];
-    return allToolkits;
-  }, [allToolkits]);
+
+    let filtered = [...allToolkits];
+
+    // Filter out Pipedream apps from Composio tab
+    filtered = filtered.filter(toolkit => !toolkit.slug.startsWith('pipedream_'));
+
+    // Apply search filter
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = filtered.filter(toolkit =>
+        toolkit.name.toLowerCase().includes(searchLower) ||
+        toolkit.description?.toLowerCase().includes(searchLower) ||
+        toolkit.slug.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(toolkit =>
+        toolkit.categories?.includes(selectedCategory)
+      );
+    }
+
+    return filtered;
+  }, [allToolkits, activeTab, search, selectedCategory]);
 
   const handleConnect = (app: ComposioToolkit) => {
     if (mode !== 'profile-only' && !currentAgentId && showAgentSelector) {
-      toast.error('Please select an agent first');
+      // toast.error('Please select an agent first');
       return;
     }
-    setSelectedApp(app);
-    setShowConnector(true);
+
+    if (activeTab === 'pipedream') {
+      setSelectedPipedreamApp(app);
+      setShowPipedreamConnector(true);
+    } else {
+      setSelectedApp(app);
+      setShowConnector(true);
+    }
   };
 
   const handleConfigure = (app: ComposioToolkit, profile: ComposioProfile) => {
     if (mode !== 'profile-only' && !currentAgentId) {
-      toast.error('Please select an agent first');
+      // toast.error('Please select an agent first');
       return;
     }
-    setSelectedApp(app);
-    setShowConnector(true);
+
+    if (activeTab === 'pipedream') {
+      setSelectedPipedreamApp(app);
+      setShowPipedreamConnector(true);
+    } else {
+      setSelectedApp(app);
+      setShowConnector(true);
+    }
   };
 
-    const handleToggleTools = (profileId: string, enabled: boolean) => {
+  const handleToggleTools = (profileId: string, enabled: boolean) => {
     if (!currentAgentId || !agent) return;
 
     const updatedCustomMcps = agent.custom_mcps?.map((mcpConfig: any) => {
@@ -383,10 +707,10 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
       custom_mcps: updatedCustomMcps
     }, {
       onSuccess: () => {
-        toast.success(enabled ? 'Tools enabled' : 'Tools disabled');
+        // toast.success(enabled ? 'Tools enabled' : 'Tools disabled');
       },
       onError: (error: any) => {
-        toast.error(error.message || 'Failed to update tools');
+        // toast.error(error.message || 'Failed to update tools');
       }
     });
   };
@@ -396,14 +720,27 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
     setShowToolsManager(true);
   };
 
-  const handleConnectionComplete = (profileId: string, appName: string, appSlug: string) => {
-    setShowConnector(false);
+  const handlePipedreamConnectionComplete = (profileId: string, selectedTools: string[], appName: string, appSlug: string) => {
+    setShowPipedreamConnector(false);
     queryClient.invalidateQueries({ queryKey: ['composio', 'profiles'] });
-    
+
     if (currentAgentId) {
       queryClient.invalidateQueries({ queryKey: ['agents', 'detail', currentAgentId] });
     }
-    
+
+    if (onToolsSelected) {
+      onToolsSelected(profileId, selectedTools, appName, appSlug);
+    }
+  };
+
+  const handleConnectionComplete = (profileId: string, appName: string, appSlug: string) => {
+    setShowConnector(false);
+    queryClient.invalidateQueries({ queryKey: ['composio', 'profiles'] });
+
+    if (currentAgentId) {
+      queryClient.invalidateQueries({ queryKey: ['agents', 'detail', currentAgentId] });
+    }
+
     if (onToolsSelected) {
       onToolsSelected(profileId, [], appName, appSlug);
     }
@@ -434,7 +771,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
         replace_mcps: true  // Use replace mode to ensure proper updates
       }, {
         onSuccess: () => {
-          toast.success(`Custom MCP "${customConfig.name}" added successfully`);
+          // toast.success(`Custom MCP "${customConfig.name}" added successfully`);
           queryClient.invalidateQueries({ queryKey: ['agents', 'detail', currentAgentId] });
           resolve();
         },
@@ -448,61 +785,43 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
   const categories = categoriesData?.categories || [];
 
   return (
-    <div className="h-full w-full overflow-hidden flex">
-      {/*<div className="w-64 h-full overflow-hidden border-r bg-muted/20">
-        <div className="h-full flex flex-col">
-          <div className="flex-shrink-0 p-4 border-b">
-            <h3 className="text-sm font-medium text-muted-foreground">Categories</h3>
+    <div className="flex flex-col h-screen max-h-screen bg-background">
+      <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b p-4 flex-shrink-0">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <List className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Apps & Integrations</h2>
+              <p className="text-sm text-muted-foreground">Connect and manage your apps</p>
+            </div>
           </div>
-          
-          <div className="flex-1 overflow-hidden">
-            <ScrollArea className="h-full">
-              <div className="p-4 space-y-1">
-                <button
-                  onClick={() => setSelectedCategory('')}
-                  className={cn(
-                    "w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors text-left",
-                    selectedCategory === '' 
-                      ? "bg-muted-foreground/20 text-muted-foreground" 
-                      : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <span className="text-base">📁</span>
-                  <span>All Apps</span>
-                </button>
-
-                {isLoadingCategories ? (
-                  <div className="space-y-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="flex items-center gap-3 px-3 py-2">
-                        <Skeleton className="w-4 h-4 bg-muted rounded" />
-                        <Skeleton className="flex-1 h-4 bg-muted rounded" />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => setSelectedCategory(category.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm transition-colors text-left",
-                        selectedCategory === category.id 
-                          ? "bg-muted-foreground/20 text-muted-foreground" 
-                          : "hover:bg-muted/50 text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <span className="text-base">{CATEGORY_EMOJIS[category.id] || '📁'}</span>
-                      <span className="truncate">{category.name}</span>
-                    </button>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </div>
+          {onClose && (
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          )}
         </div>
-      </div>*/}
-      <div className="flex-1 h-full overflow-hidden">
+
+        <Tabs
+          value={activeTab}
+          onValueChange={handleTabChange}
+          className="w-full"
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="composio">
+              <Zap className="h-4 w-4 mr-2" />
+              Composio Apps
+            </TabsTrigger>
+            <TabsTrigger value="pipedream">
+              <Server className="h-4 w-4 mr-2" />
+              Pipedream Apps
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+      <div className="flex-1 min-h-0 overflow-hidden">
         <div className="h-full flex flex-col">
           <div className="flex-shrink-0 border-b p-6">
             <div className="flex items-start justify-between mb-4">
@@ -511,7 +830,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                   {mode === 'profile-only' ? 'Connect New App' : 'App Integrations'}
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  {mode === 'profile-only' 
+                  {mode === 'profile-only'
                     ? 'Create a connection profile for your favorite apps'
                     : `Connect your favorite apps with ${currentAgentId ? 'this agent' : 'your agent'}`
                   }
@@ -529,21 +848,33 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-3">
               <div className="flex items-center gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search apps..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
-                  />
+                <div className="mt-4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={activeTab === 'composio' ? 'Search Composio apps...' : 'Search Pipedream apps...'}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="pl-10"
+                    />
+                    {search && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSearch('')}
+                        className="absolute right-1 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 {mode !== 'profile-only' && currentAgentId && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => setShowCustomMCPDialog(true)}
                     className="flex items-center gap-2 whitespace-nowrap h-10"
                   >
@@ -580,7 +911,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                       <div className="w-full hover:underline flex items-center justify-between p-0 h-auto">
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-medium">Connected to this agent</h3>
-                          {isLoadingConnectedApps ? (
+                          {isLoading ? (
                             <Skeleton className="w-6 h-5 rounded ml-2" />
                           ) : connectedApps.length > 0 && (
                             <Badge variant="outline" className="ml-2">
@@ -596,7 +927,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                       </div>
                     </CollapsibleTrigger>
                     <CollapsibleContent className="mt-4">
-                      {isLoadingConnectedApps ? (
+                      {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                           {Array.from({ length: 3 }).map((_, i) => (
                             <ConnectedAppSkeleton key={i} />
@@ -631,7 +962,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                   <h3 className="text-lg font-medium mb-4">
                     {currentAgentId ? 'Available Apps' : 'Browse Apps'}
                   </h3>
-                  
+
                   {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                       {Array.from({ length: 12 }).map((_, i) => (
@@ -649,20 +980,43 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                       </p>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {filteredToolkits.map((app) => (
-                          <AppCard
-                            key={app.slug}
-                            app={app}
-                            profiles={profilesByToolkit[app.slug] || []}
-                            onConnect={() => handleConnect(app)}
-                            onConfigure={(profile) => handleConfigure(app, profile)}
-                            isConnectedToAgent={isAppConnectedToAgent(agent, app.slug, profiles || [])}
-                            currentAgentId={currentAgentId}
-                            mode={mode}
-                          />
-                        ))}
+                    <div className="flex flex-col h-full">
+                      <ScrollArea className="flex-1 pr-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-6">
+                          {/* Custom scrollbar styling */}
+                          <style jsx global>{`
+                            .custom-scrollbar::-webkit-scrollbar {
+                              width: 6px;
+                              height: 6px;
+                            }
+                            .custom-scrollbar::-webkit-scrollbar-track {
+                              background: transparent;
+                              border-radius: 10px;
+                            }
+                            .custom-scrollbar::-webkit-scrollbar-thumb {
+                              background: #888;
+                              border-radius: 10px;
+                            }
+                            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                              background: #555;
+                            }
+                          `}</style>
+                          {filteredToolkits.map((app) => (
+                            <AppCard
+                              key={app.slug}
+                              app={app}
+                              profiles={profilesByToolkit[app.slug] || []}
+                              onConnect={() => handleConnect(app)}
+                              onConfigure={(profile) => handleConfigure(app, profile)}
+                              isConnectedToAgent={isAppConnectedToAgent(agent, app.slug, profiles || [])}
+                              currentAgentId={currentAgentId}
+                              mode={mode}
+                            />
+                          ))}
+                        </div>
+                      </ScrollArea>
+                      <div className="text-xs text-muted-foreground text-center pt-3 pb-2 border-t mt-2 shrink-0">
+                        Mostrando {filteredToolkits.length} de {filteredToolkits.length} aplicativos
                       </div>
                       {hasNextPage && (
                         <div className="flex justify-center pt-4">
@@ -702,6 +1056,39 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
         />
       )}
 
+      {selectedPipedreamApp && currentAgentId && (
+        <PipedreamConnector
+          app={selectedPipedreamApp}
+          open={showPipedreamConnector}
+          onOpenChange={setShowPipedreamConnector}
+          onComplete={handlePipedreamConnectionComplete}
+          mode={mode === 'profile-only' ? 'profile-only' : 'full'}
+          agentId={currentAgentId}
+          saveMode="direct"
+        />
+      )}
+
+      {selectedToolsProfile && currentAgentId && (
+        <ToolsManager
+          mode="pipedream"
+          profileId={selectedToolsProfile.profileId}
+          appName={selectedToolsProfile.appName}
+          profileName={selectedToolsProfile.profileName}
+          agentId={currentAgentId}
+          open={showToolsManager}
+          onOpenChange={(open) => {
+            setShowToolsManager(open);
+            if (!open) {
+              setSelectedToolsProfile(null);
+            }
+          }}
+          onToolsUpdate={(enabledTools) => {
+            queryClient.invalidateQueries({ queryKey: ['agent', currentAgentId] });
+          }}
+          versionData={effectiveVersionData}
+          versionId={undefined}
+        />
+      )}
       {selectedConnectedApp && currentAgentId && (
         <ComposioToolsManager
           agentId={currentAgentId}

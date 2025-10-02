@@ -12,8 +12,20 @@ from core.agentpress.thread_manager import ThreadManager
 
 from . import core_utils as utils
 from .core_utils import _get_version_service
+from typing import List, Dict, Any, Optional
+from uuid import UUID
+from pydantic import BaseModel
 
 router = APIRouter()
+
+class PipedreamToolConfig(BaseModel):
+    name: str
+    type: str = "pipedream"
+    config: Dict[str, Any]
+    enabled_tools: List[str]
+
+class PipedreamToolUpdateRequest(BaseModel):
+    tools: List[PipedreamToolConfig]
 
 @router.get("/agents/{agent_id}/custom-mcp-tools")
 async def get_custom_mcp_tools_for_agent(
@@ -68,6 +80,11 @@ async def get_custom_mcp_tools_for_agent(
         for mcp in custom_mcps:
             if mcp_type == 'composio':
                 if (mcp.get('type') == 'composio' and 
+                    mcp.get('config', {}).get('profile_id') == mcp_url):
+                    existing_mcp = mcp
+                    break
+            elif mcp_type == 'pipedream':
+                if (mcp.get('type') == 'pipedream' and 
                     mcp.get('config', {}).get('profile_id') == mcp_url):
                     existing_mcp = mcp
                     break
@@ -209,6 +226,170 @@ async def update_custom_mcp_tools_for_agent(
         raise
     except Exception as e:
         logger.error(f"Error updating custom MCP tools for agent {agent_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.put("/agents/{agent_id}/pipedream-tools/{profile_id}")
+async def update_agent_pipedream_tools(
+    agent_id: str,
+    profile_id: str,
+    request: dict,
+    user_id: str = Depends(verify_and_get_user_id_from_jwt)
+):
+    """
+    Update Pipedream tools configuration for an agent.
+    
+    The request body should be in the format:
+    {
+        "name": "Conta Principal do Gmail",
+        "type": "pipedream",
+        "config": {
+            "url": "https://remote.mcp.pipedream.net",
+            "headers": {
+                "x-pd-app-slug": "gmail"
+            },
+            "profile_id": "5072d483-0135-4f81-9097-83d43c6d07bc"
+        },
+        "enabled_tools": ["gmail-send-email"]
+    }
+    """
+    logger.debug(f"Updating Pipedream tools for agent {agent_id}, profile {profile_id}")
+    
+    try:
+        # Validate required fields
+        if not isinstance(request.get('enabled_tools', []), list):
+            raise HTTPException(status_code=400, detail="enabled_tools must be a list")
+            
+        # Get the current agent configuration
+        client = await utils.db.client
+        agent_result = await client.table('agents')\
+            .select('current_version_id')\
+            .eq('agent_id', agent_id)\
+            .eq('account_id', user_id)\
+            .execute()
+            
+        if not agent_result.data:
+            raise HTTPException(status_code=404, detail="Agent not found")
+            
+        agent = agent_result.data[0]
+        
+        # Get the current agent version config
+        version_result = await client.table('agent_versions')\
+            .select('config')\
+            .eq('version_id', agent['current_version_id'])\
+            .maybe_single()\
+            .execute()
+            
+        agent_config = version_result.data.get('config', {}) if version_result.data else {}
+        tools = agent_config.get('tools', {})
+        
+        # Get or initialize custom_mcp array
+        custom_mcps = tools.get('custom_mcp', [])
+        
+        # Check if this Pipedream profile already exists in the config
+        existing_tool = None
+        existing_index = -1
+        for i, mcp in enumerate(custom_mcps):
+            if (mcp.get('type') == 'pipedream' and 
+                mcp.get('config', {}).get('profile_id') == profile_id):
+                existing_tool = mcp
+                existing_index = i
+                break
+        
+        # Prepare the Pipedream tool configuration
+        if existing_tool:
+            # Update existing tool with new values, preserving existing ones if not provided
+            pipedream_tool = {
+                "name": request.get('name', existing_tool.get('name', 'Pipedream Tool')),
+                "type": "pipedream",
+                "config": {**existing_tool.get('config', {}), **request.get('config', {})},
+                "enabledTools": request.get('enabled_tools', [])
+            }
+            # Ensure profile_id is preserved in config
+            pipedream_tool['config']['profile_id'] = profile_id
+        else:
+            # Create new tool with default values
+            app_name = 'unknown_app'
+            request_config = request.get('config', {})
+            
+            if request_config and 'headers' in request_config and 'x-pd-app-slug' in request_config['headers']:
+                app_name = request_config['headers']['x-pd-app-slug']
+            
+            # Start with default config
+            pipedream_tool = {
+                "name": f"Pipedream - {app_name}",
+                "type": "pipedream",
+                "config": {
+                    "url": "https://remote.mcp.pipedream.net",
+                    "headers": {
+                        "x-pd-app-slug": app_name
+                    },
+                    "profile_id": profile_id
+                },
+                "enabledTools": request.get('enabled_tools', [])
+            }
+            
+            # Update with any provided values
+            if 'name' in request:
+                pipedream_tool['name'] = request['name']
+                
+            # Safely update config if provided
+            if request_config:
+                if 'url' in request_config:
+                    pipedream_tool['config']['url'] = request_config['url']
+                if 'headers' in request_config:
+                    pipedream_tool['config']['headers'] = {
+                        **pipedream_tool['config'].get('headers', {}),
+                        **request_config.get('headers', {})
+                    }
+                # Ensure profile_id is always set
+                pipedream_tool['config']['profile_id'] = profile_id
+        
+        # Update or add the tool in the custom_mcps array
+        if existing_index >= 0:
+            custom_mcps[existing_index] = pipedream_tool
+        else:
+            custom_mcps.append(pipedream_tool)
+            
+        # Update the tools configuration
+        tools['custom_mcp'] = custom_mcps
+        agent_config['tools'] = tools
+        
+        # Create a new version with the updated config
+        from .versioning.version_service import get_version_service
+        try:
+            version_service = await get_version_service()
+            new_version = await version_service.create_version(
+                agent_id=agent_id,
+                user_id=user_id,
+                system_prompt=agent_config.get('system_prompt', ''),
+                configured_mcps=agent_config.get('tools', {}).get('mcp', []),
+                custom_mcps=custom_mcps,
+                agentpress_tools=agent_config.get('tools', {}).get('agentpress', {}),
+                change_description=f"Updated Pipedream tools configuration for profile {profile_id}"
+            )
+            logger.debug(f"Created version {new_version.version_id} for Pipedream tools update on agent {agent_id}")
+            
+            # Update the agent's current version
+            await client.table('agents')\
+                .update({'current_version_id': str(new_version.version_id)})\
+                .eq('agent_id', agent_id)\
+                .eq('account_id', user_id)\
+                .execute()
+                
+        except Exception as e:
+            logger.error(f"Failed to create version for Pipedream tools update: {e}")
+            raise HTTPException(status_code=500, detail="Failed to save changes")
+            
+        return {
+            'success': True,
+            'message': 'Pipedream tools updated successfully',
+            'enabled_tools': request['enabled_tools']
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating Pipedream tools for agent {agent_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.put("/agents/{agent_id}/custom-mcp-tools")
