@@ -1,3 +1,5 @@
+'use client';
+
 import { Input } from '@/components/ui/input';
 import { SubmitButton } from '../ui/submit-button';
 import { Label } from '../ui/label';

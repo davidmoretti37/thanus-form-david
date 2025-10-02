@@ -29,7 +29,7 @@ export default function FloatingSidebar() {
     { href: '/multi-computer', icon: Monitor, label: t('floatingSidebar.multiComputer') },
     { href: '/settings/whatsapp', icon: MessageSquare, label: t('floatingSidebar.whatsapp') },
     { href: '/settings/credentials', icon: Plug, label: t('floatingSidebar.integrations') },
-    { href: '/settings', icon: Wrench, label: t('floatingSidebar.settings') },
+    { href: '/settings/billing', icon: Wrench, label: t('floatingSidebar.settings') },
   ];
 
   // Render in a portal to avoid parent transforms breaking position: fixed (e.g., marketplace)
@@ -68,9 +68,25 @@ export default function FloatingSidebar() {
       {/* Menu icons */}
       <nav className="flex flex-col items-center gap-3">
         {items.map(({ href, icon: Icon, label }) => {
-          const active =
-            pathname === href ||
-            (href !== '/dashboard' && pathname?.startsWith(href.split('?')[0]));
+          // Verifica se o item está ativo
+          const isActive = () => {
+            // Se for a rota exata
+            if (pathname === href) return true;
+            
+            // Se não for o dashboard e o pathname começar com o href
+            if (href !== '/dashboard') {
+              const baseHref = href.split('?')[0];
+              // Verifica se o pathname começa com o href e o próximo caractere é / ou ? ou undefined
+              // Isso evita que /settings marque /settings/billing e /settings/outra-coisa ao mesmo tempo
+              return pathname?.startsWith(baseHref) && 
+                     (pathname.length === baseHref.length || 
+                      pathname[baseHref.length] === '/' ||
+                      pathname[baseHref.length] === '?');
+            }
+            return false;
+          };
+          
+          const active = isActive();
 
           return (
             <Tooltip key={href}>
