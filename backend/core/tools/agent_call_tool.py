@@ -13,11 +13,13 @@ class AgentCallTool(Tool):
     while maintaining workspace and thread continuity.
     """
 
-    def __init__(self, thread_manager: ThreadManager, db_connection, account_id: str):
+    def __init__(self, thread_manager: ThreadManager, db_connection, account_id: str, project_id: str = None, thread_id: str = None):
         super().__init__()
         self.thread_manager = thread_manager
         self.db = db_connection
         self.account_id = account_id
+        self.project_id = project_id
+        self.thread_id = thread_id
 
     async def _get_current_account_id(self) -> Optional[str]:
         return self.account_id
@@ -237,16 +239,17 @@ class AgentCallTool(Tool):
                 except Exception as e:
                     logger.warning(f"Could not load configuration for agent {agent_id}: {e}")
 
-            # Update the thread manager's agent configuration
+            # Update the thread manager's agent configuration and tools
             if agent_config:
                 # Ensure agent_id is included in the config
                 agent_config['agent_id'] = agent_id
                 agent_config['agent_name'] = agent_name
 
-                # Update the agent configuration in the thread manager
+                # Get old configuration for comparison
                 old_config = self.thread_manager.agent_config
                 old_agent_id = old_config.get('agent_id') if old_config else None
 
+                # Update the agent configuration in the thread manager
                 self.thread_manager.agent_config = agent_config
 
                 # Update the response processor with new agent config
@@ -254,9 +257,31 @@ class AgentCallTool(Tool):
 
                 logger.info(f"Successfully switched agent configuration from '{old_agent_id}' to '{agent_id}' ({agent_name})")
 
-                # TODO: Consider re-registering tools based on new agent configuration
-                # This would require a more complex tool registry update mechanism
-                # For now, tools registered remain the same but agent config is updated
+                # Reload tools based on new agent configuration
+                if self.project_id and self.thread_id:
+                    try:
+                        tool_stats = self.thread_manager.reload_tools_for_agent(
+                            new_agent_config=agent_config,
+                            project_id=self.project_id,
+                            thread_id=self.thread_id,
+                            account_id=self.account_id
+                        )
+                        logger.info(f"Successfully reloaded tools for agent '{agent_id}': {tool_stats['total_functions']} functions available")
+
+                        # Add tool reload info to success message
+                        tools_reloaded = True
+                        new_tool_count = tool_stats['total_functions']
+                    except Exception as e:
+                        logger.error(f"Failed to reload tools for agent '{agent_id}': {e}")
+                        tools_reloaded = False
+                        new_tool_count = None
+                else:
+                    logger.warning("Cannot reload tools: project_id or thread_id not available")
+                    tools_reloaded = False
+                    new_tool_count = None
+            else:
+                tools_reloaded = False
+                new_tool_count = None
 
             success_message = f"✅ Successfully switched to **{agent_name}**!\n\n"
 
@@ -278,12 +303,19 @@ class AgentCallTool(Tool):
                         success_message += f" ({', '.join(enabled_tools[:3])}{'...' if len(enabled_tools) > 3 else ''})"
                     success_message += f"\n"
 
-                success_message += f"\n**Workspace Preserved:**\n"
+                success_message += f"\n**System Updates:**\n"
                 success_message += f"• Thread: Maintained ✅\n"
                 success_message += f"• Conversation History: Preserved ✅\n"
-                success_message += f"• Workspace State: Unchanged ✅\n\n"
+                success_message += f"• Workspace State: Unchanged ✅\n"
 
-            success_message += f"The agent is now active and ready to assist you!"
+                if tools_reloaded and new_tool_count is not None:
+                    success_message += f"• Tools: Reloaded ({new_tool_count} functions) ✅\n"
+                elif not tools_reloaded:
+                    success_message += f"• Tools: Configuration updated ⚠️\n"
+
+                success_message += f"\n"
+
+            success_message += f"The agent is now active with the correct configuration and tools!"
 
             return self.success_response({
                 "message": success_message,
@@ -529,3 +561,72 @@ class AgentCallTool(Tool):
         except Exception as e:
             logger.error(f"Failed to search agents: {e}")
             return self.fail_response("Failed to search agents")
+
+    @openapi_schema({
+        "type": "function",
+        "function": {
+            "name": "list_current_tools",
+            "description": "List all currently available tools and their functions. Useful for debugging and verifying that agent switching worked correctly.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "include_statistics": {
+                        "type": "boolean",
+                        "description": "Whether to include detailed statistics about the tool registry",
+                        "default": True
+                    }
+                }
+            }
+        }
+    })
+    @usage_example('''
+        <function_calls>
+        <invoke name="list_current_tools">
+        <parameter name="include_statistics">true</parameter>
+        </invoke>
+        </function_calls>
+        ''')
+    async def list_current_tools(self, include_statistics: bool = True) -> ToolResult:
+        """List all currently available tools and their functions."""
+        try:
+            # Get tool registry statistics
+            stats = self.thread_manager.tool_registry.get_tool_statistics()
+
+            message = f"**Current Tool Registry Status**\n\n"
+            message += f"• **Total Functions**: {stats['total_functions']}\n"
+            message += f"• **Unique Tool Classes**: {stats['unique_tool_classes']}\n\n"
+
+            message += f"**Available Functions:**\n"
+            for i, func_name in enumerate(sorted(stats['function_names']), 1):
+                message += f"{i:2d}. `{func_name}`\n"
+
+            if include_statistics:
+                message += f"\n**Tool Classes:**\n"
+                for i, class_name in enumerate(sorted(stats['tool_class_names']), 1):
+                    message += f"{i:2d}. {class_name}\n"
+
+            # Get current agent info if available
+            current_config = self.thread_manager.agent_config
+            if current_config and current_config.get('agent_id'):
+                agent_name = current_config.get('agent_name', 'Unknown')
+                agent_id = current_config.get('agent_id')
+                message += f"\n**Current Agent**: {agent_name} (`{agent_id}`)\n"
+
+                # Show enabled/disabled tools from agent config
+                if 'tools' in current_config:
+                    tools_config = current_config['tools'].get('agentpress', {})
+                    enabled_count = sum(1 for enabled in tools_config.values() if enabled)
+                    disabled_count = sum(1 for enabled in tools_config.values() if not enabled)
+                    message += f"**Agent Tool Config**: {enabled_count} enabled, {disabled_count} disabled\n"
+            else:
+                message += f"\n**Current Agent**: Default system configuration\n"
+
+            return self.success_response({
+                "message": message,
+                "statistics": stats if include_statistics else None,
+                "current_agent": current_config.get('agent_id') if current_config else None
+            })
+
+        except Exception as e:
+            logger.error(f"Failed to list current tools: {e}")
+            return self.fail_response("Failed to list current tools")

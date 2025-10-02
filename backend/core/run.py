@@ -625,8 +625,15 @@ class AgentRunner:
                 from core.services.supabase import DBConnection
 
                 db = DBConnection()
-                self.thread_manager.add_tool(AgentCallTool, thread_manager=self.thread_manager, db_connection=db, account_id=self.account_id)
-                logger.debug("Registered agent_call_tool after account_id was loaded")
+                self.thread_manager.add_tool(
+                    AgentCallTool,
+                    thread_manager=self.thread_manager,
+                    db_connection=db,
+                    account_id=self.account_id,
+                    project_id=self.config.project_id,
+                    thread_id=self.config.thread_id
+                )
+                logger.debug("Registered agent_call_tool with full context after account_id was loaded")
             else:
                 logger.warning("Could not register agent_call_tool: account_id not available")
 
