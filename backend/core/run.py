@@ -186,6 +186,7 @@ class ToolManager:
                 else:
                     self.thread_manager.add_tool(PaperSearchTool, thread_manager=self.thread_manager)
                     logger.debug("Registered paper_search_tool (all methods)")
+
     
     def _register_agent_builder_tools(self, agent_id: str, disabled_tools: List[str]):
         """Register agent builder tools."""
@@ -224,9 +225,9 @@ class ToolManager:
         if 'agent_creation_tool' not in disabled_tools:
             from core.tools.agent_creation_tool import AgentCreationTool
             from core.services.supabase import DBConnection
-            
+
             db = DBConnection()
-            
+
             if hasattr(self, 'account_id') and self.account_id:
                 enabled_methods = self._get_enabled_methods_for_tool('agent_creation_tool')
                 if enabled_methods is not None:
@@ -237,6 +238,7 @@ class ToolManager:
                     logger.debug("Registered agent_creation_tool for Tars (all methods)")
             else:
                 logger.warning("Could not register agent_creation_tool: account_id not available")
+
     
     def _register_browser_tool(self, disabled_tools: List[str]):
         if 'browser_tool' not in disabled_tools:
@@ -615,10 +617,22 @@ class AgentRunner:
         disabled_tools = self._get_disabled_tools_from_config()
         
         tool_manager.register_all_tools(agent_id=agent_id, disabled_tools=disabled_tools)
-        
+
+        # Register Agent Call Tool after account_id is available
+        if 'agent_call_tool' not in disabled_tools:
+            if hasattr(self, 'account_id') and self.account_id:
+                from core.tools.agent_call_tool import AgentCallTool
+                from core.services.supabase import DBConnection
+
+                db = DBConnection()
+                self.thread_manager.add_tool(AgentCallTool, thread_manager=self.thread_manager, db_connection=db, account_id=self.account_id)
+                logger.debug("Registered agent_call_tool after account_id was loaded")
+            else:
+                logger.warning("Could not register agent_call_tool: account_id not available")
+
         is_suna_agent = (self.config.agent_config and self.config.agent_config.get('is_suna_default', False)) or (self.config.agent_config is None)
         logger.debug(f"Agent config check: agent_config={self.config.agent_config is not None}, is_suna_default={is_suna_agent}")
-        
+
         if is_suna_agent:
             logger.debug("Registering Tars-specific tools...")
             self._register_suna_specific_tools(disabled_tools)
@@ -661,9 +675,9 @@ class AgentRunner:
         if 'agent_creation_tool' not in disabled_tools:
             from core.tools.agent_creation_tool import AgentCreationTool
             from core.services.supabase import DBConnection
-            
+
             db = DBConnection()
-            
+
             if hasattr(self, 'account_id') and self.account_id:
                 # Check for granular method control
                 enabled_methods = self._get_enabled_methods_for_tool('agent_creation_tool')
@@ -677,6 +691,7 @@ class AgentRunner:
                     logger.debug("Registered agent_creation_tool for Tars (all methods)")
             else:
                 logger.warning("Could not register agent_creation_tool: account_id not available")
+
     
     def _get_disabled_tools_from_config(self) -> List[str]:
         disabled_tools = []

@@ -620,6 +620,42 @@ export const TOOL_GROUPS: Record<string, ToolGroup> = {
     ],
   },
 
+  agent_call_tool: {
+    name: 'agent_call_tool',
+    displayName: 'Agent Management',
+    description: 'List, search, and switch between available agents',
+    icon: 'Users',
+    color: 'bg-indigo-100 dark:bg-indigo-800/50',
+    toolClass: 'AgentCallTool',
+    enabled: true,
+    methods: [
+      {
+        name: 'list_available_agents',
+        displayName: 'List Available Agents',
+        description: 'List all available agents with their capabilities',
+        enabled: true,
+      },
+      {
+        name: 'switch_to_agent',
+        displayName: 'Switch to Agent',
+        description: 'Switch to a specific agent while maintaining workspace',
+        enabled: true,
+      },
+      {
+        name: 'get_current_agent_info',
+        displayName: 'Get Current Agent Info',
+        description: 'Get information about the currently active agent',
+        enabled: true,
+      },
+      {
+        name: 'search_agents',
+        displayName: 'Search Agents',
+        description: 'Search for agents by name or description',
+        enabled: true,
+      },
+    ],
+  },
+
   data_providers_tool: {
     name: 'data_providers_tool',
     displayName: 'Data Providers',
