@@ -21,10 +21,10 @@ class ModelRegistry:
     def _initialize_models(self):
         
         self.register(Model(
-            id="openrouter/deepseek/deepseek-chat-v3.1", # if is_local else "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+            id="anthropic/claude-sonnet-4-5-20250929", # if is_local else "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0"
             name="Sonnet 4.5",
-            provider=ModelProvider.OPENROUTER,
-            aliases=["claude-sonnet-4.5", "anthropic/claude-sonnet-4.5", "Claude Sonnet 4.5", "claude-sonnet-4-5-20250929", "global.anthropic.claude-sonnet-4-5-20250929-v1:0", "arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0", "anthropic/claude-sonnet-4-5-20250929"],
+            provider=ModelProvider.ANTHROPIC,
+            aliases=["claude-sonnet-4.5", "anthropic/claude-sonnet-4.5", "Claude Sonnet 4.5", "claude-sonnet-4-5-20250929", "global.anthropic.claude-sonnet-4-5-20250929-v1:0", "arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0"],
             context_window=1_000_000,
             capabilities=[
                 ModelCapability.CHAT,
@@ -48,10 +48,10 @@ class ModelRegistry:
         ))
         
         self.register(Model(
-            id="openrouter/deepseek/deepseek-chat-v3.1",
-            name="Claude Sonnet 4",
-            provider=ModelProvider.OPENROUTER,
-            aliases=["claude-sonnet-4", "anthropic/claude-sonnet-4", "Claude Sonnet 4", "claude-sonnet-4-20250514", "anthropic/claude-sonnet-4-20250514", "openrouter/anthropic/claude-sonnet-4-20250514"],
+            id="anthropic/claude-sonnet-4-20250514" if is_local else "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-sonnet-4-20250514-v1:0",
+            name="Sonnet 4",
+            provider=ModelProvider.ANTHROPIC,
+            aliases=["claude-sonnet-4", "Claude Sonnet 4", "claude-sonnet-4-20250514", "arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-sonnet-4-20250514-v1:0"],
             context_window=1_000_000,
             capabilities=[
                 ModelCapability.CHAT,
@@ -118,6 +118,32 @@ class ModelRegistry:
             enabled=True
         ))        
         
+        self.register(Model(
+            id="openrouter/deepseek/deepseek-chat-v3.1", # if is_local else "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0"
+            name="Sonnet 4.5",
+            provider=ModelProvider.OPENROUTER,
+            aliases=["claude-sonnet-4.5", "anthropic/claude-sonnet-4.5", "Claude Sonnet 4.5", "claude-sonnet-4-5-20250929", "global.anthropic.claude-sonnet-4-5-20250929-v1:0", "arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0", "anthropic/claude-sonnet-4-5-20250929"],
+            context_window=200_000,
+            capabilities=[
+                ModelCapability.CHAT,
+                ModelCapability.FUNCTION_CALLING,
+                ModelCapability.VISION,
+                ModelCapability.THINKING,
+            ],
+            pricing=ModelPricing(
+                input_cost_per_million_tokens=3.00,
+                output_cost_per_million_tokens=15.00
+            ),
+            tier_availability=["paid", "free"],
+            priority=101,
+            recommended=True,
+            enabled=True,
+            config=ModelConfig(
+                extra_headers={
+                    "anthropic-beta": "context-1m-2025-08-07" 
+                },
+            )
+        ))
         # self.register(Model(
         #     id="anthropic/claude-3-5-sonnet-latest",
         #     name="Claude 3.5 Sonnet",
