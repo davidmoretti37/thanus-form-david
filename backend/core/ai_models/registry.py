@@ -120,9 +120,9 @@ class ModelRegistry:
         
         self.register(Model(
             id="openrouter/deepseek/deepseek-chat-v3.1", # if is_local else "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0"
-            name="Sonnet 4.5",
+            name="Deep Seek Chat 3.1",
             provider=ModelProvider.OPENROUTER,
-            aliases=["claude-sonnet-4.5", "anthropic/claude-sonnet-4.5", "Claude Sonnet 4.5", "claude-sonnet-4-5-20250929", "global.anthropic.claude-sonnet-4-5-20250929-v1:0", "arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0", "anthropic/claude-sonnet-4-5-20250929"],
+            aliases=["deepseek", "deepseek-chat", "deepseek-chat-v3.1"],
             context_window=200_000,
             capabilities=[
                 ModelCapability.CHAT,
