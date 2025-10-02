@@ -725,11 +725,6 @@ async def execute_agent(
             instance_id="api",
             project_id=project_id,
             model_name=model_name,
-            enable_thinking=execute_request.enable_thinking,
-            reasoning_effort=execute_request.reasoning_effort,
-            stream=execute_request.stream,
-            enable_context_manager=execute_request.enable_context_manager,
-            enable_prompt_caching=False,
             agent_config=agent_config,
             request_id=str(uuid.uuid4())
         )
@@ -903,11 +898,6 @@ async def send_message_to_thread(
             instance_id="api",
             project_id=project_id,
             model_name=model_name,
-            enable_thinking=enable_thinking,
-            reasoning_effort=reasoning_effort,
-            stream=send_request.stream,
-            enable_context_manager=enable_context_manager,
-            enable_prompt_caching=False,
             agent_config=agent_config,
             request_id=str(uuid.uuid4())
         )

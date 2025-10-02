@@ -68,6 +68,32 @@ async def run_agent_background(
         thread_id=thread_id,
         request_id=request_id,
     )
+    
+    # Fetch additional parameters from the database
+    try:
+        client = await DBConnection().client
+        run_result = await client.table('agent_runs').select('metadata').eq('id', agent_run_id).execute()
+        if run_result.data and 'metadata' in run_result.data[0]:
+            metadata = run_result.data[0]['metadata'] or {}
+            enable_thinking = metadata.get('enable_thinking', False)
+            reasoning_effort = metadata.get('reasoning_effort', 'low')
+            stream = metadata.get('stream', True)
+            enable_context_manager = metadata.get('enable_context_manager', False)
+            enable_prompt_caching = metadata.get('enable_prompt_caching', False)
+            
+            # Update agent_config with these parameters if needed
+            if agent_config is None:
+                agent_config = {}
+            
+            agent_config.update({
+                'enable_thinking': enable_thinking,
+                'reasoning_effort': reasoning_effort,
+                'stream': stream,
+                'enable_context_manager': enable_context_manager,
+                'enable_prompt_caching': enable_prompt_caching
+            })
+    except Exception as e:
+        logger.warning(f"Failed to fetch agent run metadata: {str(e)}")
 
     try:
         await initialize()
