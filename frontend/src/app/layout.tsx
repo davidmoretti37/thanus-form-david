@@ -11,7 +11,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next';
 import Script from 'next/script';
 import { PostHogIdentify } from '@/components/posthog-identify';
 import '@/lib/polyfills'; // Load polyfills early
-import FloatingSidebar from '@/components/floating-sidebar/FloatingSidebar';
+import { FloatingSidebarWrapper } from '@/components/floating-sidebar/FloatingSidebarWrapper';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -111,6 +111,7 @@ export const metadata: Metadata = {
   },
 };
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -150,9 +151,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            <FloatingSidebar />
-            {children}
-            <Toaster />
+            <FloatingSidebarWrapper>
+              {children}
+              <Toaster />
+            </FloatingSidebarWrapper>
           </Providers>
           <Analytics />
           <GoogleAnalytics gaId="G-6ETJFB3PT3" />

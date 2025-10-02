@@ -44,6 +44,17 @@ export const translations = {
     'floatingSidebar.whatsapp': 'WhatsApp',
     'floatingSidebar.integrations': 'Integrations',
     'floatingSidebar.settings': 'Settings',
+    'floatingSidebar.accounts': 'Accounts',
+    'floatingSidebar.personalAccount': 'Personal Account',
+    'floatingSidebar.team': 'Team',
+    'floatingSidebar.manageBilling': 'Manage Billing',
+    'floatingSidebar.upgradePlan': 'Upgrade Plan',
+    'floatingSidebar.billing': 'Billing',
+    'floatingSidebar.apiKeys': 'API Keys',
+    'floatingSidebar.toggleTheme': 'Toggle Theme',
+    'floatingSidebar.free': 'Free',
+    'floatingSidebar.freePlan': 'Free Plan',
+    'floatingSidebar.admin': 'Admin',
 
     // Home Page
     'home.createWorker.title': 'Create Worker',
@@ -1379,6 +1390,27 @@ export const translations = {
     'plans.basic.feature4': 'Community support',
   },
   pt: {
+    // Sidebar Menu
+    'floatingSidebar.chat': 'Chat',
+    'floatingSidebar.tasks': 'Tarefas',
+    'floatingSidebar.agents': 'Agentes',
+    'floatingSidebar.knowledge': 'Jardim do Conhecimento',
+    'floatingSidebar.multiComputer': 'Múltiplos Computadores',
+    'floatingSidebar.whatsapp': 'WhatsApp',
+    'floatingSidebar.integrations': 'Integrações',
+    'floatingSidebar.settings': 'Configurações',
+    'floatingSidebar.accounts': 'Contas',
+    'floatingSidebar.personalAccount': 'Conta Pessoal',
+    'floatingSidebar.team': 'Time',
+    'floatingSidebar.manageBilling': 'Gerenciar Cobrança',
+    'floatingSidebar.upgradePlan': 'Atualizar Plano',
+    'floatingSidebar.billing': 'Cobrança',
+    'floatingSidebar.apiKeys': 'Chaves de API',
+    'floatingSidebar.toggleTheme': 'Alternar Tema',
+    'floatingSidebar.free': 'Grátis',
+    'floatingSidebar.freePlan': 'Plano Grátis',
+    'floatingSidebar.admin': 'Administrador',
+    
     // Tasks Page
     'tasks.title': 'Tarefas',
     'tasks.history': 'Histórico',
@@ -1395,16 +1427,6 @@ export const translations = {
     'tasks.historyTitle': 'Histórico',
     'tasks.historyCount': '{count} tarefas',
     
-    // Sidebar Menu
-    'floatingSidebar.chat': 'Chat',
-    'floatingSidebar.tasks': 'Tarefas',
-    'floatingSidebar.agents': 'Agentes',
-    'floatingSidebar.knowledge': 'Jardim do Conhecimento',
-    'floatingSidebar.multiComputer': 'Multi Computador',
-    'floatingSidebar.whatsapp': 'WhatsApp',
-    'floatingSidebar.integrations': 'Integrações',
-    'floatingSidebar.settings': 'Configurações',
-
     // Home Page
     'home.createWorker.title': 'Criar Worker',
     'home.createWorker.description': 'Crie seus próprios funcionários virtuais com o Criar Worker',
@@ -2595,6 +2617,27 @@ export const translations = {
     'plans.basic.feature4': 'Suporte da comunidade',
   },
   es: {
+    // Sidebar Menu
+    'floatingSidebar.chat': 'Chat',
+    'floatingSidebar.tasks': 'Tareas',
+    'floatingSidebar.agents': 'Agentes',
+    'floatingSidebar.knowledge': 'Jardín del Conocimiento',
+    'floatingSidebar.multiComputer': 'Múltiples Computadoras',
+    'floatingSidebar.whatsapp': 'WhatsApp',
+    'floatingSidebar.integrations': 'Integraciones',
+    'floatingSidebar.settings': 'Configuración',
+    'floatingSidebar.accounts': 'Cuentas',
+    'floatingSidebar.personalAccount': 'Cuenta Personal',
+    'floatingSidebar.team': 'Equipo',
+    'floatingSidebar.manageBilling': 'Gestionar Facturación',
+    'floatingSidebar.upgradePlan': 'Mejorar Plan',
+    'floatingSidebar.billing': 'Facturación',
+    'floatingSidebar.apiKeys': 'Claves API',
+    'floatingSidebar.toggleTheme': 'Cambiar Tema',
+    'floatingSidebar.free': 'Gratis',
+    'floatingSidebar.freePlan': 'Plan Gratis',
+    'floatingSidebar.admin': 'Administrador',
+    
     // API Endpoints Translations
     'apiEndpoints.viewInDashboard': 'Ver en el Panel',
     'apiEndpoints.useInCurrentEndpoint': 'Usar en el endpoint actual',
@@ -2840,16 +2883,6 @@ export const translations = {
     'tasks.historyTitle': 'Historial',
     'tasks.historyCount': '{count} tareas',
     
-    // Sidebar Menu
-    'floatingSidebar.chat': 'Chat',
-    'floatingSidebar.tasks': 'Tareas',
-    'floatingSidebar.agents': 'Agentes',
-    'floatingSidebar.knowledge': 'Jardín del Conocimiento',
-    'floatingSidebar.multiComputer': 'Multi Computadora',
-    'floatingSidebar.whatsapp': 'WhatsApp',
-    'floatingSidebar.integrations': 'Integraciones',
-    'floatingSidebar.settings': 'Configuración',
-
     // Home Page
     'home.createWorker.title': 'Crear Worker',
     'home.createWorker.description': 'Crea tus propios empleados virtuales con Crear Worker',
