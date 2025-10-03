@@ -42,28 +42,54 @@ export const useComposioToolkitsInfinite = (search?: string, category?: string) 
   return useInfiniteQuery({
     queryKey: ['composio', 'toolkits', 'infinite', search, category],
     queryFn: async ({ pageParam }): Promise<ComposioToolkitsResponse> => {
+      // Buscando mais itens por página
       const result = await composioApi.getToolkits(search, category, pageParam);
+      
+      // Se houver mais páginas, vamos carregar mais páginas em paralelo
+      if (result.next_cursor && (!category || category === 'all')) {
+        // Carrega as próximas 10 páginas em paralelo para pegar mais itens de uma vez
+        const nextPages = [];
+        let currentCursor = result.next_cursor;
+        
+        // Vamos carregar até 10 páginas adicionais ou até não ter mais páginas
+        for (let i = 0; i < 10 && currentCursor; i++) {
+          try {
+            const nextPage = await composioApi.getToolkits(search, category, currentCursor);
+            nextPages.push(nextPage);
+            if (!nextPage.next_cursor) break;
+            currentCursor = nextPage.next_cursor;
+          } catch (error) {
+            console.error('Error loading additional page:', error);
+            break;
+          }
+        }
+        
+        // Combina todos os resultados
+        result.toolkits = [
+          ...result.toolkits,
+          ...nextPages.flatMap(page => page.toolkits || [])
+        ];
+        
+        // Atualiza o cursor para a última página carregada
+        if (nextPages.length > 0) {
+          const lastPage = nextPages[nextPages.length - 1];
+          result.next_cursor = lastPage.next_cursor;
+        }
+      }
+      
       return result;
     },
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage) => {
+      // Só retorna o próximo cursor se ainda houver mais itens para carregar
       return lastPage.next_cursor || undefined;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000, // 5 minutos
     retry: 2,
-  });
-};
-
-export const useComposioToolkitIcon = (toolkitSlug: string, options?: { enabled?: boolean }) => {
-  return useQuery({
-    queryKey: ['composio', 'toolkit-icon', toolkitSlug],
-    queryFn: async (): Promise<{ success: boolean; icon_url?: string }> => {
-      const result = await composioApi.getToolkitIcon(toolkitSlug);
-      return result;
-    },
-    enabled: options?.enabled !== undefined ? options.enabled : !!toolkitSlug,
-    staleTime: 60 * 60 * 1000,
-    retry: 2,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    refetchOnReconnect: false,
+    maxPages: 20, // Aumentando o número de páginas em cache
   });
 };
 
@@ -76,6 +102,19 @@ export const useComposioToolkitDetails = (toolkitSlug: string, options?: { enabl
     },
     enabled: options?.enabled !== undefined ? options.enabled : !!toolkitSlug,
     staleTime: 10 * 60 * 1000,
+    retry: 2,
+  });
+};
+
+export const useComposioToolkitIcon = (toolkitSlug: string, options?: { enabled?: boolean }) => {
+  return useQuery({
+    queryKey: ['composio', 'toolkit-icon', toolkitSlug],
+    queryFn: async (): Promise<{ success: boolean; icon_url?: string }> => {
+      const result = await composioApi.getToolkitIcon(toolkitSlug);
+      return result;
+    },
+    enabled: options?.enabled !== undefined ? options.enabled : !!toolkitSlug,
+    staleTime: 60 * 60 * 1000, // 1 hora
     retry: 2,
   });
 };
