@@ -70,7 +70,7 @@ class ThreadManager:
 
         # Create a new ToolManager instance with the new agent config
         from core.run import ToolManager
-        tool_manager = ToolManager(self, project_id, thread_id, new_agent_config)
+        tool_manager = ToolManager(self, project_id, thread_id, new_agent_config, account_id)
 
         # Calculate disabled tools based on new agent config
         disabled_tools = []
@@ -89,23 +89,8 @@ class ThreadManager:
         agent_id = new_agent_config.get('agent_id')
         tool_manager.register_all_tools(agent_id=agent_id, disabled_tools=disabled_tools)
 
-        # Re-register the AgentCallTool if it was registered before
-        if 'agent_call_tool' not in disabled_tools:
-            try:
-                from core.tools.agent_call_tool import AgentCallTool
-                from core.services.supabase import DBConnection
-                db = DBConnection()
-                self.add_tool(
-                    AgentCallTool,
-                    thread_manager=self,
-                    db_connection=db,
-                    account_id=account_id,
-                    project_id=project_id,
-                    thread_id=thread_id
-                )
-                logger.debug("Re-registered AgentCallTool with full context after tool reload")
-            except Exception as e:
-                logger.warning(f"Failed to re-register AgentCallTool: {e}")
+        # AgentCallTool is now handled by the standard tool registration process
+        # No special case needed - it will be registered with other utility tools
 
         # Get new tool statistics
         new_stats = self.tool_registry.get_tool_statistics()
