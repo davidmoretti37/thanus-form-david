@@ -59,6 +59,7 @@ export interface BaseAgentData {
   is_kortix_team?: boolean;
   download_count?: number;
   marketplace_published_at?: string;
+  tools?: string[]; // Tool/integration icons
   
   // Template specific
   template_id?: string;
@@ -430,6 +431,7 @@ export const UnifiedAgentCard: React.FC<UnifiedAgentCardProps> = ({
   const renderStandardCard = () => {
     const cardClassName = cn(
       'group relative bg-card rounded-2xl overflow-hidden transition-all duration-300 border cursor-pointer flex flex-col border-border/50 hover:border-primary/20',
+      variant === 'marketplace' && 'min-h-[380px]',
       className
     );
     
@@ -582,6 +584,36 @@ export const UnifiedAgentCard: React.FC<UnifiedAgentCardProps> = ({
             <div className="min-h-[1.25rem] mb-3">
               <TagList tags={data.tags} />
             </div>
+            
+            {/* Tool icons section - minimalist display */}
+            {variant === 'marketplace' && data.tools && data.tools.length > 0 && (
+              <div className="mb-4 mt-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {data.tools.slice(0, 4).map((tool, index) => (
+                    <div 
+                      key={index}
+                      className="w-8 h-8 rounded-lg bg-muted/50 border border-border/30 flex items-center justify-center overflow-hidden"
+                    >
+                      <img 
+                        src={tool} 
+                        alt="" 
+                        className="w-5 h-5 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                    </div>
+                  ))}
+                  {data.tools.length > 4 && (
+                    <div className="w-8 h-8 rounded-lg bg-muted/30 border border-border/20 flex items-center justify-center">
+                      <span className="text-xs text-muted-foreground font-medium">
+                        +{data.tools.length - 4}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
             
             <div className="mt-auto">
               <div className="mb-3">

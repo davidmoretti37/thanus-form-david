@@ -2,6 +2,7 @@
 
 import { NavMenu } from '@/components/home/nav-menu';
 import { ThemeToggle } from '@/components/home/theme-toggle';
+import { OrbToggle } from '@/components/home/ui/OrbToggle';
 import { siteConfig } from '@/lib/home';
 import { cn } from '@/lib/utils';
 import { Menu, X, Github } from 'lucide-react';
@@ -180,6 +181,12 @@ export function Navbar() {
                       Try free
                     </Link>
                   )}
+                </div>
+                <div 
+                  className="w-8 h-8 rounded-full bg-red-500 border-2 border-white flex items-center justify-center cursor-pointer"
+                  onClick={() => alert('TEST BUTTON CLICKED!')}
+                >
+                  🔴
                 </div>
                 <ThemeToggle />
                 <button
