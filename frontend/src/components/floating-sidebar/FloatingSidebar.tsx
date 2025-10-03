@@ -2,13 +2,12 @@
 
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Bot, Flower2, ListTodo, MessageCircle, MessageSquare, Monitor, Plug, Wrench, User, LogOut, Settings, CreditCard, Key, Users, BarChart3, FileText, Shield, AudioWaveform, Command, Sun, Moon, Zap, KeyRound, DollarSign, ChevronsUpDown, Bell } from "lucide-react";
+import { Bot, Flower2, Home, ListTodo, MessageCircle, MessageSquare, Monitor, Plug, Wrench, User, LogOut, Settings, CreditCard, Key, Users, BarChart3, FileText, Shield, AudioWaveform, Command, Sun, Moon, Zap, KeyRound, DollarSign, ChevronsUpDown, Bell } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import BlueRingIcon from "@/components/ui/blue-ring-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -152,13 +151,13 @@ export default function FloatingSidebar() {
       )}
       aria-label="Floating sidebar"
     >
-      {/* Top ring indicator - same gradient ring as Home header */}
+      {/* Home icon */}
       <Link
         href="/home"
         aria-label="Home"
         className="flex items-center justify-center w-8 h-8 rounded-full hover:bg-foreground/10 transition-colors"
       >
-        <BlueRingIcon className="w-5 h-5" />
+        <Home className="w-5 h-5" />
       </Link>
 
       {/* Menu icons */}
@@ -432,4 +431,3 @@ export default function FloatingSidebar() {
     portalEl
   );
 }
-

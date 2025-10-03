@@ -25,6 +25,7 @@ import { AnimatedTooltip } from '@/components/ui/animated-tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import MiniCalendar from '@/components/ui/mini-calendar';
 import { t } from '@/lib/i18n';
+import { OrbToggle } from '@/components/home/ui/OrbToggle';
 
 const ICON_CLOUD_SLUGS: string[] = [
   "react",
@@ -271,6 +272,7 @@ export default function HomePage() {
         </div>
       </div>
       <div className="absolute top-5 right-6 flex items-center gap-3">
+        <OrbToggle />
         <button
           onClick={toggleTheme}
           className="h-8 rounded-full border bg-background shadow-sm px-2 flex items-center gap-1 cursor-pointer"

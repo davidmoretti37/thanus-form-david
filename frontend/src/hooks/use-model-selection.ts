@@ -47,13 +47,18 @@ export const useModelSelection = () => {
   });
 
   const { data: subscriptionData } = useSubscriptionData();
-  const { selectedModel, setSelectedModel } = useModelStore();
+  const { 
+    selectedModel, 
+    setSelectedModel,
+    customModels,
+    addCustomModel,
+    updateCustomModel,
+    removeCustomModel,
+  } = useModelStore();
 
-  // Transform API data to ModelOption format
+  // Transform API data to ModelOption format and merge with custom models
   const availableModels = useMemo<ModelOption[]>(() => {
-    if (!modelsData?.models) return [];
-    
-    return modelsData.models.map(model => ({
+    const apiModels = modelsData?.models ? modelsData.models.map(model => ({
       id: model.id, // Always use the actual model ID
       label: model.display_name || model.short_name || model.id,
       requiresSubscription: model.requires_subscription || false,
@@ -61,13 +66,31 @@ export const useModelSelection = () => {
       recommended: model.recommended || false,
       capabilities: model.capabilities || [],
       contextWindow: model.context_window || 128000,
-    })).sort((a, b) => {
+    })) : [];
+
+    // Add custom models (they don't require subscription in local mode)
+    const customModelOptions: ModelOption[] = customModels.map(cm => ({
+      id: cm.id,
+      label: cm.label,
+      requiresSubscription: false,
+      priority: 0,
+      recommended: false,
+      capabilities: [],
+      contextWindow: 128000,
+    }));
+
+    // Merge and remove duplicates (custom models override API models with same ID)
+    const modelMap = new Map<string, ModelOption>();
+    apiModels.forEach(m => modelMap.set(m.id, m));
+    customModelOptions.forEach(m => modelMap.set(m.id, m));
+
+    return Array.from(modelMap.values()).sort((a, b) => {
       // Sort by recommended first, then priority, then name
       if (a.recommended !== b.recommended) return a.recommended ? -1 : 1;
       if (a.priority !== b.priority) return b.priority - a.priority;
       return a.label.localeCompare(b.label);
     });
-  }, [modelsData]);
+  }, [modelsData, customModels]);
 
   // Get accessible models based on subscription
   const accessibleModels = useMemo(() => {
@@ -97,8 +120,11 @@ export const useModelSelection = () => {
   }, [selectedModel, accessibleModels, availableModels, isLoading, setSelectedModel, subscriptionData]);
 
   const handleModelChange = (modelId: string) => {
-    const model = accessibleModels.find(m => m.id === modelId);
-    if (model) {
+    // Allow selection of custom models or accessible models
+    const isCustomModel = customModels.some(m => m.id === modelId);
+    const isAccessibleModel = accessibleModels.some(m => m.id === modelId);
+    
+    if (isCustomModel || isAccessibleModel) {
       console.log('🔧 useModelSelection: Changing model to:', modelId);
       setSelectedModel(modelId);
     }
@@ -120,12 +146,12 @@ export const useModelSelection = () => {
       return model?.requiresSubscription || false;
     },
     
-    // Compatibility stubs for custom models (not needed with API-driven approach)
+    // Custom models functionality (connected to store)
     handleModelChange,
-    customModels: [] as any[], // Empty array since we're not using custom models
-    addCustomModel: (_model: any) => {}, // No-op
-    updateCustomModel: (_id: string, _model: any) => {}, // No-op
-    removeCustomModel: (_id: string) => {}, // No-op
+    customModels,
+    addCustomModel,
+    updateCustomModel,
+    removeCustomModel,
     
     // Get the actual model ID to send to the backend (no transformation needed now)
     getActualModelId: (modelId: string) => modelId,
