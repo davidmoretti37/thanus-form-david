@@ -790,6 +790,39 @@ TOOL_GROUPS: Dict[str, ToolGroup] = {
         ]
     ),
 
+    "agent_call_tool": ToolGroup(
+        name="agent_call_tool",
+        display_name="Agent Management",
+        description="List, search, and switch between available agents",
+        tool_class="AgentCallTool",
+        methods=[
+            ToolMethod(
+                name="list_available_agents",
+                display_name="List Available Agents",
+                description="List all available agents with their capabilities",
+                enabled=True
+            ),
+            ToolMethod(
+                name="switch_to_agent",
+                display_name="Switch to Agent",
+                description="Switch to a specific agent while maintaining workspace",
+                enabled=True
+            ),
+            ToolMethod(
+                name="get_current_agent_info",
+                display_name="Get Current Agent Info",
+                description="Get information about the currently active agent",
+                enabled=True
+            ),
+            ToolMethod(
+                name="search_agents",
+                display_name="Search Agents",
+                description="Search for agents by name or description",
+                enabled=True
+            ),
+        ]
+    ),
+
     "sb_browser_tool": ToolGroup(
         name="sb_browser_tool",
         display_name="Browser Automation (Advanced)",

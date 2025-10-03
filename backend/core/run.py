@@ -63,11 +63,12 @@ class AgentConfig:
     trace: Optional[StatefulTraceClient] = None
 
 class ToolManager:
-    def __init__(self, thread_manager: ThreadManager, project_id: str, thread_id: str, agent_config: Optional[dict] = None):
+    def __init__(self, thread_manager: ThreadManager, project_id: str, thread_id: str, agent_config: Optional[dict] = None, account_id: Optional[str] = None):
         self.thread_manager = thread_manager
         self.project_id = project_id
         self.thread_id = thread_id
         self.agent_config = agent_config
+        self.account_id = account_id
     
     def register_all_tools(self, agent_id: Optional[str] = None, disabled_tools: Optional[List[str]] = None):
         """Register all available tools by default, with optional exclusions.
@@ -186,7 +187,42 @@ class ToolManager:
                 else:
                     self.thread_manager.add_tool(PaperSearchTool, thread_manager=self.thread_manager)
                     logger.debug("Registered paper_search_tool (all methods)")
-    
+
+        # Register Agent Call Tool with standard pattern
+        if 'agent_call_tool' not in disabled_tools:
+            if self.account_id:
+                from core.tools.agent_call_tool import AgentCallTool
+                from core.services.supabase import DBConnection
+                db = DBConnection()
+
+                enabled_methods = self._get_enabled_methods_for_tool('agent_call_tool')
+                if enabled_methods is not None:
+                    # Register only enabled methods
+                    self.thread_manager.add_tool(
+                        AgentCallTool,
+                        function_names=enabled_methods,
+                        thread_manager=self.thread_manager,
+                        db_connection=db,
+                        account_id=self.account_id,
+                        project_id=self.project_id,
+                        thread_id=self.thread_id
+                    )
+                    logger.debug(f"Registered agent_call_tool with methods: {enabled_methods}")
+                else:
+                    # Register all methods
+                    self.thread_manager.add_tool(
+                        AgentCallTool,
+                        thread_manager=self.thread_manager,
+                        db_connection=db,
+                        account_id=self.account_id,
+                        project_id=self.project_id,
+                        thread_id=self.thread_id
+                    )
+                    logger.debug("Registered agent_call_tool (all methods)")
+            else:
+                logger.warning("Could not register agent_call_tool: account_id not available")
+
+
     def _register_agent_builder_tools(self, agent_id: str, disabled_tools: List[str]):
         """Register agent builder tools."""
         from core.tools.agent_builder_tools.agent_config_tool import AgentConfigTool
@@ -224,9 +260,9 @@ class ToolManager:
         if 'agent_creation_tool' not in disabled_tools:
             from core.tools.agent_creation_tool import AgentCreationTool
             from core.services.supabase import DBConnection
-            
+
             db = DBConnection()
-            
+
             if hasattr(self, 'account_id') and self.account_id:
                 enabled_methods = self._get_enabled_methods_for_tool('agent_creation_tool')
                 if enabled_methods is not None:
@@ -237,6 +273,7 @@ class ToolManager:
                     logger.debug("Registered agent_creation_tool for Tars (all methods)")
             else:
                 logger.warning("Could not register agent_creation_tool: account_id not available")
+
     
     def _register_browser_tool(self, disabled_tools: List[str]):
         if 'browser_tool' not in disabled_tools:
@@ -606,7 +643,7 @@ class AgentRunner:
             logger.debug(f"No sandbox found for project {self.config.project_id}; will create lazily when needed")
     
     async def setup_tools(self):
-        tool_manager = ToolManager(self.thread_manager, self.config.project_id, self.config.thread_id, self.config.agent_config)
+        tool_manager = ToolManager(self.thread_manager, self.config.project_id, self.config.thread_id, self.config.agent_config, self.account_id)
         
         agent_id = None
         if self.config.agent_config:
@@ -615,10 +652,10 @@ class AgentRunner:
         disabled_tools = self._get_disabled_tools_from_config()
         
         tool_manager.register_all_tools(agent_id=agent_id, disabled_tools=disabled_tools)
-        
+
         is_suna_agent = (self.config.agent_config and self.config.agent_config.get('is_suna_default', False)) or (self.config.agent_config is None)
         logger.debug(f"Agent config check: agent_config={self.config.agent_config is not None}, is_suna_default={is_suna_agent}")
-        
+
         if is_suna_agent:
             logger.debug("Registering Tars-specific tools...")
             self._register_suna_specific_tools(disabled_tools)
@@ -661,9 +698,9 @@ class AgentRunner:
         if 'agent_creation_tool' not in disabled_tools:
             from core.tools.agent_creation_tool import AgentCreationTool
             from core.services.supabase import DBConnection
-            
+
             db = DBConnection()
-            
+
             if hasattr(self, 'account_id') and self.account_id:
                 # Check for granular method control
                 enabled_methods = self._get_enabled_methods_for_tool('agent_creation_tool')
@@ -677,6 +714,7 @@ class AgentRunner:
                     logger.debug("Registered agent_creation_tool for Tars (all methods)")
             else:
                 logger.warning("Could not register agent_creation_tool: account_id not available")
+
     
     def _get_disabled_tools_from_config(self) -> List[str]:
         disabled_tools = []
@@ -708,10 +746,10 @@ class AgentRunner:
             'sb_shell_tool', 'sb_files_tool', 'sb_deploy_tool', 'sb_expose_tool',
             'web_search_tool', 'image_search_tool', 'sb_vision_tool', 'sb_presentation_tool', 'sb_image_edit_tool',
             'sb_sheets_tool', 'sb_kb_tool', 'sb_design_tool', 'sb_presentation_outline_tool', 'sb_upload_file_tool',
-            'sb_docs_tool', 'sb_browser_tool', 'sb_templates_tool', 'computer_use_tool', 'sb_web_dev_tool', 
-            'data_providers_tool', 'browser_tool', 'people_search_tool', 'company_search_tool', 
+            'sb_docs_tool', 'sb_browser_tool', 'sb_templates_tool', 'computer_use_tool', 'sb_web_dev_tool',
+            'data_providers_tool', 'browser_tool', 'people_search_tool', 'company_search_tool',
             'agent_config_tool', 'mcp_search_tool', 'credential_profile_tool', 'workflow_tool', 'trigger_tool',
-            'agent_creation_tool'
+            'agent_creation_tool', 'agent_call_tool'
         ]
         
         for tool_name in all_tools:

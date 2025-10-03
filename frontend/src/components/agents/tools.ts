@@ -3,6 +3,7 @@ export const AGENTPRESS_TOOL_DEFINITIONS: Record<string, { enabled: boolean; des
     'ask_tool': { enabled: true, description: 'Ask users questions and wait for responses during task execution', icon: 'MessageCircleQuestion', color: 'bg-blue-100 dark:bg-blue-800/50', isCore: true },
     'task_list_tool': { enabled: true, description: 'Create and manage task lists to organize work and track progress', icon: 'ListTodo', color: 'bg-green-100 dark:bg-green-800/50', isCore: true },
     'expand_message_tool': { enabled: true, description: 'Expand truncated messages from previous conversations', icon: 'Expand', color: 'bg-purple-100 dark:bg-purple-800/50', isCore: true },
+    'agent_call_tool': { enabled: true, description: 'List, search, and switch between available agents while maintaining workspace continuity', icon: 'Users', color: 'bg-indigo-100 dark:bg-indigo-800/50' },
     
     // Core sandbox tools
     'sb_shell_tool': { enabled: true, description: 'Execute shell commands in tmux sessions for terminal operations, CLI tools, and system management', icon: 'Terminal', color: 'bg-slate-100 dark:bg-slate-800' },
@@ -69,6 +70,7 @@ export const getToolDisplayName = (toolName: string): string => {
       'ask_tool': 'User Communication',
       'task_list_tool': 'Task Management',
       'expand_message_tool': 'Message Expansion',
+      'agent_call_tool': 'Agent Management',
       
       // Core sandbox tools
       'sb_shell_tool': 'Terminal',
