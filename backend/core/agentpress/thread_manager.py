@@ -44,6 +44,62 @@ class ThreadManager:
         """Add a tool to the ThreadManager."""
         self.tool_registry.register_tool(tool_class, function_names, **kwargs)
 
+    def reload_tools_for_agent(self, new_agent_config: dict, project_id: str, thread_id: str, account_id: str):
+        """Reload tools based on new agent configuration.
+
+        Args:
+            new_agent_config: New agent configuration containing tool settings
+            project_id: Project ID for tool registration
+            thread_id: Thread ID for tool registration
+            account_id: Account ID for tool registration
+        """
+        logger.info("Starting tool registry reload for agent switch")
+
+        # Get current tool statistics for comparison
+        old_stats = self.tool_registry.get_tool_statistics()
+        logger.debug(f"Current tools before reload: {old_stats['total_functions']} functions from {old_stats['unique_tool_classes']} classes")
+
+        # Clear current tools (except core tools that should always remain)
+        # We'll preserve core tools and re-register everything else
+        core_tool_functions = ['ask_user', 'create_task_list', 'expand_message']
+        all_tools = self.tool_registry.get_registered_tool_names()
+        tools_to_remove = [tool for tool in all_tools if tool not in core_tool_functions]
+
+        if tools_to_remove:
+            self.tool_registry.unregister_tool_functions(tools_to_remove)
+            logger.debug(f"Unregistered {len(tools_to_remove)} non-core tools")
+
+        # Create a new ToolManager instance with the new agent config
+        from core.run import ToolManager
+        tool_manager = ToolManager(self, project_id, thread_id, new_agent_config, account_id)
+
+        # Calculate disabled tools based on new agent config
+        disabled_tools = []
+        if new_agent_config and 'tools' in new_agent_config:
+            tools_config = new_agent_config['tools']
+            agentpress_tools = tools_config.get('agentpress', {})
+
+            # Find disabled tools
+            for tool_name, enabled in agentpress_tools.items():
+                if not enabled:
+                    disabled_tools.append(tool_name)
+
+        logger.debug(f"Disabled tools for new agent: {disabled_tools}")
+
+        # Re-register tools based on new configuration
+        agent_id = new_agent_config.get('agent_id')
+        tool_manager.register_all_tools(agent_id=agent_id, disabled_tools=disabled_tools)
+
+        # AgentCallTool is now handled by the standard tool registration process
+        # No special case needed - it will be registered with other utility tools
+
+        # Get new tool statistics
+        new_stats = self.tool_registry.get_tool_statistics()
+        logger.info(f"Tool registry reload complete: {new_stats['total_functions']} functions from {new_stats['unique_tool_classes']} classes")
+        logger.debug(f"New tool functions: {new_stats['function_names']}")
+
+        return new_stats
+
     async def create_thread(
         self,
         account_id: Optional[str] = None,
