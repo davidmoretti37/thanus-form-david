@@ -1,4 +1,5 @@
 import json
+import re
 from typing import Optional, Dict, Any, List
 from core.agentpress.tool import Tool, ToolResult, openapi_schema, usage_example
 from core.agentpress.thread_manager import ThreadManager
@@ -23,6 +24,133 @@ class AgentCallTool(Tool):
 
     async def _get_current_account_id(self) -> Optional[str]:
         return self.account_id
+
+    def _is_uuid_format(self, identifier: str) -> bool:
+        """Check if the identifier looks like a UUID."""
+        # UUID v4 pattern: 8-4-4-4-12 hexadecimal characters
+        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        return bool(re.match(uuid_pattern, identifier.lower()))
+
+    def _calculate_similarity(self, query: str, target: str) -> float:
+        """Calculate similarity score between two strings using simple ratio."""
+        query_lower = query.lower().strip()
+        target_lower = target.lower().strip()
+
+        # Exact match
+        if query_lower == target_lower:
+            return 1.0
+
+        # One string contains the other
+        if query_lower in target_lower or target_lower in query_lower:
+            return 0.8
+
+        # Simple character-based similarity (Jaccard similarity)
+        set1 = set(query_lower)
+        set2 = set(target_lower)
+        intersection = len(set1.intersection(set2))
+        union = len(set1.union(set2))
+
+        if union == 0:
+            return 0.0
+
+        return intersection / union
+
+    def _find_similar_agents(self, query: str, agents: List[dict], threshold: float = 0.3) -> List[dict]:
+        """Find agents with names similar to the query."""
+        similar_agents = []
+
+        for agent in agents:
+            agent_name = agent.get('name', '')
+            similarity = self._calculate_similarity(query, agent_name)
+
+            if similarity >= threshold:
+                agent_copy = agent.copy()
+                agent_copy['similarity_score'] = similarity
+                similar_agents.append(agent_copy)
+
+        # Sort by similarity score (highest first)
+        similar_agents.sort(key=lambda x: x['similarity_score'], reverse=True)
+
+        return similar_agents
+
+    async def _resolve_agent_by_identifier(self, identifier: str) -> tuple[Optional[dict], Optional[str]]:
+        """
+        Smart agent resolution that handles both UUIDs and names.
+
+        Returns:
+            tuple: (agent_data, error_message)
+        """
+        try:
+            account_id = self.account_id
+            if not account_id:
+                return None, "Unable to determine current account ID"
+
+            client = await self.db.client
+
+            # Strategy 1: If it looks like a UUID, search by agent_id
+            if self._is_uuid_format(identifier):
+                logger.debug(f"Treating '{identifier}' as UUID, searching by agent_id")
+                agent_result = await client.table('agents').select(
+                    'agent_id, name, description, icon_name, icon_color, icon_background, is_default, current_version_id'
+                ).eq('agent_id', identifier).eq('account_id', account_id).single().execute()
+
+                if agent_result.data:
+                    return agent_result.data, None
+                else:
+                    return None, f"Agent with ID '{identifier}' not found or access denied."
+
+            # Strategy 2: Search by name (case-insensitive)
+            logger.debug(f"Treating '{identifier}' as name, searching case-insensitively")
+
+            # Get all agents for the account
+            all_agents_result = await client.table('agents').select(
+                'agent_id, name, description, icon_name, icon_color, icon_background, is_default, current_version_id'
+            ).eq('account_id', account_id).execute()
+
+            if not all_agents_result.data:
+                return None, "No agents found for your account."
+
+            all_agents = all_agents_result.data
+
+            # Try exact case-insensitive match first
+            for agent in all_agents:
+                if agent['name'].lower() == identifier.lower():
+                    logger.debug(f"Found exact name match: '{agent['name']}'")
+                    return agent, None
+
+            # Strategy 3: No exact match found, try fuzzy matching
+            logger.debug(f"No exact match for '{identifier}', trying fuzzy matching")
+            similar_agents = self._find_similar_agents(identifier, all_agents, threshold=0.3)
+
+            if similar_agents:
+                # If we have a very good match (>90%), use it
+                best_match = similar_agents[0]
+                if best_match['similarity_score'] >= 0.9:
+                    logger.debug(f"Found high-confidence match: '{best_match['name']}' (score: {best_match['similarity_score']:.2f})")
+                    return best_match, None
+
+                # Otherwise, show suggestions
+                suggestions = []
+                for agent in similar_agents[:5]:  # Show top 5 matches
+                    score_percent = int(agent['similarity_score'] * 100)
+                    suggestions.append(f"• **{agent['name']}** (similarity: {score_percent}%) - ID: `{agent['agent_id']}`")
+
+                suggestion_text = "\n".join(suggestions)
+                return None, f"Agent '{identifier}' not found. Did you mean:\n\n{suggestion_text}\n\nUse the exact name or agent ID to switch."
+
+            # Strategy 4: No similar agents found, show all available agents
+            agent_list = []
+            for agent in all_agents[:10]:  # Show first 10 agents
+                agent_list.append(f"• **{agent['name']}** - ID: `{agent['agent_id']}`")
+
+            agents_text = "\n".join(agent_list)
+            more_text = f"\n\n... and {len(all_agents) - 10} more agents." if len(all_agents) > 10 else ""
+
+            return None, f"Agent '{identifier}' not found. Available agents:\n\n{agents_text}{more_text}\n\nUse `list_available_agents` to see all agents with details."
+
+        except Exception as e:
+            logger.error(f"Failed to resolve agent identifier '{identifier}': {e}")
+            return None, f"Failed to resolve agent identifier: {str(e)}"
 
     @openapi_schema({
         "type": "function",
@@ -176,13 +304,13 @@ class AgentCallTool(Tool):
         "type": "function",
         "function": {
             "name": "switch_to_agent",
-            "description": "Switch to a specific agent while maintaining the current workspace and conversation context. This works like the @ agent switching system, allowing you to change the active agent without losing conversation history or workspace state.",
+            "description": "Switch to a specific agent while maintaining the current workspace and conversation context. This works like the @ agent switching system, allowing you to change the active agent without losing conversation history or workspace state. You can use either the agent's name (e.g., 'roteirista') or its UUID.",
             "parameters": {
                 "type": "object",
                 "properties": {
                     "agent_id": {
                         "type": "string",
-                        "description": "The ID of the agent to switch to. Use list_available_agents to see available agent IDs."
+                        "description": "The agent name or ID to switch to. Can be either the agent's name (case-insensitive, e.g., 'roteirista', 'Roteirista') or the exact agent UUID. If using a name with typos, the system will suggest similar agents."
                     },
                     "confirm_switch": {
                         "type": "boolean",
@@ -197,8 +325,21 @@ class AgentCallTool(Tool):
     @usage_example('''
         <function_calls>
         <invoke name="switch_to_agent">
+        <parameter name="agent_id">roteirista</parameter>
+        <parameter name="confirm_switch">true</parameter>
+        </invoke>
+        </function_calls>
+
+        <function_calls>
+        <invoke name="switch_to_agent">
         <parameter name="agent_id">agent-uuid-123</parameter>
         <parameter name="confirm_switch">true</parameter>
+        </invoke>
+        </function_calls>
+
+        <function_calls>
+        <invoke name="switch_to_agent">
+        <parameter name="agent_id">ROTEIRISTA</parameter>
         </invoke>
         </function_calls>
         ''')
@@ -209,22 +350,20 @@ class AgentCallTool(Tool):
     ) -> ToolResult:
         """Switch to a specific agent while maintaining workspace continuity."""
         try:
-            account_id = self.account_id
-            if not account_id:
-                return self.fail_response("Unable to determine current account ID")
+            # Use smart agent resolution to handle both UUIDs and names
+            agent, error_message = await self._resolve_agent_by_identifier(agent_id)
+
+            if not agent:
+                return self.fail_response(error_message or "Agent not found or access denied.")
+
+            agent_name = agent['name']
+            actual_agent_id = agent['agent_id']
+
+            # Log the resolution for debugging
+            if agent_id != actual_agent_id:
+                logger.info(f"Resolved agent identifier '{agent_id}' to agent '{agent_name}' (ID: {actual_agent_id})")
 
             client = await self.db.client
-
-            # Validate agent exists and user has access
-            agent_result = await client.table('agents').select(
-                'agent_id, name, description, icon_name, icon_color, icon_background, is_default, current_version_id'
-            ).eq('agent_id', agent_id).eq('account_id', account_id).single().execute()
-
-            if not agent_result.data:
-                return self.fail_response("Agent not found or access denied. Use list_available_agents to see available agents.")
-
-            agent = agent_result.data
-            agent_name = agent['name']
 
             # Get agent configuration
             agent_config = None
@@ -242,7 +381,7 @@ class AgentCallTool(Tool):
             # Update the thread manager's agent configuration and tools
             if agent_config:
                 # Ensure agent_id is included in the config
-                agent_config['agent_id'] = agent_id
+                agent_config['agent_id'] = actual_agent_id
                 agent_config['agent_name'] = agent_name
 
                 # Get old configuration for comparison
@@ -255,7 +394,7 @@ class AgentCallTool(Tool):
                 # Update the response processor with new agent config
                 self.thread_manager.response_processor.agent_config = agent_config
 
-                logger.info(f"Successfully switched agent configuration from '{old_agent_id}' to '{agent_id}' ({agent_name})")
+                logger.info(f"Successfully switched agent configuration from '{old_agent_id}' to '{actual_agent_id}' ({agent_name})")
 
                 # Reload tools based on new agent configuration
                 if self.project_id and self.thread_id:
@@ -266,7 +405,7 @@ class AgentCallTool(Tool):
                             thread_id=self.thread_id,
                             account_id=self.account_id
                         )
-                        logger.info(f"Successfully reloaded tools for agent '{agent_id}': {tool_stats['total_functions']} functions available")
+                        logger.info(f"Successfully reloaded tools for agent '{actual_agent_id}': {tool_stats['total_functions']} functions available")
 
                         # Add tool reload info to success message
                         tools_reloaded = True
@@ -320,18 +459,19 @@ class AgentCallTool(Tool):
             return self.success_response({
                 "message": success_message,
                 "switched_to": {
-                    "agent_id": agent_id,
+                    "agent_id": actual_agent_id,
                     "agent_name": agent_name,
                     "description": agent.get('description'),
-                    "is_default": agent.get('is_default', False)
+                    "is_default": agent.get('is_default', False),
+                    "resolved_from": agent_id if agent_id != actual_agent_id else None
                 },
                 "workspace_preserved": True,
                 "thread_preserved": True
             })
 
         except Exception as e:
-            logger.error(f"Failed to switch to agent {agent_id}: {e}")
-            return self.fail_response("Failed to switch to the specified agent")
+            logger.error(f"Failed to switch to agent '{agent_id}': {e}")
+            return self.fail_response(f"Failed to switch to agent '{agent_id}': {str(e)}")
 
     @openapi_schema({
         "type": "function",
@@ -630,3 +770,80 @@ class AgentCallTool(Tool):
         except Exception as e:
             logger.error(f"Failed to list current tools: {e}")
             return self.fail_response("Failed to list current tools")
+
+    @openapi_schema({
+        "type": "function",
+        "function": {
+            "name": "test_agent_resolution",
+            "description": "Test the smart agent resolution system with different input formats. Useful for debugging and demonstrating the name resolution capabilities.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "test_identifier": {
+                        "type": "string",
+                        "description": "Test identifier to resolve (can be name, partial name, UUID, etc.)"
+                    }
+                },
+                "required": ["test_identifier"]
+            }
+        }
+    })
+    @usage_example('''
+        <function_calls>
+        <invoke name="test_agent_resolution">
+        <parameter name="test_identifier">roteirista</parameter>
+        </invoke>
+        </function_calls>
+
+        <function_calls>
+        <invoke name="test_agent_resolution">
+        <parameter name="test_identifier">roteirist</parameter>
+        </invoke>
+        </function_calls>
+        ''')
+    async def test_agent_resolution(self, test_identifier: str) -> ToolResult:
+        """Test the smart agent resolution system."""
+        try:
+            is_uuid = self._is_uuid_format(test_identifier)
+
+            message = f"**Agent Resolution Test**\n\n"
+            message += f"**Input**: `{test_identifier}`\n"
+            message += f"**Detected as**: {'UUID' if is_uuid else 'Name'}\n\n"
+
+            agent, error_message = await self._resolve_agent_by_identifier(test_identifier)
+
+            if agent:
+                message += f"**✅ Resolution Successful**\n"
+                message += f"• **Resolved to**: {agent['name']}\n"
+                message += f"• **Agent ID**: `{agent['agent_id']}`\n"
+                message += f"• **Description**: {agent.get('description', 'No description')}\n"
+
+                if test_identifier != agent['agent_id']:
+                    message += f"• **Input Transformation**: `{test_identifier}` → `{agent['name']}`\n"
+
+                return self.success_response({
+                    "message": message,
+                    "test_result": "success",
+                    "input": test_identifier,
+                    "resolved_agent": {
+                        "agent_id": agent['agent_id'],
+                        "name": agent['name'],
+                        "description": agent.get('description')
+                    },
+                    "is_uuid": is_uuid
+                })
+            else:
+                message += f"**❌ Resolution Failed**\n"
+                message += f"• **Error**: {error_message}\n"
+
+                return self.success_response({
+                    "message": message,
+                    "test_result": "failed",
+                    "input": test_identifier,
+                    "error": error_message,
+                    "is_uuid": is_uuid
+                })
+
+        except Exception as e:
+            logger.error(f"Failed to test agent resolution: {e}")
+            return self.fail_response(f"Failed to test agent resolution: {str(e)}")
