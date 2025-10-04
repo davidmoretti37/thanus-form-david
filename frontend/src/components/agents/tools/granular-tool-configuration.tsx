@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,6 +42,52 @@ export const GranularToolConfiguration = ({
   const getIconComponent = (iconName: string) => {
     const IconComponent = (icons as any)[iconName];
     return IconComponent || Wrench;
+  };
+
+  const getToolSettings = (toolName: string): Record<string, any> => {
+    const toolConfig = tools[toolName];
+    if (typeof toolConfig === 'object' && toolConfig !== null) {
+      return toolConfig.settings || {};
+    }
+    return {};
+  };
+
+  const handleToolSettingChange = (toolName: string, key: string, value: any) => {
+    if (disabled && isTarsAgent) {
+      toast.error("Tools cannot be modified", {
+        description: "Tars's default tools are managed centrally and cannot be changed.",
+      });
+      return;
+    }
+    if (isLoading) return;
+
+    const toolGroup = getToolGroup(toolName);
+    const currentConfig = tools[toolName];
+
+    let updated: any;
+    if (typeof currentConfig === 'object' && currentConfig !== null) {
+      updated = {
+        ...currentConfig,
+        settings: {
+          ...(currentConfig.settings || {}),
+          [key]: value,
+        },
+      };
+    } else {
+      updated = {
+        enabled: isToolGroupEnabled(toolName),
+        methods: toolGroup?.methods.reduce((acc, method) => {
+          acc[method.name] = method.enabled;
+          return acc;
+        }, {} as Record<string, boolean>) || {},
+        settings: { [key]: value },
+      };
+    }
+
+    onToolsChange({
+      ...tools,
+      [toolName]: updated,
+    });
   };
 
   const isToolGroupEnabled = (toolName: string): boolean => {
@@ -311,6 +358,49 @@ export const GranularToolConfiguration = ({
                               Individual Capabilities
                             </span>
                           </div>
+
+                          {(toolGroup.name === 'sb_image_edit_tool' || toolGroup.name === 'sb_design_tool') && (
+                            <div className="pl-6 mb-3 space-y-3">
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">
+                                  Fal AI model for Generate (text → image)
+                                </Label>
+                                <Input
+                                  placeholder="e.g. fal-ai/flux-pro"
+                                  value={getToolSettings(toolGroup.name).fal_model_generate ?? ''}
+                                  onChange={(e) => handleToolSettingChange(toolGroup.name, 'fal_model_generate', e.target.value)}
+                                  className="max-w-sm"
+                                  disabled={disabled || isLoading}
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">
+                                  Fal AI model for Edit (img2img)
+                                </Label>
+                                <Input
+                                  placeholder="e.g. fal-ai/stable-diffusion-xl"
+                                  value={getToolSettings(toolGroup.name).fal_model_edit ?? ''}
+                                  onChange={(e) => handleToolSettingChange(toolGroup.name, 'fal_model_edit', e.target.value)}
+                                  className="max-w-sm"
+                                  disabled={disabled || isLoading}
+                                />
+                              </div>
+
+                              <div className="space-y-2">
+                                <Label className="text-xs text-muted-foreground">
+                                  Optional fallback model (used if the specific one is empty)
+                                </Label>
+                                <Input
+                                  placeholder="optional fallback, e.g. fal-ai/flux-pro"
+                                  value={getToolSettings(toolGroup.name).fal_model ?? ''}
+                                  onChange={(e) => handleToolSettingChange(toolGroup.name, 'fal_model', e.target.value)}
+                                  className="max-w-sm"
+                                  disabled={disabled || isLoading}
+                                />
+                              </div>
+                            </div>
+                          )}
                           
                           {toolGroup.methods.map((method) => {
                             const isMethodEnabledState = isMethodEnabled(toolGroup.name, method.name);
