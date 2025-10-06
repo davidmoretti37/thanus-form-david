@@ -1,7 +1,7 @@
 import json
 import re
 from typing import Optional, Dict, Any, List
-from core.agentpress.tool import Tool, ToolResult, openapi_schema, usage_example
+from core.agentpress.tool import Tool, ToolResult, openapi_schema
 from core.agentpress.thread_manager import ThreadManager
 from core.utils.logger import logger
 
@@ -173,20 +173,6 @@ class AgentCallTool(Tool):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="list_available_agents">
-        <parameter name="include_details">true</parameter>
-        </invoke>
-        </function_calls>
-
-        <function_calls>
-        <invoke name="list_available_agents">
-        <parameter name="search_query">research</parameter>
-        <parameter name="include_details">true</parameter>
-        </invoke>
-        </function_calls>
-        ''')
     async def list_available_agents(
         self,
         include_details: bool = True,
@@ -322,27 +308,6 @@ class AgentCallTool(Tool):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="switch_to_agent">
-        <parameter name="agent_id">roteirista</parameter>
-        <parameter name="confirm_switch">true</parameter>
-        </invoke>
-        </function_calls>
-
-        <function_calls>
-        <invoke name="switch_to_agent">
-        <parameter name="agent_id">agent-uuid-123</parameter>
-        <parameter name="confirm_switch">true</parameter>
-        </invoke>
-        </function_calls>
-
-        <function_calls>
-        <invoke name="switch_to_agent">
-        <parameter name="agent_id">ROTEIRISTA</parameter>
-        </invoke>
-        </function_calls>
-        ''')
     async def switch_to_agent(
         self,
         agent_id: str,
@@ -490,13 +455,6 @@ class AgentCallTool(Tool):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="get_current_agent_info">
-        <parameter name="include_tools">true</parameter>
-        </invoke>
-        </function_calls>
-        ''')
     async def get_current_agent_info(self, include_tools: bool = True) -> ToolResult:
         """Get information about the currently active agent."""
         try:
@@ -615,20 +573,6 @@ class AgentCallTool(Tool):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="search_agents">
-        <parameter name="query">research</parameter>
-        <parameter name="limit">5</parameter>
-        </invoke>
-        </function_calls>
-
-        <function_calls>
-        <invoke name="search_agents">
-        <parameter name="query">coding assistant</parameter>
-        </invoke>
-        </function_calls>
-        ''')
     async def search_agents(self, query: str, limit: int = 10) -> ToolResult:
         """Search for agents by name or description."""
         try:
@@ -719,13 +663,6 @@ class AgentCallTool(Tool):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="list_current_tools">
-        <parameter name="include_statistics">true</parameter>
-        </invoke>
-        </function_calls>
-        ''')
     async def list_current_tools(self, include_statistics: bool = True) -> ToolResult:
         """List all currently available tools and their functions."""
         try:
@@ -788,19 +725,6 @@ class AgentCallTool(Tool):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="test_agent_resolution">
-        <parameter name="test_identifier">roteirista</parameter>
-        </invoke>
-        </function_calls>
-
-        <function_calls>
-        <invoke name="test_agent_resolution">
-        <parameter name="test_identifier">roteirist</parameter>
-        </invoke>
-        </function_calls>
-        ''')
     async def test_agent_resolution(self, test_identifier: str) -> ToolResult:
         """Test the smart agent resolution system."""
         try:

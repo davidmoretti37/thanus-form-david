@@ -4,7 +4,7 @@ import json
 import zipfile
 import io
 from typing import Optional, Dict, Any, List
-from core.agentpress.tool import ToolResult, ToolSchema, SchemaType, openapi_schema, usage_example
+from core.agentpress.tool import ToolResult, ToolSchema, SchemaType, openapi_schema
 from core.agentpress.thread_manager import ThreadManager
 from core.sandbox.tool_base import SandboxToolsBase
 from core.utils.logger import logger
@@ -60,13 +60,6 @@ class WhatsAppTool(SandboxToolsBase):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="send_text_via_whatsapp">
-        <parameter name="message">Hello, this is a test message from the agent</parameter>
-        </invoke>
-        </function_calls>
-    ''')
     async def send_text_via_whatsapp(self, message: str) -> ToolResult:
         """Send a text message via WhatsApp."""
         try:
@@ -110,14 +103,6 @@ class WhatsAppTool(SandboxToolsBase):
             }
         }
     })
-    @usage_example('''
-        <function_calls>
-        <invoke name="send_files_via_whatsapp">
-        <parameter name="file_paths">["report.pdf", "data.csv"]</parameter>
-        <parameter name="message">Here are the files you requested</parameter>
-        </invoke>
-        </function_calls>
-    ''')
     async def send_files_via_whatsapp(self, file_paths: List[str], message: str = "") -> ToolResult:
         """Send files via WhatsApp."""
         try:
@@ -597,15 +582,6 @@ class WhatsAppTool(SandboxToolsBase):
                 output=error_msg
             )
 
-    @usage_example(
-        '''{
-            "tool_name": "send_files_via_whatsapp",
-            "example": {
-                "file_paths": ["/workspace/results/data.csv", "/workspace/results/analysis.txt"],
-                "message": "Here are the analysis results you requested."
-            }
-        }'''
-    )
     async def example_usage(self):
         """Example usage of the WhatsApp file sending tool."""
         pass
