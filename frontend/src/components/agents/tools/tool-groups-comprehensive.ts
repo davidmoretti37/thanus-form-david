@@ -1219,7 +1219,8 @@ export function getAllToolGroups(): Record<string, ToolGroup> {
 
 export function hasGranularControl(toolName: string): boolean {
   const group = getToolGroup(toolName);
-  return group ? group.methods.length > 1 : false;
+  // Consider sb_image_edit_tool and sb_design_tool as "granular" to expose their settings panels
+  return group ? (group.methods.length > 1 || toolName === 'sb_image_edit_tool' || toolName === 'sb_design_tool') : false;
 }
 
 export function getEnabledMethodsForTool(toolName: string, config: any): string[] {
@@ -1287,7 +1288,9 @@ export function validateToolConfig(config: Record<string, any>): Record<string, 
     if (typeof toolConfig === 'boolean') {
       normalizedConfig[toolName] = toolConfig;
     } else if (typeof toolConfig === 'object' && toolConfig !== null) {
+      // Preserve any extra configuration fields (e.g., settings) while normalizing
       const validatedConfig: any = {
+        ...(toolConfig || {}),
         enabled: toolConfig.enabled ?? true,
         methods: {},
       };

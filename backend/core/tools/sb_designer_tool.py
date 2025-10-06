@@ -3,19 +3,36 @@ from core.agentpress.tool import ToolResult, openapi_schema, usage_example
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager
 import httpx
-from io import BytesIO
 import uuid
-from litellm import aimage_generation, aimage_edit
-import base64
+import os
+import asyncio
+import tempfile
+
+# Fal AI client (requires dependency: fal-client; env var FAL_KEY must be set)
+try:
+    from fal_client import submit, upload
+    _FAL_AVAILABLE = True
+except Exception:
+    _FAL_AVAILABLE = False
 
 
 class SandboxDesignerTool(SandboxToolsBase):
+    """
+    Professional design tool migrated to Fal AI for image generation and editing.
+    This replaces previous usage of OpenAI gpt-image-1 in this tool.
+
+    Notes:
+    - Requires env var FAL_KEY configured (backend/.env already includes this key).
+    - Relies on 'fal-client' (present in backend/pyproject.toml).
+    - Saves resulting PNGs under /workspace/designs and returns sandbox URL for viewing.
+    """
+
     def __init__(self, project_id: str, thread_id: str, thread_manager: ThreadManager):
         super().__init__(project_id, thread_manager)
         self.thread_id = thread_id
         self.thread_manager = thread_manager
         self.designs_dir = "/workspace/designs"
-        
+
         self.social_media_sizes = {
             "instagram_square": (1080, 1080),
             "instagram_portrait": (1080, 1350),
@@ -54,12 +71,13 @@ class SandboxDesignerTool(SandboxToolsBase):
             "flyer_a4": (2480, 3508),
             "poster_a3": (3508, 4961),
         }
-        
+
     async def _ensure_designs_directory(self):
         await self._ensure_sandbox()
         try:
             await self.sandbox.fs.make_dir(self.designs_dir)
-        except:
+        except Exception:
+            # ignore if exists
             pass
 
     @openapi_schema(
@@ -128,7 +146,7 @@ class SandboxDesignerTool(SandboxToolsBase):
         <parameter name="quality">auto</parameter>
         </invoke>
         </function_calls>
-        
+
         Create YouTube thumbnail:
         <function_calls>
         <invoke name="designer_create_or_edit">
@@ -139,7 +157,7 @@ class SandboxDesignerTool(SandboxToolsBase):
         <parameter name="quality">auto</parameter>
         </invoke>
         </function_calls>
-        
+
         Create LinkedIn banner:
         <function_calls>
         <invoke name="designer_create_or_edit">
@@ -150,7 +168,7 @@ class SandboxDesignerTool(SandboxToolsBase):
         <parameter name="quality">auto</parameter>
         </invoke>
         </function_calls>
-        
+
         Create custom size design:
         <function_calls>
         <invoke name="designer_create_or_edit">
@@ -178,6 +196,7 @@ class SandboxDesignerTool(SandboxToolsBase):
         try:
             await self._ensure_designs_directory()
 
+            # Resolve dimensions
             if platform_preset == "custom":
                 if width is None or height is None:
                     return self.fail_response("Width and height are required when using 'custom' platform preset.")
@@ -188,49 +207,68 @@ class SandboxDesignerTool(SandboxToolsBase):
                 actual_width, actual_height = self.social_media_sizes[platform_preset]
 
             enhanced_prompt = self._enhance_design_prompt(prompt, design_style, platform_preset, actual_width, actual_height)
-            
-            size_string = self._get_size_string(actual_width, actual_height)
+
+            # Fal settings
+            if not _FAL_AVAILABLE:
+                return self.fail_response("Fal client not available. Please ensure 'fal-client' is installed and restart the server.")
+            if not os.getenv("FAL_KEY"):
+                return self.fail_response("FAL_KEY was not found in environment. Please set FAL_KEY in backend/.env and restart the server.")
+
+            image_size = f"{max(256, min(4096, actual_width))}x{max(256, min(4096, actual_height))}"
+            default_strength = 0.7
+            model_to_use = self._get_default_fal_model("create" if mode == "create" else "edit") or "fal-ai/flux-pro"
 
             if mode == "create":
-                response = await aimage_generation(
-                    model="gpt-image-1",
-                    prompt=enhanced_prompt,
-                    n=1,
-                    size=size_string,
-                    quality=quality,
+                # Prompt-only generation with Fal
+                image_url_or_err = await self._fal_generate_image(
+                    prompt=enhanced_prompt, fal_model=model_to_use, image_size=image_size
                 )
+                if isinstance(image_url_or_err, ToolResult):
+                    return image_url_or_err
+                design_path_or_err = await self._save_design_from_url(image_url_or_err, actual_width, actual_height)
+                if isinstance(design_path_or_err, ToolResult):
+                    return design_path_or_err
+                design_path = design_path_or_err
+
             elif mode == "edit":
+                # Img2img with Fal
                 if not image_path:
                     return self.fail_response("'image_path' is required for edit mode.")
 
                 image_bytes = await self._get_image_bytes(image_path)
-                if isinstance(image_bytes, ToolResult):  
+                if isinstance(image_bytes, ToolResult):
                     return image_bytes
 
-                image_io = BytesIO(image_bytes)
-                image_io.name = "design.png"
+                init_image_url_or_err = await self._fal_upload_image(image_bytes)
+                if isinstance(init_image_url_or_err, ToolResult):
+                    return init_image_url_or_err
+                init_image_url = init_image_url_or_err
 
-                response = await aimage_edit(
-                    image=[image_io],  
+                image_url_or_err = await self._fal_edit_image(
                     prompt=enhanced_prompt,
-                    model="gpt-image-1",
-                    n=1,
-                    size=size_string,
+                    fal_model=model_to_use,
+                    init_image_url=init_image_url,
+                    image_size=image_size,
+                    strength=default_strength,
                 )
+                if isinstance(image_url_or_err, ToolResult):
+                    return image_url_or_err
+
+                design_path_or_err = await self._save_design_from_url(image_url_or_err, actual_width, actual_height)
+                if isinstance(design_path_or_err, ToolResult):
+                    return design_path_or_err
+                design_path = design_path_or_err
             else:
                 return self.fail_response("Invalid mode. Use 'create' or 'edit'.")
 
-            design_path = await self._process_design_response(response, actual_width, actual_height)
-            if isinstance(design_path, ToolResult):  
-                return design_path
-
+            # Build response and sandbox URL
             dimensions_text = f"{actual_width}x{actual_height}px"
             platform_text = f" for {platform_preset.replace('_', ' ').title()}" if platform_preset != "custom" else ""
             style_text = f" in {design_style} style" if design_style else ""
-            
+
             await self._ensure_sandbox()
             sandbox_file_url = f"/api/sandboxes/{self.sandbox_id}/files?path={design_path.lstrip('/')}"
-            
+
             return self.success_response({
                 "success": True,
                 "design_path": design_path,
@@ -267,7 +305,7 @@ class SandboxDesignerTool(SandboxToolsBase):
             "vintage": "with retro styling, nostalgic elements, classic typography, aged textures, and timeless appeal",
             "bold": "with high impact visuals, strong contrasts, attention-grabbing elements, and powerful composition",
         }
-        
+
         platform_optimizations = {
             "instagram_square": "optimized for Instagram feed with centered composition, thumb-stopping visuals, and mobile-first design",
             "instagram_story": "vertical design with safe zones for UI elements, engaging full-screen layout",
@@ -278,7 +316,7 @@ class SandboxDesignerTool(SandboxToolsBase):
             "twitter_header": "wide banner format with important elements in the center safe zone",
             "google_ads_banner": "advertising-optimized with clear CTA, minimal text, and immediate visual impact",
         }
-        
+
         professional_principles = [
             "Apply rule of thirds for balanced composition",
             "Use golden ratio proportions where applicable",
@@ -293,15 +331,14 @@ class SandboxDesignerTool(SandboxToolsBase):
             "Ensure scalability and clarity at different sizes",
             "Apply gestalt principles for visual grouping and organization",
         ]
-        
+
         base_enhancement = "Create a PROFESSIONAL, POLISHED design with EXPERT-LEVEL execution. "
-        
         enhanced = base_enhancement + prompt
-        
+
         enhanced += "\n\nAPPLY THESE PROFESSIONAL DESIGN PRINCIPLES:\n"
         for principle in professional_principles:
             enhanced += f"- {principle}\n"
-        
+
         aspect_ratio = width / height
         if aspect_ratio > 1.5:
             enhanced += "\nFor this WIDE/LANDSCAPE format: Position key elements using horizontal rule of thirds, ensure text is readable across the width, create horizontal visual flow."
@@ -309,20 +346,19 @@ class SandboxDesignerTool(SandboxToolsBase):
             enhanced += "\nFor this TALL/PORTRAIT format: Stack elements vertically with clear hierarchy, use vertical rule of thirds, ensure content flows naturally from top to bottom."
         else:
             enhanced += "\nFor this SQUARE/BALANCED format: Center key elements, use symmetrical or asymmetrical balance, create strong focal point in the center or using rule of thirds."
-        
+
         if platform and platform in platform_optimizations:
             enhanced += f"\n\nPLATFORM OPTIMIZATION: {platform_optimizations[platform]}"
-        
+
         if design_style and design_style in style_enhancements:
             enhanced += f"\n\nSTYLE DIRECTION: Apply {design_style} aesthetics - {style_enhancements[design_style]}"
-        
+
         enhanced += "\n\nENSURE: All text is perfectly legible, professionally placed with proper alignment, appropriate sizing for the format, and maintains clear hierarchy. If including text, use professional typography with proper kerning, leading, and tracking. Position text in safe zones away from edges."
-        
         enhanced += "\n\nQUALITY: Deliver agency-quality, portfolio-worthy design with flawless execution, attention to detail, and professional finish."
-        
         return enhanced
 
     def _get_size_string(self, width: int, height: int) -> str:
+        # No longer used; kept for backward compatibility with previous structure
         return "auto"
 
     async def _get_image_bytes(self, image_path: str) -> bytes | ToolResult:
@@ -344,31 +380,158 @@ class SandboxDesignerTool(SandboxToolsBase):
         try:
             cleaned_path = self.clean_path(image_path)
             full_path = f"{self.workspace_path}/{cleaned_path}"
-
             file_info = await self.sandbox.fs.get_file_info(full_path)
             if file_info.is_dir:
-                return self.fail_response(
-                    f"Path '{cleaned_path}' is a directory, not a design file."
-                )
-
+                return self.fail_response(f"Path '{cleaned_path}' is a directory, not a design file.")
             return await self.sandbox.fs.download_file(full_path)
-
         except Exception as e:
-            return self.fail_response(
-                f"Could not read design file from sandbox: {image_path} - {str(e)}"
-            )
+            return self.fail_response(f"Could not read design file from sandbox: {image_path} - {str(e)}")
 
-    async def _process_design_response(self, response, width: int, height: int) -> str | ToolResult:
+    # ---------- Fal helpers and saving ----------
+
+    def _get_default_fal_model(self, mode: Optional[str] = None) -> Optional[str]:
+        """
+        Resolve default Fal model from agent configuration.
+        Checks designer tool settings first, then falls back to image_edit tool settings.
+
+        Supported keys:
+          - fal_model_generate (for 'create' mode)
+          - fal_model_edit     (for 'edit' mode)
+          - fal_model          (legacy fallback)
+        """
         try:
-            original_b64_str = response.data[0].b64_json
-            image_data = base64.b64decode(original_b64_str)
+            cfg = getattr(self.thread_manager, "agent_config", None) or {}
+            tools_cfg = (cfg.get("agentpress_tools") or cfg.get("agentpress") or {}) or {}
+
+            # Prefer designer tool settings if available
+            tool_cfg = tools_cfg.get("sb_designer_tool") or tools_cfg.get("sb_image_edit_tool") or {}
+            settings = tool_cfg.get("settings") or {}
+
+            if isinstance(mode, str):
+                if mode == "create" and isinstance(settings.get("fal_model_generate"), str):
+                    val = settings.get("fal_model_generate", "").strip()
+                    if val:
+                        return val
+                if mode == "edit" and isinstance(settings.get("fal_model_edit"), str):
+                    val = settings.get("fal_model_edit", "").strip()
+                    if val:
+                        return val
+
+            val = settings.get("fal_model")
+            if isinstance(val, str):
+                val = val.strip()
+                if val:
+                    return val
+        except Exception:
+            pass
+        return None
+
+    async def _fal_generate_image(self, prompt: str, fal_model: str, image_size: str = "1024x1024") -> str | ToolResult:
+        try:
+            args = {
+                "prompt": prompt,
+                "image_size": image_size,
+                "num_images": 1,
+            }
+            handler = await asyncio.to_thread(submit, fal_model, arguments=args)
+            result = await asyncio.to_thread(handler.get)
+            url = self._extract_first_image_url(result)
+            if not url:
+                return self.fail_response("Fal AI did not return an image URL.")
+            return url
+        except Exception as e:
+            return self.fail_response(f"Fal AI generation failed: {str(e)}")
+
+    async def _fal_edit_image(
+        self,
+        prompt: str,
+        fal_model: str,
+        init_image_url: str,
+        image_size: str = "1024x1024",
+        strength: float = 0.7,
+    ) -> str | ToolResult:
+        try:
+            args = {
+                "prompt": prompt,
+                "image_url": init_image_url,
+                "strength": max(0.0, min(1.0, strength)),
+                "image_size": image_size,
+                "num_images": 1,
+            }
+            handler = await asyncio.to_thread(submit, fal_model, arguments=args)
+            result = await asyncio.to_thread(handler.get)
+            url = self._extract_first_image_url(result)
+            if not url:
+                return self.fail_response("Fal AI (edit) did not return an image URL.")
+            return url
+        except Exception as e:
+            return self.fail_response(f"Fal AI edit failed: {str(e)}")
+
+    async def _fal_upload_image(self, image_bytes: bytes) -> str | ToolResult:
+        """
+        Upload local bytes to Fal to obtain a temporary URL usable in arguments.
+        """
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+                tmp.write(image_bytes)
+                tmp.flush()
+                tmp_path = tmp.name
+
+            try:
+                uploaded_url = await asyncio.to_thread(upload, tmp_path)
+            finally:
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    pass
+
+            if not uploaded_url or not isinstance(uploaded_url, str):
+                return self.fail_response("Failed to upload image to Fal.")
+            return uploaded_url
+        except Exception as e:
+            return self.fail_response(f"Fal upload failed: {str(e)}")
+
+    def _extract_first_image_url(self, response: object) -> Optional[str]:
+        """
+        Try to extract the first image URL from Fal response.
+        Typical shapes:
+          - {'images': [{'url': '...'}]}
+          - {'image': {'url': '...'}}
+          - {'output': [{'url': '...'}]}
+        """
+        def _dfs(obj: object) -> Optional[str]:
+            if isinstance(obj, dict):
+                for k in ("url", "signed_url", "uri"):
+                    v = obj.get(k)
+                    if isinstance(v, str) and v.startswith("http"):
+                        return v
+                for v in obj.values():
+                    found = _dfs(v)
+                    if found:
+                        return found
+            elif isinstance(obj, list):
+                for item in obj:
+                    found = _dfs(item)
+                    if found:
+                        return found
+            elif isinstance(obj, str):
+                if obj.startswith("http"):
+                    return obj
+            return None
+
+        return _dfs(response)
+
+    async def _save_design_from_url(self, url: str, width: int, height: int) -> str | ToolResult:
+        """Download image from URL and save into /workspace/designs with random filename; return the full path."""
+        try:
+            async with httpx.AsyncClient() as client:
+                r = await client.get(url, timeout=60)
+                r.raise_for_status()
+                data = r.content
 
             random_filename = f"design_{width}x{height}_{uuid.uuid4().hex[:8]}.png"
             full_path = f"{self.designs_dir}/{random_filename}"
-
-            await self.sandbox.fs.upload_file(image_data, full_path)
-            
+            await self.sandbox.fs.upload_file(data, full_path)
             return full_path
-
         except Exception as e:
-            return self.fail_response(f"Failed to save design: {str(e)}") 
+            return self.fail_response(f"Failed to download and save Fal image: {str(e)}")

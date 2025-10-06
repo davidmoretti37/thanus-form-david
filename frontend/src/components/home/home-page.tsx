@@ -1,27 +1,18 @@
 import { FC } from 'react';
-import { useHomeContent } from '@/hooks/use-home-content';
-import { CTASection } from './sections/cta-section';
+import Orb from '@/components/home/ui/Orb';
 import { FooterSection } from './sections/footer-section';
-import { HeroSection } from './sections/hero-section';
-import { OpenSourceSection } from './sections/open-source-section';
-import { PricingSection } from './sections/pricing-section';
-import { BentoSection } from './sections/bento-section';
-import { CapabilitiesSection } from './sections/capabilities-section';
+import HeroScrollDemo from '@/components/home/HeroScrollDemo';
 
 export const HomePage: FC = () => {
-  const { siteConfig } = useHomeContent();
-  
   return (
-    <div className="w-full divide-y divide-border">
-      <HeroSection hero={siteConfig.hero} cta={siteConfig.cta} />
-      <CapabilitiesSection />
-      <BentoSection />
-      <OpenSourceSection />
-      <PricingSection 
-        title={siteConfig.pricing.title}
-        description={siteConfig.pricing.description}
-      />
-      <CTASection />
+    <div className="w-full flex flex-col items-center gap-8">
+      <HeroScrollDemo />
+      {/* Blue brand circle */}
+      <div className="w-full max-w-5xl mx-auto px-4 h-[420px]">
+        <Orb />
+      </div>
+
+      {/* Footer items */}
       <FooterSection />
     </div>
   );

@@ -235,6 +235,45 @@
       background-position: calc(100% + var(--shiny-width)) 0;
     }
   }
+
+  --animate-background-gradient: background-gradient var(--background-gradient-speed, 15s) cubic-bezier(0.445, 0.05, 0.55, 0.95) infinite;
+
+  @keyframes background-gradient {
+    0%, 100% {
+      transform: translate(0, 0);
+      animationDelay: var(--background-gradient-delay, 0s);
+    }
+    20% {
+      transform: translate(calc(100% * var(--tx-1, 1)), calc(100% * var(--ty-1, 1)));
+    }
+    40% {
+      transform: translate(calc(100% * var(--tx-2, -1)), calc(100% * var(--ty-2, 1)));
+    }
+    60% {
+      transform: translate(calc(100% * var(--tx-3, 1)), calc(100% * var(--ty-3, -1)));
+    }
+    80% {
+      transform: translate(calc(100% * var(--tx-4, -1)), calc(100% * var(--ty-4, -1)));
+    }
+  }
+  @keyframes background-gradient {
+  0%, 100% {
+    transform: translate(0, 0);
+    animationDelay: var(--background-gradient-delay, 0s);
+    }
+  20% {
+    transform: translate(calc(100% * var(--tx-1, 1)), calc(100% * var(--ty-1, 1)));
+    }
+  40% {
+    transform: translate(calc(100% * var(--tx-2, -1)), calc(100% * var(--ty-2, 1)));
+    }
+  60% {
+    transform: translate(calc(100% * var(--tx-3, 1)), calc(100% * var(--ty-3, -1)));
+    }
+  80% {
+    transform: translate(calc(100% * var(--tx-4, -1)), calc(100% * var(--ty-4, -1)));
+    }
+  }
 }
 
 :root {
@@ -440,11 +479,11 @@
     text-decoration: underline;
     text-underline-offset: 3px;
     text-decoration-thickness: 1px;
-    
+
     &:hover {
       text-decoration-thickness: 2px;
     }
-    
+
     /* External link indicator */
     &[target="_blank"]:after {
       content: " ↗";
@@ -452,14 +491,14 @@
       opacity: 0.7;
       margin-left: 2px;
     }
-    
+
     /* Special styling for URLs that look like previews */
     &[href*="preview"]:before,
     &[href*="demo"]:before {
       content: "🔗 ";
       opacity: 0.8;
     }
-    
+
     /* Live preview styling */
     &[href*="Live Preview"]:before {
       content: "📺 ";
@@ -487,7 +526,6 @@
     padding: 0.5em 0.75em;
     border: 1px solid theme('colors.slate.200');
   }
-
 
   /* Dark mode specific overrides */
   .dark & {
@@ -700,8 +738,6 @@
 .react-colorful__interactive:focus .react-colorful__pointer {
   transform: scale(1.1);
 }
-
-
 
 .tiptap {
   :first-child {
