@@ -1,7 +1,7 @@
 from tavily import AsyncTavilyClient
 import httpx
 from dotenv import load_dotenv
-from core.agentpress.tool import Tool, ToolResult, openapi_schema, usage_example
+from core.agentpress.tool import Tool, ToolResult, openapi_schema
 from core.utils.config import config
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager

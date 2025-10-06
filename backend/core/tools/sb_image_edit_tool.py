@@ -1,5 +1,5 @@
-from typing import Optional, Any
-from core.agentpress.tool import ToolResult, openapi_schema, usage_example
+from typing import Optional
+from core.agentpress.tool import ToolResult, openapi_schema
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager
 import httpx
@@ -81,27 +81,6 @@ class SandboxImageEditTool(SandboxToolsBase):
             },
         }
     )
-    @usage_example("""
-        Generate mode example (Fal AI):
-        <function_calls>
-        <invoke name="image_edit_or_generate">
-        <parameter name="mode">generate</parameter>
-        <parameter name="prompt">A futuristic cityscape at sunset, ultra-detailed</parameter>
-        <parameter name="fal_model">fal-ai/flux-pro</parameter>
-        </invoke>
-        </function_calls>
-        
-        Edit mode example (Fal AI img2img):
-        <function_calls>
-        <invoke name="image_edit_or_generate">
-        <parameter name="mode">edit</parameter>
-        <parameter name="prompt">Add a red hat to the person in the image</parameter>
-        <parameter name="image_path">generated_image_abc123.png</parameter>
-        <parameter name="fal_model">fal-ai/stable-diffusion-xl</parameter>
-        <parameter name="strength">0.6</parameter>
-        </invoke>
-        </function_calls>
-        """)
     async def image_edit_or_generate(
         self,
         mode: str,
