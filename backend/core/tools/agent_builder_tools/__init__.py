@@ -2,6 +2,7 @@ from .base_tool import AgentBuilderBaseTool
 from .agent_config_tool import AgentConfigTool
 from .mcp_search_tool import MCPSearchTool
 from .credential_profile_tool import CredentialProfileTool
+from .workflow_tool import WorkflowTool
 from .trigger_tool import TriggerTool
 from typing import List, Type, Dict, Any
 from core.agentpress.thread_manager import ThreadManager
@@ -16,6 +17,7 @@ class AgentBuilderToolRegistry:
             'agent_config': AgentConfigTool,
             'mcp_search': MCPSearchTool,
             'credential_profile': CredentialProfileTool,
+            'workflow': WorkflowTool,
             'trigger': TriggerTool,
         }
     
@@ -62,6 +64,7 @@ __all__ = [
     'AgentConfigTool',
     'MCPSearchTool',
     'CredentialProfileTool',
+    'WorkflowTool',
     'AgentBuilderToolRegistry',
     'agent_builder_registry'
 ]

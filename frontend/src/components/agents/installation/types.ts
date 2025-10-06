@@ -1,18 +1,8 @@
-export interface UsageExampleMessage {
-  role: 'user' | 'assistant';
-  content: string;
-  tool_calls?: Array<{
-    name: string;
-    arguments?: Record<string, any>;
-  }>;
-}
-
 export interface MarketplaceTemplate {
   id: string;
   creator_id: string;
   name: string;
   description: string;
-  system_prompt?: string;
   tags: string[];
   download_count: number;
   creator_name: string;
@@ -36,7 +26,6 @@ export interface MarketplaceTemplate {
     source?: 'trigger' | 'tool';
     trigger_index?: number;
   }>;
-  usage_examples?: UsageExampleMessage[];
   metadata?: {
     source_agent_id?: string;
     source_version_id?: string;

@@ -648,9 +648,11 @@ class CreateComposioTriggerRequest(BaseModel):
     profile_id: str
     slug: str
     trigger_config: Dict[str, Any]
-    route: str  # 'agent'
+    route: str  # 'agent' | 'workflow'
     name: Optional[str] = None
     agent_prompt: Optional[str] = None
+    workflow_id: Optional[str] = None
+    workflow_input: Optional[Dict[str, Any]] = None
     connected_account_id: Optional[str] = None
     webhook_url: Optional[str] = None
     toolkit_slug: Optional[str] = None
@@ -808,12 +810,20 @@ async def create_composio_trigger(req: CreateComposioTriggerRequest, current_use
             "composio_trigger_id": composio_trigger_id,
             "trigger_slug": req.slug,
             "qualified_name": qualified_name,  # Store the qualified_name for template export
+            "execution_type": req.route if req.route in ("agent", "workflow") else "agent",
             "profile_id": req.profile_id,
             # Include the actual trigger configuration (interval, etc.)
             **coerced_config,
         }
-        if req.agent_prompt:
-            suna_config["agent_prompt"] = req.agent_prompt
+        if suna_config["execution_type"] == "agent":
+            if req.agent_prompt:
+                suna_config["agent_prompt"] = req.agent_prompt
+        else:
+            if not req.workflow_id:
+                raise HTTPException(status_code=400, detail="workflow_id is required for workflow route")
+            suna_config["workflow_id"] = req.workflow_id
+            if req.workflow_input:
+                suna_config["workflow_input"] = req.workflow_input
 
         # Create Tars trigger
         trigger_service = get_trigger_service(db)
@@ -1000,7 +1010,7 @@ async def composio_webhook(request: Request):
             if not trigger_id:
                 continue
             result = await trigger_service.process_trigger_event(trigger_id, payload)
-            if result.success and result.should_execute_agent:
+            if result.success and (result.should_execute_agent or result.should_execute_workflow):
                 trigger = await trigger_service.get_trigger(trigger_id)
                 if not trigger:
                     continue

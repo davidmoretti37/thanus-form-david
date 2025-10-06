@@ -9,7 +9,9 @@ interface UpcomingRun {
   next_run_time_local: string;
   timezone: string;
   cron_expression: string;
+  execution_type: string;
   agent_prompt?: string;
+  workflow_id?: string;
   is_active: boolean;
   human_readable: string;
 }

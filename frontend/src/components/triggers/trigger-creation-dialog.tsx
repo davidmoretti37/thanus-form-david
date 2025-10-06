@@ -41,7 +41,8 @@ export function TriggerCreationDialog({
   const [name, setName] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [config, setConfig] = useState<ScheduleTriggerConfig>({
-    cron_expression: ''
+    cron_expression: '',
+    execution_type: 'agent'
   });
   const createTriggerMutation = useCreateTrigger();
   const updateTriggerMutation = useUpdateTrigger();
@@ -52,7 +53,7 @@ export function TriggerCreationDialog({
       setSelectedAgent(existingTrigger.agent_id || '');
       setName(existingTrigger.name || '');
       setDescription(existingTrigger.description || '');
-      setConfig(existingTrigger.config || { cron_expression: '' });
+      setConfig(existingTrigger.config || { cron_expression: '', execution_type: 'agent' });
       // Skip agent selection step in edit mode
       setStep('config');
     }

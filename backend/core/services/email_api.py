@@ -6,7 +6,7 @@ from core.services.email import email_service
 from core.utils.logger import logger
 from core.utils.auth_utils import verify_admin_api_key
 
-router = APIRouter(tags=["email"])
+router = APIRouter()
 
 class SendWelcomeEmailRequest(BaseModel):
     email: EmailStr

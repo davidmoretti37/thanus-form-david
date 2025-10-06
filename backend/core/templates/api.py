@@ -23,22 +23,15 @@ from .installation_service import (
 )
 from .utils import format_template_for_response
 
-router = APIRouter(tags=["templates"])
+router = APIRouter()
 
 db: Optional[DBConnection] = None
-
-
-class UsageExampleMessage(BaseModel):
-    role: str
-    content: str
-    tool_calls: Optional[List[Dict[str, Any]]] = None
 
 
 class CreateTemplateRequest(BaseModel):
     agent_id: str
     make_public: bool = False
     tags: Optional[List[str]] = None
-    usage_examples: Optional[List[UsageExampleMessage]] = None
 
 
 class InstallTemplateRequest(BaseModel):
@@ -51,7 +44,6 @@ class InstallTemplateRequest(BaseModel):
 
 class PublishTemplateRequest(BaseModel):
     tags: Optional[List[str]] = None
-    usage_examples: Optional[List[UsageExampleMessage]] = None
 
 
 class TemplateResponse(BaseModel):
@@ -73,7 +65,6 @@ class TemplateResponse(BaseModel):
     icon_background: Optional[str] = None
     metadata: Dict[str, Any]
     creator_name: Optional[str] = None
-    usage_examples: Optional[List[UsageExampleMessage]] = None
 
 
 class InstallationResponse(BaseModel):
@@ -147,16 +138,11 @@ async def create_template_from_agent(
         
         template_service = get_template_service(db)
         
-        usage_examples = None
-        if request.usage_examples:
-            usage_examples = [msg.dict() for msg in request.usage_examples]
-        
         template_id = await template_service.create_from_agent(
             agent_id=request.agent_id,
             creator_id=user_id,
             make_public=request.make_public,
-            tags=request.tags,
-            usage_examples=usage_examples
+            tags=request.tags
         )
         
         logger.debug(f"Successfully created template {template_id} from agent {request.agent_id}")
@@ -195,15 +181,7 @@ async def publish_template(
         
         template_service = get_template_service(db)
         
-        usage_examples = None
-        if request.usage_examples:
-            usage_examples = [msg.dict() for msg in request.usage_examples]
-        
-        success = await template_service.publish_template(
-            template_id, 
-            user_id,
-            usage_examples=usage_examples
-        )
+        success = await template_service.publish_template(template_id, user_id)
         
         if not success:
             logger.warning(f"Failed to publish template {template_id} for user {user_id}")
@@ -379,7 +357,7 @@ async def get_marketplace_templates(
     request: Request = None
 ):
     try:
-        from core.templates.services.marketplace_service import MarketplaceService, MarketplaceFilters
+        from core.templates.services.template_service import TemplateService, MarketplaceFilters
         creator_id_filter = None
         if mine:
             try:
@@ -409,8 +387,8 @@ async def get_marketplace_templates(
         )
         
         client = await db.client
-        marketplace_service = MarketplaceService(client)
-        paginated_result = await marketplace_service.get_marketplace_templates_paginated(
+        template_service = TemplateService(client)
+        paginated_result = await template_service.get_marketplace_templates_paginated(
             pagination_params=pagination_params,
             filters=filters
         )
@@ -451,7 +429,7 @@ async def get_my_templates(
     user_id: str = Depends(verify_and_get_user_id_from_jwt)
 ):
     try:
-        from core.templates.services.marketplace_service import MarketplaceService, MarketplaceFilters
+        from core.templates.services.template_service import TemplateService, MarketplaceFilters
         
         pagination_params = PaginationParams(
             page=page,
@@ -466,9 +444,9 @@ async def get_my_templates(
         )
         
         client = await db.client
-        marketplace_service = MarketplaceService(client)
+        template_service = TemplateService(client)
         
-        paginated_result = await marketplace_service.get_user_templates_paginated(
+        paginated_result = await template_service.get_user_templates_paginated(
             pagination_params=pagination_params,
             filters=filters
         )

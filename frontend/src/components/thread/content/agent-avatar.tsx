@@ -1,17 +1,13 @@
 'use client';
 
 import React from 'react';
-import { useAgentFromCache } from '@/hooks/react-query/agents/use-agents';
+import { useAgent } from '@/hooks/react-query/agents/use-agents';
 import { KortixLogo } from '@/components/sidebar/kortix-logo';
 import { DynamicIcon } from 'lucide-react/dynamic';
 import { cn } from '@/lib/utils';
-import type { Agent } from '@/hooks/react-query/agents/utils';
 
 interface AgentAvatarProps {
-  // For passing agent data directly (preferred - no fetch)
-  agent?: Agent;
-  
-  // For fetching agent by ID (will use cache if available)
+  // For fetching agent by ID
   agentId?: string;
   fallbackName?: string;
   
@@ -28,8 +24,7 @@ interface AgentAvatarProps {
 }
 
 export const AgentAvatar: React.FC<AgentAvatarProps> = ({ 
-  // Agent data props
-  agent: propAgent,
+  // Agent fetch props
   agentId, 
   fallbackName = "Suna",
   
@@ -44,9 +39,7 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   size = 16, 
   className = ""
 }) => {
-  // Try to get agent from cache if agentId is provided and agent prop is not
-  const cachedAgent = useAgentFromCache(!propAgent && agentId ? agentId : undefined);
-  const agent = propAgent || cachedAgent;
+  const { data: agent, isLoading } = useAgent(agentId || '');
 
   // Determine values from props or agent data
   const iconName = propIconName ?? agent?.icon_name;
@@ -61,8 +54,8 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
     borderRadius: `${Math.min(size * 0.25, 16)}px` // 25% of size, max 16px
   };
 
-  // Show skeleton when no data is available
-  if (!agent && !propIconName && !propIsSunaDefault && agentId) {
+  // Show skeleton for loading state or when no data is available
+  if ((isLoading && agentId) || (!agent && !agentId && !propIconName && !propIsSunaDefault)) {
     return (
       <div 
         className={cn("bg-muted animate-pulse border", className)}
@@ -127,18 +120,19 @@ export const AgentAvatar: React.FC<AgentAvatarProps> = ({
 };
 
 interface AgentNameProps {
-  agent?: Agent;
   agentId?: string;
   fallback?: string;
 }
 
 export const AgentName: React.FC<AgentNameProps> = ({ 
-  agent: propAgent,
   agentId, 
   fallback = "Tars" 
 }) => {
-  const cachedAgent = useAgentFromCache(!propAgent && agentId ? agentId : undefined);
-  const agent = propAgent || cachedAgent;
+  const { data: agent, isLoading } = useAgent(agentId || '');
+
+  if (isLoading && agentId) {
+    return <span className="text-muted-foreground">Loading...</span>;
+  }
 
   return <span>{agent?.name || fallback}</span>;
 };

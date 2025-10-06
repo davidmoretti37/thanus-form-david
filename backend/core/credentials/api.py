@@ -16,7 +16,7 @@ from .profile_service import (
 )
 from .utils import validate_config_not_empty, decode_mcp_qualified_name, extract_config_keys
 
-router = APIRouter(tags=["credentials"])
+router = APIRouter()
 
 db: Optional[DBConnection] = None
 

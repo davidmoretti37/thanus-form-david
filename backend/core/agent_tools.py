@@ -16,7 +16,7 @@ from typing import List, Dict, Any, Optional
 from uuid import UUID
 from pydantic import BaseModel
 
-router = APIRouter(tags=["agent-tools"])
+router = APIRouter()
 
 class PipedreamToolConfig(BaseModel):
     name: str
@@ -27,7 +27,7 @@ class PipedreamToolConfig(BaseModel):
 class PipedreamToolUpdateRequest(BaseModel):
     tools: List[PipedreamToolConfig]
 
-@router.get("/agents/{agent_id}/custom-mcp-tools", summary="Get Agent Custom MCP Tools", operation_id="get_agent_custom_mcp_tools")
+@router.get("/agents/{agent_id}/custom-mcp-tools")
 async def get_custom_mcp_tools_for_agent(
     agent_id: str,
     request: Request,
@@ -117,7 +117,7 @@ async def get_custom_mcp_tools_for_agent(
         logger.error(f"Error getting custom MCP tools for agent {agent_id}: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.post("/agents/{agent_id}/custom-mcp-tools", summary="Update Agent Custom MCP Tools", operation_id="update_agent_custom_mcp_tools")
+@router.post("/agents/{agent_id}/custom-mcp-tools")
 async def update_custom_mcp_tools_for_agent(
     agent_id: str,
     request: dict,
@@ -500,7 +500,7 @@ async def update_agent_custom_mcps(
         logger.error(f"Error updating agent custom MCPs: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
-@router.get("/agents/{agent_id}/tools", summary="Get Agent Tools", operation_id="get_agent_tools")
+@router.get("/agents/{agent_id}/tools")
 async def get_agent_tools(
     agent_id: str,
     user_id: str = Depends(verify_and_get_user_id_from_jwt)

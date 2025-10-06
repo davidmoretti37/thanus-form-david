@@ -17,24 +17,25 @@ from core.services.api_keys import (
     APIKeyResponse,
     APIKeyCreateResponse,
 )
+from core.services.supabase import DBConnection
 from core.utils.auth_utils import verify_and_get_user_id_from_jwt
 from core.utils.logger import logger
 
-router = APIRouter(tags=["api-keys"])
+router = APIRouter()
 
 
 async def get_api_key_service() -> APIKeyService:
     """Dependency to get API key service instance"""
-    from core.utils.db_helpers import get_db
-    db = await get_db()
+    db = DBConnection()
+    await db.initialize()
     return APIKeyService(db)
 
 
 async def get_account_id_from_user_id(user_id: str) -> UUID:
     """Get account ID from user ID using basejump accounts table"""
     try:
-        from core.utils.db_helpers import get_db
-        db = await get_db()
+        db = DBConnection()
+        await db.initialize()
         client = await db.client
 
         # Query the basejump.accounts table for the user's primary account

@@ -33,6 +33,9 @@ export default function CreateAgentScheduledTriggerToolView({
     name: triggerName,
     description,
     cron_expression,
+    execution_type,
+    workflow_id,
+    workflow_input,
     agent_prompt,
     trigger,
     actualIsSuccess,
@@ -47,6 +50,7 @@ export default function CreateAgentScheduledTriggerToolView({
   );
 
   const toolTitle = getToolTitle(name);
+  const isWorkflowExecution = execution_type === 'workflow';
 
   const formatCronExpression = (cron: string): string => {
     const cronMap: Record<string, string> = {
@@ -130,8 +134,12 @@ export default function CreateAgentScheduledTriggerToolView({
                       {trigger.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                     <Badge variant="outline" className="text-xs border-purple-200 text-purple-700 bg-purple-50">
-                      <Bot className="h-3 w-3 mr-1" />
-                      Agent
+                      {isWorkflowExecution ? (
+                        <FileText className="h-3 w-3 mr-1" />
+                      ) : (
+                        <Bot className="h-3 w-3 mr-1" />
+                      )}
+                      {execution_type}
                     </Badge>
                   </div>
                 </div>
@@ -163,8 +171,26 @@ export default function CreateAgentScheduledTriggerToolView({
                   </div>
                 </div>
 
+                {isWorkflowExecution && workflow_input && Object.keys(workflow_input).length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-3">
+                      <p className="text-sm font-medium text-foreground">Workflow Input Parameters</p>
+                      <div className="space-y-2">
+                        {Object.entries(workflow_input).map(([key, value]) => (
+                          <div key={key} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-foreground">{key}</p>
+                              <p className="text-xs text-muted-foreground font-mono">{String(value)}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
 
-                {agent_prompt && (
+                {!isWorkflowExecution && agent_prompt && (
                   <>
                     <Separator />
                     <div className="space-y-3">

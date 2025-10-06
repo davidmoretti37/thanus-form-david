@@ -53,6 +53,7 @@ SUNA_CONFIG = {
         "agent_creation_tool": True,
         "mcp_search_tool": True,
         "credential_profile_tool": True,
+        "workflow_tool": True,
         "trigger_tool": True
     },
     "is_default": True

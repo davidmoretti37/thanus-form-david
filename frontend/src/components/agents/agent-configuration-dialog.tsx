@@ -31,6 +31,7 @@ import {
   Wrench,
   Server,
   BookOpen,
+  Workflow,
   Zap,
   Download,
   Loader2,
@@ -56,6 +57,7 @@ import { AgentToolsConfiguration } from './agent-tools-configuration';
 import { GranularToolConfiguration } from './tools/granular-tool-configuration';
 import { AgentMCPConfiguration } from './agent-mcp-configuration';
 import { AgentKnowledgeBaseManager } from './knowledge-base/agent-kb-tree';
+import { AgentPlaybooksConfiguration } from './playbooks/agent-playbooks-configuration';
 import { AgentTriggersConfiguration } from './triggers/agent-triggers-configuration';
 import { AgentAvatar } from '../thread/content/agent-avatar';
 import { AgentIconEditorDialog } from './config/agent-icon-editor-dialog';
@@ -66,7 +68,7 @@ interface AgentConfigurationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   agentId: string;
-  initialTab?: 'instructions' | 'tools' | 'integrations' | 'knowledge' | 'triggers';
+  initialTab?: 'instructions' | 'tools' | 'integrations' | 'knowledge' | 'playbooks' | 'triggers';
   onAgentChange?: (agentId: string) => void;
 }
 
@@ -372,6 +374,7 @@ export function AgentConfigurationDialog({
     { id: 'tools', label: 'Tools', icon: Wrench, disabled: isTarsAgent },
     { id: 'integrations', label: 'Integrations', icon: Server, disabled: false },
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen, disabled: false },
+    { id: 'playbooks', label: 'Playbooks', icon: Workflow, disabled: false },
     { id: 'triggers', label: 'Triggers', icon: Zap, disabled: false },
   ];
 
@@ -676,6 +679,12 @@ export function AgentConfigurationDialog({
                 <TabsContent value="knowledge" className="p-6 mt-0 flex flex-col h-full">
                   <div className="flex flex-col flex-1 min-h-0 h-full">
                     <AgentKnowledgeBaseManager agentId={agentId} agentName={formData.name || 'Agent'} />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="playbooks" className="p-6 mt-0 flex flex-col h-full">
+                  <div className="flex flex-col flex-1 min-h-0 h-full">
+                    <AgentPlaybooksConfiguration agentId={agentId} agentName={formData.name || 'Agent'} />
                   </div>
                 </TabsContent>
 
