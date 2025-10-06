@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any
 from core.agentpress.tool import ToolResult, openapi_schema
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager
