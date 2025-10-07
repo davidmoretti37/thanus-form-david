@@ -47,6 +47,7 @@ class InstallTemplateRequest(BaseModel):
     custom_system_prompt: Optional[str] = None
     profile_mappings: Optional[Dict[str, str]] = None
     custom_mcp_configs: Optional[Dict[str, Dict[str, Any]]] = None
+    trigger_configs: Optional[Dict[str, Dict[str, Any]]] = None
 
 
 class PublishTemplateRequest(BaseModel):
@@ -74,7 +75,7 @@ class TemplateResponse(BaseModel):
     metadata: Dict[str, Any]
     creator_name: Optional[str] = None
     usage_examples: Optional[List[UsageExampleMessage]] = None
-
+    config: Optional[Dict[str, Any]] = None
 
 class InstallationResponse(BaseModel):
     status: str
@@ -313,13 +314,16 @@ async def install_template(
         
         installation_service = get_installation_service(db)
         
+        logger.info(f"Installing template with trigger_configs: {request.trigger_configs}")
+        
         install_request = TemplateInstallationRequest(
             template_id=request.template_id,
             account_id=user_id,
             instance_name=request.instance_name,
             custom_system_prompt=request.custom_system_prompt,
             profile_mappings=request.profile_mappings,
-            custom_mcp_configs=request.custom_mcp_configs
+            custom_mcp_configs=request.custom_mcp_configs,
+            trigger_configs=request.trigger_configs
         )
         
         result = await installation_service.install_template(install_request)
@@ -365,6 +369,56 @@ class MarketplacePaginationInfo(BaseModel):
 class MarketplaceTemplatesResponse(BaseModel):
     templates: List[TemplateResponse]
     pagination: MarketplacePaginationInfo
+
+@router.get("/kortix-all", response_model=MarketplaceTemplatesResponse)
+async def get_all_kortix_templates(
+    request: Request = None
+):
+    try:
+        from core.templates.services.marketplace_service import MarketplaceService, MarketplaceFilters
+        
+        pagination_params = PaginationParams(
+            page=1,
+            page_size=1000
+        )
+        
+        filters = MarketplaceFilters(
+            is_kortix_team=True,
+            sort_by="download_count",
+            sort_order="desc"
+        )
+        
+        client = await db.client
+        marketplace_service = MarketplaceService(client)
+        paginated_result = await marketplace_service.get_marketplace_templates_paginated(
+            pagination_params=pagination_params,
+            filters=filters
+        )
+        
+        template_responses = []
+        for template_data in paginated_result.data:
+            template_response = TemplateResponse(**template_data)
+            template_responses.append(template_response)
+        
+        return MarketplaceTemplatesResponse(
+            templates=template_responses,
+            pagination=MarketplacePaginationInfo(
+                current_page=1,
+                page_size=len(template_responses),
+                total_items=len(template_responses),
+                total_pages=1,
+                has_next=False,
+                has_previous=False
+            )
+        )
+        
+    except Exception as e:
+        try:
+            error_str = str(e)
+        except Exception:
+            error_str = f"Error of type {type(e).__name__}"
+        logger.error(f"Error getting all Kortix templates: {error_str}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/marketplace", response_model=MarketplaceTemplatesResponse)
 async def get_marketplace_templates(
