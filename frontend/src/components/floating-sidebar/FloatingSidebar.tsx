@@ -40,7 +40,7 @@ export default function FloatingSidebar() {
   const router = useRouter();
   const { t } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const isExcalidrawFull = pathname === '/artefatos/criar';
+  const isFullArtifact = pathname === '/artefatos/criar' || pathname === '/artefatos/opencut';
   const { data: accounts } = useAccounts();
   const [showBillingModal, setShowBillingModal] = useState(false);
   
@@ -69,9 +69,7 @@ export default function FloatingSidebar() {
     { href: '/agents?tab=my-agents', icon: Bot, label: t('floatingSidebar.agents') },
     { href: '/knowledge', icon: Flower2, label: t('floatingSidebar.knowledge') },
     { href: '/multi-computer', icon: Monitor, label: t('floatingSidebar.multiComputer') },
-    { href: '/settings/whatsapp', icon: MessageSquare, label: t('floatingSidebar.whatsapp') },
     { href: '/settings/credentials', icon: Plug, label: t('floatingSidebar.integrations') },
-    { href: '/settings/billing', icon: Wrench, label: t('floatingSidebar.settings') },
   ];
   
   // Handle team selection
@@ -147,7 +145,7 @@ export default function FloatingSidebar() {
     <div
       className={cn(
         "fixed top-1/2 -translate-y-1/2 z-50 flex flex-col items-center justify-start w-[45px] py-2.5 gap-3 rounded-2xl border bg-background/85 backdrop-blur-lg shadow-lg dark:border-white/10 border-black/10",
-        isExcalidrawFull ? "right-4" : "left-4"
+        isFullArtifact ? "right-4" : "left-4"
       )}
       aria-label="Floating sidebar"
     >
@@ -382,6 +380,13 @@ export default function FloatingSidebar() {
                 <Link href="/settings/credentials" className="w-full">
                   <Plug className="h-4 w-4 mr-2" />
                   {t('floatingSidebar.integrations')}
+                </Link>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem asChild>
+                <Link href="/settings/whatsapp" className="w-full">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  {t('floatingSidebar.whatsapp')}
                 </Link>
               </DropdownMenuItem>
               

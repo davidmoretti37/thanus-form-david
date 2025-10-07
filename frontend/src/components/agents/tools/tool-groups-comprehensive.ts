@@ -183,18 +183,99 @@ export const TOOL_GROUPS: Record<string, ToolGroup> = {
 
   sb_image_edit_tool: {
     name: 'sb_image_edit_tool',
-    displayName: 'Image Editing',
-    description: 'Edit and manipulate images with AI',
+    displayName: 'Image',
+    description: 'Generate and edit images with AI',
     icon: 'ImageIcon',
     color: 'bg-pink-100 dark:bg-pink-800/50',
     toolClass: 'SandboxImageEditTool',
     enabled: true,
     methods: [
       {
-        name: 'image_edit_or_generate',
-        displayName: 'Edit or Generate Image',
-        description: 'Edit existing images or generate new ones with AI',
+        name: 'generate_image',
+        displayName: 'Generate Image (text → image)',
+        description: 'Generate new images from text prompts using AI',
         enabled: true,
+        settings: {
+          fal_model_generate: {
+            type: 'select',
+            label: 'Fal AI model for Generate (text → image)',
+            description: 'Select the model to use for image generation',
+            defaultValue: 'fal-ai/flux-pro/v1.1',
+            options: [
+              { value: 'fal-ai/flux-pro/v1.1', label: 'Flux Pro v1.1' },
+              { value: 'fal-ai/flux-pro/kontext/max/text-to-image', label: 'Flux Pro Kontext Max' },
+              { value: 'fal-ai/flux/dev', label: 'Flux Dev' },
+              { value: 'fal-ai/flux/schnell', label: 'Flux Schnell (Fast)' },
+            ],
+          },
+        },
+      },
+      {
+        name: 'edit_image',
+        displayName: 'Edit Image (img2img)',
+        description: 'Edit existing images or generate variations using AI',
+        enabled: true,
+        settings: {
+          fal_model_edit: {
+            type: 'select',
+            label: 'Fal AI model for Edit (img2img)',
+            description: 'Select the model to use for image editing',
+            defaultValue: 'fal-ai/flux-pro/v1.1/redux',
+            options: [
+              { value: 'fal-ai/flux-pro/v1.1/redux', label: 'Flux Pro v1.1 Redux' },
+              { value: 'fal-ai/qwen-image-edit-plus-lora', label: 'Qwen Image Edit Plus' },
+              { value: 'fal-ai/flux/dev/image-to-image', label: 'Flux Dev Image-to-Image' },
+            ],
+          },
+        },
+      },
+    ],
+  },
+
+  sb_video_tool: {
+    name: 'sb_video_tool',
+    displayName: 'Video',
+    description: 'Generate and edit videos with AI',
+    icon: 'Video',
+    color: 'bg-indigo-100 dark:bg-indigo-800/50',
+    toolClass: 'SandboxVideoTool',
+    enabled: true,
+    methods: [
+      {
+        name: 'generate_video',
+        displayName: 'Generate Video (text → video)',
+        description: 'Generate videos from text prompts using Fal AI',
+        enabled: true,
+        settings: {
+          fal_model_generate: {
+            type: 'select',
+            label: 'Fal AI model for Generate (text → video)',
+            description: 'Select the model to use for video generation',
+            defaultValue: 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video',
+            options: [
+              { value: 'fal-ai/kling-video/v2.5-turbo/pro/text-to-video', label: 'Kling Video v2.5 Turbo Pro' },
+              { value: 'fal-ai/sora-2/text-to-video', label: 'Sora 2 Text-to-Video' },
+            ],
+          },
+        },
+      },
+      {
+        name: 'edit_video',
+        displayName: 'Edit Video (vid2vid/img2vid)',
+        description: 'Edit existing videos or transform images to videos using Fal AI',
+        enabled: true,
+        settings: {
+          fal_model_edit: {
+            type: 'select',
+            label: 'Fal AI model for Edit (vid2vid/img2vid)',
+            description: 'Select the model to use for video editing (image-to-video)',
+            defaultValue: 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video',
+            options: [
+              { value: 'fal-ai/kling-video/v2.5-turbo/pro/image-to-video', label: 'Kling Video v2.5 Image-to-Video' },
+              { value: 'fal-ai/sora-2/image-to-video', label: 'Sora 2 Image-to-Video' },
+            ],
+          },
+        },
       },
     ],
   },
@@ -1153,8 +1234,8 @@ export function getAllToolGroups(): Record<string, ToolGroup> {
 
 export function hasGranularControl(toolName: string): boolean {
   const group = getToolGroup(toolName);
-  // Consider sb_image_edit_tool and sb_design_tool as "granular" to expose their settings panels
-  return group ? (group.methods.length > 1 || toolName === 'sb_image_edit_tool' || toolName === 'sb_design_tool') : false;
+  // Consider sb_image_edit_tool, sb_video_tool and sb_design_tool as "granular" to expose their settings panels
+  return group ? (group.methods.length > 1 || toolName === 'sb_image_edit_tool' || toolName === 'sb_video_tool' || toolName === 'sb_design_tool') : false;
 }
 
 export function getEnabledMethodsForTool(toolName: string, config: any): string[] {

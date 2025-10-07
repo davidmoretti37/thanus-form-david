@@ -17,6 +17,7 @@ import {
   FolderKanban,
   Cog,
   PenTool,
+  Film,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -25,7 +26,7 @@ import { useRouter } from 'next/navigation';
  * Visual limpo, moderno e futurista (glass + blur), com ícones em grid.
  */
 
-type MicroAppKey = 'calculator' | 'stopwatch' | 'recorder' | 'create' | 'comingSoon1' | 'comingSoon2';
+type MicroAppKey = 'calculator' | 'stopwatch' | 'recorder' | 'create' | 'opencut' | 'comingSoon1' | 'comingSoon2';
 
 type MicroApp = {
   key: MicroAppKey;
@@ -64,6 +65,14 @@ const APPS: MicroApp[] = [
     icon: <PenTool className="h-7 w-7" />,
     accent:
       'from-violet-500/60 to-indigo-400/60 text-violet-900 dark:text-violet-50 ring-violet-500/30',
+  },
+  {
+    key: 'opencut',
+    name: 'Video Editor',
+    icon: <Film className="h-7 w-7" />,
+    accent:
+      'from-pink-500/60 to-rose-400/60 text-pink-900 dark:text-pink-50 ring-pink-500/30',
+    description: 'Editor de vídeo',
   },
   {
     key: 'comingSoon1',
@@ -140,6 +149,8 @@ export default function ArtefatosPage() {
           onOpen={(k) => {
             if (k === 'create') {
               router.push('/artefatos/criar');
+            } else if (k === 'opencut') {
+              router.push('/artefatos/opencut');
             } else {
               setOpenKey(k);
             }

@@ -14,6 +14,7 @@ export const AGENTPRESS_TOOL_DEFINITIONS: Record<string, { enabled: boolean; des
     'image_search_tool': { enabled: true, description: 'Search for images using SERPER API with support for single and batch searches', icon: 'Image', color: 'bg-indigo-100 dark:bg-indigo-800/50' },
     'sb_vision_tool': { enabled: true, description: 'Vision and image processing capabilities for visual content analysis', icon: 'Eye', color: 'bg-pink-100 dark:bg-pink-800/50' },
     'sb_image_edit_tool': { enabled: true, description: 'Generate new images or edit existing images using OpenAI GPT Image 1', icon: 'Palette', color: 'bg-purple-100 dark:bg-purple-800/50' },
+    'sb_video_tool': { enabled: true, description: 'Generate and edit videos with Fal AI (text-to-video, vid2vid/img2vid)', icon: 'Video', color: 'bg-indigo-100 dark:bg-indigo-800/50' },
     'sb_presentation_outline_tool': { enabled: false, description: 'Create structured presentation outlines with slide descriptions and speaker notes', icon: 'ClipboardList', color: 'bg-purple-100 dark:bg-purple-800/50' },
     'sb_presentation_tool': { enabled: false, description: 'Create professional presentations with HTML slides, preview, and export capabilities', icon: 'Presentation', color: 'bg-violet-100 dark:bg-violet-800/50' },
 
@@ -84,6 +85,7 @@ export const getToolDisplayName = (toolName: string): string => {
       'sb_presentation_tool': 'Presentation Creator',
       'sb_docs_tool': 'Document Editor',
       'sb_design_tool': 'Design Tool',
+      'sb_video_tool': 'Video',
 
       'sb_sheets_tool': 'Spreadsheets',
       
