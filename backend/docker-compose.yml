@@ -22,7 +22,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=
+      - REDIS_PASSWORD=NKQ6TRkA9ZLnxuEQMDlx82hs2R
       - LOG_LEVEL=INFO
     logging:
       driver: "json-file"
@@ -58,7 +58,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=
+      - REDIS_PASSWORD=NKQ6TRkA9ZLnxuEQMDlx82hs2R
       - LOG_LEVEL=INFO
     logging:
       driver: "json-file"
@@ -83,7 +83,7 @@ services:
       - app-network
     command: redis-server /usr/local/etc/redis/redis.conf --appendonly yes --bind 0.0.0.0 --protected-mode no --maxmemory 8gb --maxmemory-policy allkeys-lru
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "NKQ6TRkA9ZLnxuEQMDlx82hs2R", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
