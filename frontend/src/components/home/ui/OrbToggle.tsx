@@ -19,7 +19,6 @@ const Orb = dynamic(() => import('./Orb'), {
 
 export function OrbToggle() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const {
     isActive,
@@ -36,20 +35,6 @@ export function OrbToggle() {
     setMounted(true);
   }, []);
 
-  // Busca API key do backend
-  useEffect(() => {
-    fetch('/api/voice-agent')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.apiKey) {
-          setApiKey(data.apiKey);
-        } else {
-          console.error('OpenAI API key not found');
-        }
-      })
-      .catch((err) => console.error('Failed to fetch API key:', err));
-  }, []);
-
   // Mostra erros via toast
   useEffect(() => {
     if (error) {
@@ -58,16 +43,8 @@ export function OrbToggle() {
   }, [error]);
 
   const handleOrbClick = async () => {
-    console.log('🔘 Orb clicked, isActive:', isActive, 'isConnected:', isConnected);
-    
-    if (!apiKey) {
-      toast.error('Chave API não configurada');
-      return;
-    }
-
     // Se já está ativo, apenas expande
     if (isActive) {
-      console.log('⚠️ Agent already active, just expanding');
       setIsExpanded(true);
       return;
     }
@@ -75,8 +52,7 @@ export function OrbToggle() {
     // Se não está ativo, conecta
     setIsExpanded(true);
     try {
-      console.log('🚀 Starting agent...');
-      await startAgent(apiKey);
+      await startAgent();
       toast.success('Assistente de voz ativada! Fale comigo.');
     } catch (err) {
       console.error('❌ Failed to start agent:', err);
@@ -85,10 +61,7 @@ export function OrbToggle() {
   };
 
   const handleBackdropClick = async () => {
-    console.log('👆 Backdrop clicked, isActive:', isActive);
-    
     if (isActive) {
-      console.log('🛑 Stopping agent...');
       await stopAgent();
       toast.info('Assistente de voz desativada');
     }
