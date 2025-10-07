@@ -123,14 +123,22 @@ const getAgentConnectedApps = (
 const isAppConnectedToAgent = (
   agent: any,
   appSlug: string,
-  profiles: ComposioProfile[] = []
+  profiles: ComposioProfile[] = [],
+  activeTab: TabType = 'composio'
 ): boolean => {
   if (!agent?.custom_mcps) return false;
 
   return agent.custom_mcps.some((mcpConfig: any) => {
     if (mcpConfig.config?.profile_id) {
-      const profile = profiles.find(p => p.profile_id === mcpConfig.config.profile_id);
-      return profile?.toolkit_slug === appSlug;
+      if (activeTab === 'composio') {
+        // For Composio, check by profile toolkit_slug
+        const profile = profiles.find(p => p.profile_id === mcpConfig.config.profile_id);
+        return profile?.toolkit_slug === appSlug;
+      } else {
+        // For Pipedream, check by app name_slug in the mcpConfig
+        // The mcpConfig.name should match the app's name_slug
+        return mcpConfig.type === 'pipedream' && mcpConfig.name === appSlug;
+      }
     }
     return false;
   });
@@ -1002,7 +1010,7 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
                               profiles={profilesByToolkit[app.slug] || []}
                               onConnect={() => handleConnect(app)}
                               onConfigure={(profile) => handleConfigure(app, profile)}
-                              isConnectedToAgent={isAppConnectedToAgent(agent, app.slug, profiles || [])}
+                              isConnectedToAgent={isAppConnectedToAgent(agent, app.slug, profiles || [], activeTab)}
                               currentAgentId={currentAgentId}
                               mode={mode}
                             />
