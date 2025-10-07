@@ -25,7 +25,7 @@ frontend/src/
 │   └── voice-agent-store.ts     # Store global Zustand
 ├── hooks/
 │   └── use-voice-agent.ts       # Hook React customizado
-├── app/api/voice-agent/
+├── app/frontend-api/voice-agent/
 │   └── route.ts                 # API route para obter chave OpenAI
 └── components/home/ui/
     └── OrbToggle.tsx            # Componente UI integrado
@@ -142,7 +142,7 @@ store.reset()
 ## 🔐 Segurança
 
 - A chave da OpenAI é armazenada apenas no backend (variáveis de ambiente)
-- A API route `/api/voice-agent` fornece a chave de forma segura
+- A API route `/frontend-api/voice-agent` fornece a chave de forma segura
 - Nunca exponha a chave no código frontend
 
 ## 📝 Personalização

@@ -80,7 +80,7 @@ export function ThreadComponent({ projectId, threadId, compact = false, configur
     setSelectedAgent,
     initializeFromAgents,
     getCurrentAgent,
-    isTarsAgent,
+    isEchoAgent,
   } = useAgentSelection();
 
   const { data: agentsResponse } = useAgents();

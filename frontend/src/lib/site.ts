@@ -1,7 +1,7 @@
 export const siteConfig = {
-  name: 'Tars',
+  name: 'Echo',
   url: 'https://tars.ai/',
-  description: 'Tars AI',
+  description: 'Echo AI',
   links: {
     twitter: 'https://x.com/tarsai',
     github: 'https://github.com/inventu-ai/tars/',

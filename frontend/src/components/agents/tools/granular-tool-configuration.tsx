@@ -26,7 +26,7 @@ interface GranularToolConfigurationProps {
   tools: Record<string, any>;
   onToolsChange: (tools: Record<string, any>) => void;
   disabled?: boolean;
-  isTarsAgent?: boolean;
+  isEchoAgent?: boolean;
   isLoading?: boolean;
 }
 
@@ -34,7 +34,7 @@ export const GranularToolConfiguration = ({
   tools, 
   onToolsChange, 
   disabled = false, 
-  isTarsAgent = false, 
+  isEchoAgent = false, 
   isLoading = false 
 }: GranularToolConfigurationProps) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -54,7 +54,7 @@ export const GranularToolConfiguration = ({
   };
 
   const handleToolSettingChange = (toolName: string, key: string, value: any) => {
-    if (disabled && isTarsAgent) {
+    if (disabled && isEchoAgent) {
       toast.error("Tools cannot be modified", {
         description: "Tars's default tools are managed centrally and cannot be changed.",
       });
@@ -133,7 +133,7 @@ export const GranularToolConfiguration = ({
       return;
     }
     
-    if (disabled && isTarsAgent) {
+    if (disabled && isEchoAgent) {
       toast.error("Tools cannot be modified", {
         description: "Tars's default tools are managed centrally and cannot be changed.",
       });
@@ -182,7 +182,7 @@ export const GranularToolConfiguration = ({
       return;
     }
     
-    if (disabled && isTarsAgent) {
+    if (disabled && isEchoAgent) {
       toast.error("Methods cannot be modified", {
         description: "Tars's default tool methods are managed centrally and cannot be changed.",
       });

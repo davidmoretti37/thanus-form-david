@@ -65,17 +65,17 @@ export function ConfigurationTab({
   isLoading = false,
 }: ConfigurationTabProps) {
 
-  const isTarsAgent = agentMetadata?.is_suna_default || false;
+  const isEchoAgent = agentMetadata?.is_suna_default || false;
 
   const mapAccordion = (val?: string) => {
-    if (val === 'instructions') return isTarsAgent ? 'integrations' : 'system';
-    if (isTarsAgent && (val === 'system' || val === 'tools')) {
+    if (val === 'instructions') return isEchoAgent ? 'integrations' : 'system';
+    if (isEchoAgent && (val === 'system' || val === 'tools')) {
       return 'integrations';
     }
     if (['system', 'tools', 'integrations', 'knowledge', 'triggers'].includes(val || '')) {
       return val!;
     }
-    return isTarsAgent ? 'integrations' : 'system';
+    return isEchoAgent ? 'integrations' : 'system';
   };
 
   const [openAccordion, setOpenAccordion] = React.useState<string>(mapAccordion(initialAccordion));
@@ -90,7 +90,7 @@ export function ConfigurationTab({
   const areToolsEditable = !isViewingOldVersion && (restrictions.tools_editable !== false);
 
   const handleSystemPromptChange = (value: string) => {
-    if (!isSystemPromptEditable && isTarsAgent) {
+    if (!isSystemPromptEditable && isEchoAgent) {
       toast.error("System prompt cannot be edited", {
         description: "Tars's system prompt is managed centrally and cannot be changed.",
       });
@@ -104,7 +104,7 @@ export function ConfigurationTab({
   };
 
   const handleToolsChange = (tools: Record<string, boolean | { enabled: boolean; description: string }>) => {
-    if (!areToolsEditable && isTarsAgent) {
+    if (!areToolsEditable && isEchoAgent) {
       toast.error("Tools cannot be modified", {
         description: "Tars's default tools are managed centrally and cannot be changed.",
       });
@@ -122,23 +122,23 @@ export function ConfigurationTab({
     <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto">
         <div className="px-8 py-0 space-y-3">
-          {isTarsAgent && (
+          {isEchoAgent && (
             <div className="p-4 bg-primary/10 border border-primary-200 rounded-xl">
               <div className="flex items-center gap-3 mb-2">
                 <div className="text-primary-600">
                   <KortixLogo size={20} />
                 </div>
-                <span className="font-semibold text-primary-800">Tars Default Agent</span>
+                <span className="font-semibold text-primary-800">Echo Default Agent</span>
               </div>
               <p className="text-sm text-primary-700">
-                This is Tars's default agent with centrally managed system prompt and tools.
+                This is Echo's default agent with centrally managed system prompt and tools.
                 You can customize integrations, knowledge base, and triggers to personalize your experience.
               </p>
             </div>
           )}
 
           <div className="space-y-3">
-            {!isTarsAgent && (
+            {!isEchoAgent && (
               <>
                 <div className="group overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/10" data-tour="model-section">
                   <button
@@ -239,7 +239,7 @@ export function ConfigurationTab({
                       tools={displayData.agentpress_tools}
                       onToolsChange={areToolsEditable ? handleToolsChange : () => { }}
                       disabled={!areToolsEditable}
-                      isTarsAgent={isTarsAgent}
+                      isEchoAgent={isEchoAgent}
                       isLoading={isLoading}
                     />
                   </div>

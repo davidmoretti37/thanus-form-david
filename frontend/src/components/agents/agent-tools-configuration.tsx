@@ -11,11 +11,11 @@ interface AgentToolsConfigurationProps {
   tools: Record<string, boolean | { enabled: boolean; description: string }>;
   onToolsChange: (tools: Record<string, boolean | { enabled: boolean; description: string }>) => void;
   disabled?: boolean;
-  isTarsAgent?: boolean;
+  isEchoAgent?: boolean;
   isLoading?: boolean;
 }
 
-export const AgentToolsConfiguration = ({ tools, onToolsChange, disabled = false, isTarsAgent = false, isLoading = false }: AgentToolsConfigurationProps) => {
+export const AgentToolsConfiguration = ({ tools, onToolsChange, disabled = false, isEchoAgent = false, isLoading = false }: AgentToolsConfigurationProps) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const getIconComponent = (iconName: string) => {
@@ -48,7 +48,7 @@ export const AgentToolsConfiguration = ({ tools, onToolsChange, disabled = false
       return;
     }
     
-    if (disabled && isTarsAgent) {
+    if (disabled && isEchoAgent) {
       toast.error("Tools cannot be modified", {
         description: "Tars's default tools are managed centrally and cannot be changed.",
       });

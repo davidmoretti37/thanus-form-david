@@ -4,14 +4,14 @@ import { siteConfig } from '@/lib/site';
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
-  keywords: ['Tars', 'Tars AI', 'AI', 'Agent', 'Open Source'],
+  keywords: ['Echo', 'Echo AI', 'AI', 'Agent', 'Open Source'],
   authors: [
     {
-      name: 'Tars Team',
+      name: 'Echo Team',
       url: 'https://tars.ai',
     },
   ],
-  creator: 'Tars Team',
+  creator: 'Echo Team',
   openGraph: {
     type: 'website',
     locale: 'en_US',

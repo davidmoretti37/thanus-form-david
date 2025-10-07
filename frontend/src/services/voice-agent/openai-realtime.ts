@@ -31,8 +31,8 @@ export class OpenAIRealtimeService {
     const store = useVoiceAgentStore.getState();
 
     try {
-      // Fetch ephemeral key from backend
-      const response = await fetch('/api/voice-agent/token');
+      // Fetch ephemeral key from frontend API
+      const response = await fetch('/frontend-api/voice-agent/token');
 
       if (!response.ok) {
         throw new Error('Failed to fetch ephemeral key from backend');

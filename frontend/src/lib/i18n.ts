@@ -366,17 +366,17 @@ export const translations = {
     'apiKeys.title': 'API Keys',
     'apiKeys.description': 'Manage your API keys for programmatic access to your account.',
     'apiKeys.noKeys': 'No API keys yet',
-    'apiKeys.noKeysDescription': 'Create your first API key to start using the Tars API programmatically. Each key includes a token prefix for secure authentication.',
+    'apiKeys.noKeysDescription': 'Create your first API key to start using the Echo API programmatically. Each key includes a token prefix for secure authentication.',
     'apiKeys.createKey': 'Create API Key',
     'apiKeys.viewDocumentation': 'View API Documentation',
-    'apiKeys.gettingStarted': 'Getting Started with Tars API',
-    'apiKeys.gettingStartedDescription': 'Learn how to integrate with Tars API using your API keys',
+    'apiKeys.gettingStarted': 'Getting Started with Echo API',
+    'apiKeys.gettingStartedDescription': 'Learn how to integrate with Echo API using your API keys',
     'apiKeys.step1.title': '1. Create an API Key',
-    'apiKeys.step1.description': 'Generate a new API key to authenticate your requests to the Tars API.',
+    'apiKeys.step1.description': 'Generate a new API key to authenticate your requests to the Echo API.',
     'apiKeys.step2.title': '2. Read the Documentation',
     'apiKeys.step2.description': 'Explore our API documentation to understand available endpoints and how to use them.',
     'apiKeys.step3.title': '3. Start Building',
-    'apiKeys.step3.description': 'Integrate Tars API into your applications and automate your workflows.',
+    'apiKeys.step3.description': 'Integrate Echo API into your applications and automate your workflows.',
     'apiKeys.copyKey': 'Copy Key',
     'apiKeys.keyCopied': 'Key copied to clipboard',
     'apiKeys.keyName': 'Key Name',
@@ -526,7 +526,7 @@ export const translations = {
     'apiModelDescriptions.helpfulAI': 'A helpful AI agent',
     'apiKeys.copy': 'Copy',
     'apiKeys.keySecurityWarning': 'For security reasons, we won\'t show this key again.',
-    'apiKeys.sdkBeta.title': 'Tars SDK & API',
+    'apiKeys.sdkBeta.title': 'Echo SDK & API',
     'apiKeys.sdkBeta.description': 'Our SDK and API are currently in beta. Use these API keys to integrate with our programmatic interface for building custom applications and automations.',
     'apiKeys.sdkBeta.viewDocumentation': 'View SDK Documentation',
     'apiKeys.tokenPrefixDescription': 'API keys use a token prefix for secure authentication',
@@ -1146,7 +1146,7 @@ export const translations = {
     'whatsapp.testPhoneNumber': 'Test Phone Number',
     'whatsapp.send': 'Send',    
   // Home Page - Site Config
-  'home.site.name': 'Tars',
+  'home.site.name': 'Echo',
   'home.site.description': 'The Generalist AI Worker that can act on your behalf.',
   'home.site.cta': 'Start Free',
 
@@ -1159,9 +1159,9 @@ export const translations = {
 
   // Hero Section
   'home.hero.badge': '100% OPEN SOURCE',
-  'home.hero.title': 'Tars – Build, manage and train your AI Workforce.',
-  'home.hero.description': 'Tars – open-source platform to build, manage and train your AI Workforce.',
-  'home.hero.inputPlaceholder': 'Ask Tars to...',
+  'home.hero.title': 'Echo – Build, manage and train your AI Workforce.',
+  'home.hero.description': 'Echo – open-source platform to build, manage and train your AI Workforce.',
+  'home.hero.inputPlaceholder': 'Ask Echo to...',
 
   // Pricing Section
   'home.pricing.title': 'Pricing',
@@ -1213,7 +1213,7 @@ export const translations = {
 
   // Companies Section
   'home.companies.title': 'Trusted by innovative teams',
-  'home.companies.description': 'Join companies using Tars to power their AI workforce',
+  'home.companies.description': 'Join companies using Echo to power their AI workforce',
 
   // CTA Section
   'home.ctaSection.title': 'Launch Your First AI Worker Today',
@@ -1224,7 +1224,7 @@ export const translations = {
   'home.cta.subtext': 'No credit card required',
 
   // Footer
-  'home.footer.tars': 'Tars',
+  'home.footer.tars': 'Echo',
   'home.footer.about': 'About',
   'home.footer.contact': 'Contact',
   'home.footer.careers': 'Careers',
@@ -1239,8 +1239,8 @@ export const translations = {
 
   // FAQ Section
   'home.faq.title': 'Frequently Asked Questions',
-  'home.faq.items.1.question': 'What is Tars?',
-  'home.faq.items.1.answer': 'Tars is an open-source platform to build, manage and train your AI Workforce.',
+  'home.faq.items.1.question': 'What is Echo?',
+  'home.faq.items.1.answer': 'Echo is an open-source platform to build, manage and train your AI Workforce.',
   'home.faq.items.6.question': 'How do I get started?',
   'home.faq.items.6.answer': 'Sign up for a free account and start building your AI workforce in minutes.',
 
@@ -1258,24 +1258,24 @@ export const translations = {
   'home.opensource.view_github': 'View on GitHub',
 
   // Home Page - Hero Section
-  'home.hero.title.prefix': 'Hire Tars for ',
+  'home.hero.title.prefix': 'Hire Echo for ',
   'home.hero.title.rotatingTexts': 'Research,Presentations,Docs,Spreadsheets,Design,Data Analysis,Email Management,Social Media,SEO,Lead Generation,Customer Support,Content Creation,Project Management,Sales,Marketing,Analytics',
   'home.hero.subtitle': 'Deploy AI Workers that run your business autonomously.',
-  'home.hero.chatPlaceholder': 'Give Tars a task to complete...',
+  'home.hero.chatPlaceholder': 'Give Echo a task to complete...',
   
   // Home Page - Bento Section
   'home.bento.title': 'Create a New AI Worker in 3 Simple Steps',
   'home.bento.subtitle': 'Customize powerful AI Workers to work on your tailored use cases.',
   'home.bento.items.0.title': 'Describe your needs',
-  'home.bento.items.0.description': 'Tell Tars what you need and customize your AI worker for your use cases.',
+  'home.bento.items.0.description': 'Tell Echo what you need and customize your AI worker for your use cases.',
   'home.bento.items.1.title': 'Connect 100s of tools',
   'home.bento.items.1.description': 'Connect to your favorite tools and services with our extensive library of integrations.',
   'home.bento.items.2.title': 'Deploy and personalize',
   'home.bento.items.2.description': 'Watch your agent handle complex tasks and workflows with advanced AI reasoning.',
 
   // Home Page - Capabilities Section
-  'home.capabilities.title': 'What Can Tars Do For You?',
-  'home.capabilities.subtitle': 'From content creation to data analysis, Tars handles the work that takes you hours in just minutes.',
+  'home.capabilities.title': 'What Can Echo Do For You?',
+  'home.capabilities.subtitle': 'From content creation to data analysis, Echo handles the work that takes you hours in just minutes.',
   'home.capabilities.documents.title': 'Create Professional Documents',
   'home.capabilities.documents.description': 'Generate reports, proposals, contracts, and presentations that look like they came from a top agency. PDF, Word, PowerPoint - any format you need.',
   'home.capabilities.design.title': 'Design Graphics & Visuals',
@@ -1291,9 +1291,9 @@ export const translations = {
   'home.capabilities.workflows.title': 'Manage Your Workflows',
   'home.capabilities.workflows.description': 'Set up automated processes for lead generation, customer follow-ups, content creation, and daily business operations.',
   'home.capabilities.availability.title': 'Work Around the Clock',
-  'home.capabilities.availability.description': 'Tars never sleeps. Schedule tasks to run overnight, on weekends, or whenever you need work done without being there.',
+  'home.capabilities.availability.description': 'Echo never sleeps. Schedule tasks to run overnight, on weekends, or whenever you need work done without being there.',
   'home.auth.signInTitle': 'Sign in to continue',
-  'home.auth.signInDescription': 'Sign in or create an account to talk with Tars',
+  'home.auth.signInDescription': 'Sign in or create an account to talk with Echo',
   'home.auth.orContinueWith': 'or continue with email',
   'home.auth.signInWithEmail': 'Sign in with email',
   'home.auth.createNewAccount': 'Create new account',
@@ -1459,15 +1459,15 @@ export const translations = {
     'home.bento.title': 'Crie um Novo Trabalhador de IA em 3 Passos Simples',
     'home.bento.subtitle': 'Personalize Trabalhadores de IA poderosos para atender às suas necessidades específicas.',
     'home.bento.items.0.title': 'Descreva suas necessidades',
-    'home.bento.items.0.description': 'Diga ao Tars o que você precisa e personalize seu trabalhador de IA para seus casos de uso.',
+    'home.bento.items.0.description': 'Diga ao Echo o que você precisa e personalize seu trabalhador de IA para seus casos de uso.',
     'home.bento.items.1.title': 'Conecte centenas de ferramentas',
     'home.bento.items.1.description': 'Conecte-se às suas ferramentas e serviços favoritos com nossa extensa biblioteca de integrações.',
     'home.bento.items.2.title': 'Implante e personalize',
     'home.bento.items.2.description': 'Veja seu agente lidar com tarefas e fluxos de trabalho complexos com raciocínio de IA avançado.',
     
     // Home Page - Capabilities Section
-    'home.capabilities.title': 'O que o Tars pode fazer por você?',
-    'home.capabilities.subtitle': 'Da criação de conteúdo à análise de dados, o Tars realiza em minutos o que levaria horas do seu tempo.',
+    'home.capabilities.title': 'O que o Echo pode fazer por você?',
+    'home.capabilities.subtitle': 'Da criação de conteúdo à análise de dados, o Echo realiza em minutos o que levaria horas do seu tempo.',
     'home.capabilities.documents.title': 'Crie Documentos Profissionais',
     'home.capabilities.documents.description': 'Gere relatórios, propostas, contratos e apresentações com qualidade de agência. PDF, Word, PowerPoint - no formato que você precisar.',
     'home.capabilities.design.title': 'Design de Gráficos e Visuais',
@@ -1483,7 +1483,7 @@ export const translations = {
     'home.capabilities.workflows.title': 'Gerencie Seus Fluxos de Trabalho',
     'home.capabilities.workflows.description': 'Configure processos automatizados para geração de leads, acompanhamento de clientes, criação de conteúdo e operações diárias do negócio.',
     'home.capabilities.availability.title': 'Trabalhe 24 Horas por Dia',
-    'home.capabilities.availability.description': 'O Tars nunca dorme. Agende tarefas para executar durante a noite, finais de semana ou sempre que precisar que o trabalho seja feito sem sua presença.',
+    'home.capabilities.availability.description': 'O Echo nunca dorme. Agende tarefas para executar durante a noite, finais de semana ou sempre que precisar que o trabalho seja feito sem sua presença.',
     'common.enterpriseDemo': 'Demonstração empresarial de funcionários de IA para sua empresa',
     'common.enterpriseDemoTitle': 'Demo Empresarial',
     'common.enterpriseDemoSubtitle': 'Funcionários de IA para sua empresa',
@@ -2169,13 +2169,13 @@ export const translations = {
     'apiKeys.title': 'Chaves de API',
     'apiKeys.description': 'Gerencie suas chaves de API para acesso programático à sua conta.',
     'apiKeys.noKeys': 'Nenhuma chave de API encontrada',
-    'apiKeys.noKeysDescription': 'Crie sua primeira chave de API para começar a usar a API Tars programaticamente. Cada chave inclui um prefixo de token para autenticação segura.',
+    'apiKeys.noKeysDescription': 'Crie sua primeira chave de API para começar a usar a API Echo programaticamente. Cada chave inclui um prefixo de token para autenticação segura.',
     'apiKeys.createKey': 'Criar Chave de API',
     'apiKeys.viewDocumentation': 'Ver Documentação da API',
-    'apiKeys.gettingStarted': 'Começando com a API Tars',
-    'apiKeys.gettingStartedDescription': 'Aprenda a integrar com a API Tars usando suas chaves de API',
+    'apiKeys.gettingStarted': 'Começando com a API Echo',
+    'apiKeys.gettingStartedDescription': 'Aprenda a integrar com a API Echo usando suas chaves de API',
     'apiKeys.step1.title': '1. Crie uma Chave de API',
-    'apiKeys.step1.description': 'Gere uma nova chave de API para autenticar suas requisições à API Tars.',
+    'apiKeys.step1.description': 'Gere uma nova chave de API para autenticar suas requisições à API Echo.',
     'apiKeys.step2.title': '2. Leia a Documentação',
     'apiKeys.step2.description': 'Explore nossa documentação para entender os endpoints disponíveis e como usá-los.',
     'apiKeys.step3.title': '3. Comece a Construir',
@@ -2221,7 +2221,7 @@ export const translations = {
     'apiDocs.lastExecution.agentRunId': 'ID de Execução do Agente',
     'apiDocs.lastExecution.projectId': 'ID do Projeto',
     'apiDocs.lastExecution.cleared': 'Dados de execução limpos',
-    'apiKeys.step3.description': 'Integre a API Tars em seus aplicativos e automatize seus fluxos de trabalho.',
+    'apiKeys.step3.description': 'Integre a API Echo em seus aplicativos e automatize seus fluxos de trabalho.',
 
     'apiKeys.helpTitle': 'Precisa de ajuda com a integração da API?',
     'apiKeys.helpText': 'Confira nossa {documentationLink} ou entre em contato com nossa {supportLink} para obter assistência.',
@@ -2317,7 +2317,7 @@ export const translations = {
     'apiModelDescriptions.helpfulAI': 'Um agente de IA prestativo',
     'apiKeys.copy': 'Copiar',
     'apiKeys.keySecurityWarning': 'Por motivos de segurança, não mostraremos esta chave novamente.',
-    'apiKeys.sdkBeta.title': 'Tars SDK & API',
+    'apiKeys.sdkBeta.title': 'Echo SDK & API',
     'apiKeys.sdkBeta.description': 'Nosso SDK e API estão atualmente em beta. Use essas chaves de API para se integrar com nossa interface programática para criar aplicativos e automações personalizadas.',
     'apiKeys.sdkBeta.viewDocumentation': 'Ver Documentação do SDK',
     'apiKeys.tokenPrefixDescription': 'As chaves de API usam um prefixo de token para autenticação segura',
@@ -2399,7 +2399,7 @@ export const translations = {
     'workflowDefinitions.toolsDescription': 'Usar ferramentas e integrações específicas',
     
     // Home Page - Site Config
-    'home.site.name': 'Tars',
+    'home.site.name': 'Echo',
     'home.site.description': 'O Trabalhador de IA Generalista que pode agir em seu nome.',
     'home.site.cta': 'Comece Grátis',
 
@@ -2412,9 +2412,9 @@ export const translations = {
 
     // Hero Section
     'home.hero.badge': '100% CÓDIGO ABERTO',
-    'home.hero.title': 'Tars – Construa, gerencie e treine sua Força de Trabalho de IA.',
-    'home.hero.description': 'Tars – plataforma de código aberto para construir, gerenciar e treinar sua Força de Trabalho de IA.',
-    'home.hero.inputPlaceholder': 'Pergunte ao Tars...',
+    'home.hero.title': 'Echo – Construa, gerencie e treine sua Força de Trabalho de IA.',
+    'home.hero.description': 'Echo – plataforma de código aberto para construir, gerenciar e treinar sua Força de Trabalho de IA.',
+    'home.hero.inputPlaceholder': 'Pergunte ao Echo...',
 
     // Pricing Section
     'home.pricing.plus.name': 'Plus',
@@ -2464,7 +2464,7 @@ export const translations = {
 
     // Companies Section
     'home.companies.title': 'Confiado por equipes inovadoras',
-    'home.companies.description': 'Junte-se a empresas que usam Tars para potencializar sua força de trabalho de IA',
+    'home.companies.description': 'Junte-se a empresas que usam Echo para potencializar sua força de trabalho de IA',
 
     // CTA Section
     'home.ctaSection.title': 'Lance Seu Primeiro Trabalhador de IA Hoje',
@@ -2475,7 +2475,7 @@ export const translations = {
     'home.cta.subtext': 'Sem necessidade de cartão de crédito',
 
     // Footer
-    'home.footer.tars': 'Tars',
+    'home.footer.tars': 'Echo',
     'home.footer.about': 'Sobre',
     'home.footer.contact': 'Contato',
     'home.footer.careers': 'Carreiras',
@@ -2490,8 +2490,8 @@ export const translations = {
 
     // FAQ Section
     'home.faq.title': 'Perguntas Frequentes',
-    'home.faq.items.1.question': 'O que é o Tars?',
-    'home.faq.items.1.answer': 'Tars é uma plataforma de código aberto para construir, gerenciar e treinar sua Força de Trabalho de IA.',
+    'home.faq.items.1.question': 'O que é o Echo?',
+    'home.faq.items.1.answer': 'Echo é uma plataforma de código aberto para construir, gerenciar e treinar sua Força de Trabalho de IA.',
     'home.faq.items.6.question': 'Como eu começo?',
     'home.faq.items.6.answer': 'Crie uma conta gratuita e comece a construir sua força de trabalho de IA em minutos.',
 
@@ -2510,12 +2510,12 @@ export const translations = {
     'workflowDefinitions.use': 'Usar',
     
     // Página Inicial
-    'home.hero.title.prefix': 'Contrate o Tars para ',
+    'home.hero.title.prefix': 'Contrate o Echo para ',
     'home.hero.title.rotatingTexts': 'Pesquisa,Apresentações,Documentos,Planilhas,Design,Análise de Dados,Gestão de E-mails,Mídias Sociais,SEO,Geração de Leads,Atendimento ao Cliente,Criação de Conteúdo,Gestão de Projetos,Vendas,Marketing,Análises',
     'home.hero.subtitle': 'Implante Trabalhadores de IA que gerenciam seu negócio de forma autônoma.',
-    'home.hero.chatPlaceholder': 'Dê uma tarefa para o Tars completar...',
+    'home.hero.chatPlaceholder': 'Dê uma tarefa para o Echo completar...',
     'home.auth.signInTitle': 'Faça login para continuar',
-    'home.auth.signInDescription': 'Faça login ou crie uma conta para conversar com o Tars',
+    'home.auth.signInDescription': 'Faça login ou crie uma conta para conversar com o Echo',
     'home.auth.orContinueWith': 'ou continue com e-mail',
     'home.auth.signInWithEmail': 'Entrar com e-mail',
     'home.auth.createNewAccount': 'Criar nova conta',
@@ -2652,7 +2652,7 @@ export const translations = {
     'apiEndpoints.listProjectsDescription': 'Obtiene una lista de proyectos en su espacio de trabajo. Incluye tanto proyectos creados manualmente a través del panel de control como proyectos generados automáticamente por ejecuciones de agentes. Utilice este endpoint para obtener una visión general de su trabajo y encontrar IDs de proyectos para otras operaciones.',
     'apiEndpoints.listProjectsResponse': 'Lista de proyectos del usuario',
     'apiEndpoints.executeDefaultAgent': 'Ejecutar Agente Predeterminado',
-    'apiEndpoints.executeDefaultAgentDescription': 'Ejecuta el agente predeterminado de Tars con un mensaje proporcionado. Si no hay un agente predeterminado configurado, el sistema utilizará el agente de propósito general integrado.',
+    'apiEndpoints.executeDefaultAgentDescription': 'Ejecuta el agente predeterminado de Echo con un mensaje proporcionado. Si no hay un agente predeterminado configurado, el sistema utilizará el agente de propósito general integrado.',
     'apiEndpoints.executeSpecificAgent': 'Ejecutar Agente Específico',
     'apiEndpoints.executeSpecificAgentDescription': 'Ejecuta un agente específico proporcionando su ID. Utilice el endpoint \'Listar Agentes\' para obtener los IDs de agentes disponibles. Esto le permite ejecutar agentes personalizados con capacidades y configuraciones especializadas.',
     'apiEndpoints.sendMessageToThread': 'Enviar Mensaje a Hilo',
@@ -2662,7 +2662,7 @@ export const translations = {
     'apiEndpoints.getAgentRunResult': 'Obtener Resultado de Ejecución de Agente',
     'apiEndpoints.getAgentRunResultDescription': 'Obtiene el estado y los resultados de una ejecución de agente específica. Utilice este endpoint para verificar el progreso de una tarea asíncrona o recuperar los resultados finales una vez completada. Incluye información detallada sobre el estado, los pasos realizados y cualquier salida generada.',
     'apiEndpoints.uploadFile': 'Subir Archivo',
-    'apiEndpoints.uploadFileDescription': 'Carga un archivo al almacenamiento de Tars y devuelve un ID de archivo que puede ser utilizado en otras solicitudes de API. Admite varios formatos de archivo, incluyendo documentos de texto, imágenes y archivos de datos. El archivo estará disponible para su uso en ejecuciones de agentes dentro de su espacio de trabajo.',
+    'apiEndpoints.uploadFileDescription': 'Carga un archivo al almacenamiento de Echo y devuelve un ID de archivo que puede ser utilizado en otras solicitudes de API. Admite varios formatos de archivo, incluyendo documentos de texto, imágenes y archivos de datos. El archivo estará disponible para su uso en ejecuciones de agentes dentro de su espacio de trabajo.',
     'apiEndpoints.downloadFile': 'Descargar Archivo',
     'apiEndpoints.downloadFileDescription': 'Descarga un archivo previamente cargado utilizando su ID de archivo. Útil para recuperar resultados generados por agentes o acceder a archivos cargados previamente. Asegúrese de tener los permisos adecuados para acceder al archivo solicitado.',
     'apiEndpoints.listFiles': 'Listar Archivos',
@@ -2718,11 +2718,11 @@ export const translations = {
     'apiEndpoints.updateIntegration': 'Actualizar Integración',
     'apiEndpoints.updateIntegrationDescription': 'Actualiza la configuración de una integración existente. Permite modificar credenciales, ajustar parámetros o cambiar el comportamiento de la integración. Los cambios suelen aplicarse inmediatamente.',
     'apiEndpoints.deleteIntegration': 'Eliminar Integración',
-    'apiEndpoints.deleteIntegrationDescription': 'Elimina permanentemente una integración de su cuenta. Esto revocará el acceso a la API de Tars para el servicio de terceros. Los agentes ya no podrán utilizar esta integración hasta que se vuelva a configurar.',
+    'apiEndpoints.deleteIntegrationDescription': 'Elimina permanentemente una integración de su cuenta. Esto revocará el acceso a la API de Echo para el servicio de terceros. Los agentes ya no podrán utilizar esta integración hasta que se vuelva a configurar.',
     'apiEndpoints.testIntegration': 'Probar Integración',
     'apiEndpoints.testIntegrationDescription': 'Prueba la conectividad y configuración de una integración sin realizar cambios en los datos. Verifica que las credenciales proporcionadas sean válidas y que el servicio de terceros sea accesible. Útil para solucionar problemas de conexión.',
     'apiEndpoints.listTemplates': 'Listar Plantillas',
-    'apiEndpoints.listTemplatesDescription': 'Obtiene una lista de plantillas de agentes disponibles. Las plantillas son configuraciones predefinidas que pueden usarse como punto de partida para crear nuevos agentes. Incluye plantillas oficiales de Tars y plantillas personalizadas que haya guardado.',
+    'apiEndpoints.listTemplatesDescription': 'Obtiene una lista de plantillas de agentes disponibles. Las plantillas son configuraciones predefinidas que pueden usarse como punto de partida para crear nuevos agentes. Incluye plantillas oficiales de Echo y plantillas personalizadas que haya guardado.',
     'apiEndpoints.getTemplateDetails': 'Obtener Detalles de la Plantilla',
     'apiEndpoints.getTemplateDetailsDescription': 'Obtiene información detallada sobre una plantilla de agente específica, incluyendo su configuración, capacidades y requisitos. Útil para inspeccionar los detalles de una plantilla antes de usarla para crear un nuevo agente.',
     'apiEndpoints.createAgentFromTemplate': 'Crear Agente desde Plantilla',
@@ -2764,11 +2764,11 @@ export const translations = {
     'apiEndpoints.getTrainingStatus': 'Obtener Estado del Entrenamiento',
     'apiEndpoints.getTrainingStatusDescription': 'Obtiene información sobre el estado actual del entrenamiento del modelo de conocimiento. Incluye métricas de progreso, como el porcentaje completado y el tiempo estimado restante. Útil para monitorear el progreso de las operaciones de entrenamiento en segundo plano.',
     'apiEndpoints.exportKnowledgeBase': 'Exportar Base de Conocimiento',
-    'apiEndpoints.exportKnowledgeBaseDescription': 'Genera un archivo de exportación que contiene todo el contenido de su base de conocimiento. El archivo puede usarse para hacer copias de seguridad o transferir conocimiento entre diferentes instancias de Tars. El formato de exportación incluye metadatos y relaciones entre elementos.',
+    'apiEndpoints.exportKnowledgeBaseDescription': 'Genera un archivo de exportación que contiene todo el contenido de su base de conocimiento. El archivo puede usarse para hacer copias de seguridad o transferir conocimiento entre diferentes instancias de Echo. El formato de exportación incluye metadatos y relaciones entre elementos.',
     'apiEndpoints.importKnowledgeBase': 'Importar Base de Conocimiento',
     'apiEndpoints.importKnowledgeBaseDescription': 'Importa una base de conocimiento a partir de un archivo de exportación previamente generado. Puede optar por fusionar con la base de conocimiento existente o reemplazarla por completo. La importación puede llevar tiempo, dependiendo del tamaño de los datos.',
     'apiEndpoints.listDataSources': 'Listar Fuentes de Datos',
-    'apiEndpoints.listDataSourcesDescription': 'Obtiene una lista de fuentes de datos configuradas en su espacio de trabajo. Las fuentes de datos pueden incluir bases de datos, APIs o sistemas de archivos a los que Tars puede conectarse para recuperar o almacenar información.',
+    'apiEndpoints.listDataSourcesDescription': 'Obtiene una lista de fuentes de datos configuradas en su espacio de trabajo. Las fuentes de datos pueden incluir bases de datos, APIs o sistemas de archivos a los que Echo puede conectarse para recuperar o almacenar información.',
     'apiEndpoints.createDataSource': 'Crear Fuente de Datos',
     'apiEndpoints.createDataSourceDescription': 'Configura una nueva conexión a una fuente de datos externa. Especifique el tipo de fuente de datos, los parámetros de conexión y cualquier configuración adicional necesaria. Una vez configurada, la fuente de datos estará disponible para su uso en agentes y flujos de trabajo.',
     'apiEndpoints.testDataSource': 'Probar Fuente de Datos',
@@ -2782,11 +2782,11 @@ export const translations = {
     'apiEndpoints.deleteDataSource': 'Eliminar Fuente de Datos',
     'apiEndpoints.deleteDataSourceDescription': 'Elimina permanentemente una fuente de datos de su espacio de trabajo. Esta acción no se puede deshacer. Los agentes y flujos de trabajo que dependan de esta fuente de datos ya no podrán acceder a ella hasta que se configure una nueva conexión.',
     'apiEndpoints.getSystemStatus': 'Obtener Estado del Sistema',
-    'apiEndpoints.getSystemStatusDescription': 'Obtiene información sobre el estado actual del sistema Tars, incluyendo el estado de los servicios, el uso de recursos y cualquier problema conocido. Útil para monitorear el rendimiento y la disponibilidad de la plataforma.',
+    'apiEndpoints.getSystemStatusDescription': 'Obtiene información sobre el estado actual del sistema Echo, incluyendo el estado de los servicios, el uso de recursos y cualquier problema conocido. Útil para monitorear el rendimiento y la disponibilidad de la plataforma.',
     'apiEndpoints.getApiDocumentation': 'Obtener Documentación de la API',
-    'apiEndpoints.getApiDocumentationDescription': 'Devuelve documentación detallada sobre la API de Tars, incluyendo descripciones de endpoints, parámetros, formatos de solicitud/respuesta y ejemplos de código. Útil para desarrolladores que integran con la API de Tars.',
+    'apiEndpoints.getApiDocumentationDescription': 'Devuelve documentación detallada sobre la API de Echo, incluyendo descripciones de endpoints, parámetros, formatos de solicitud/respuesta y ejemplos de código. Útil para desarrolladores que integran con la API de Echo.',
     'apiEndpoints.generateApiKey': 'Generar Clave de API',
-    'apiEndpoints.generateApiKeyDescription': 'Crea una nueva clave de API para la autenticación. Las claves de API permiten que aplicaciones externas interactúen con la API de Tars en su nombre. Asegúrese de almacenar la clave de forma segura, ya que solo se mostrará una vez.',
+    'apiEndpoints.generateApiKeyDescription': 'Crea una nueva clave de API para la autenticación. Las claves de API permiten que aplicaciones externas interactúen con la API de Echo en su nombre. Asegúrese de almacenar la clave de forma segura, ya que solo se mostrará una vez.',
     'apiEndpoints.listApiKeys': 'Listar Claves de API',
     'apiEndpoints.listApiKeysDescription': 'Obtiene una lista de las claves de API asociadas a su cuenta. Incluye información sobre cuándo se creó cada clave, cuándo se usó por última vez y a qué recursos tiene acceso. Las claves reales no se muestran por razones de seguridad.',
     'apiEndpoints.revokeApiKey': 'Revocar Clave de API',
@@ -2796,7 +2796,7 @@ export const translations = {
     'apiEndpoints.getAuditLogs': 'Obtener Registros de Auditoría',
     'apiEndpoints.getAuditLogsDescription': 'Recupera un registro de eventos relacionados con su cuenta, como inicios de sesión, cambios de configuración y operaciones realizadas a través de la API. Útil para fines de seguridad, cumplimiento y solución de problemas.',
     'apiEndpoints.webhook': 'Webhook',
-    'apiEndpoints.webhookDescription': 'Configura un webhook para recibir notificaciones en tiempo real sobre eventos específicos en su cuenta de Tars. Los webhooks permiten la integración con sistemas externos sin necesidad de sondeo constante.',
+    'apiEndpoints.webhookDescription': 'Configura un webhook para recibir notificaciones en tiempo real sobre eventos específicos en su cuenta de Echo. Los webhooks permiten la integración con sistemas externos sin necesidad de sondeo constante.',
     'apiEndpoints.listWebhooks': 'Listar Webhooks',
     'apiEndpoints.listWebhooksDescription': 'Obtiene una lista de todos los webhooks configurados para su cuenta. Incluye información sobre los eventos que activan cada webhook y la URL de destino a la que se envían las notificaciones.',
     'apiEndpoints.createWebhook': 'Crear Webhook',
@@ -2918,15 +2918,15 @@ export const translations = {
     'home.bento.title': 'Crea un Nuevo Trabajador de IA en 3 Sencillos Pasos',
     'home.bento.subtitle': 'Personaliza potentes Trabajadores de IA para que trabajen en tus casos de uso específicos.',
     'home.bento.items.0.title': 'Describe tus necesidades',
-    'home.bento.items.0.description': 'Dile a Tars lo que necesitas y personaliza tu trabajador de IA para tus casos de uso.',
+    'home.bento.items.0.description': 'Dile a Echo lo que necesitas y personaliza tu trabajador de IA para tus casos de uso.',
     'home.bento.items.1.title': 'Conecta cientos de herramientas',
     'home.bento.items.1.description': 'Conéctate a tus herramientas y servicios favoritos con nuestra extensa biblioteca de integraciones.',
     'home.bento.items.2.title': 'Despliega y personaliza',
     'home.bento.items.2.description': 'Observa a tu agente manejar tareas y flujos de trabajo complejos con razonamiento de IA avanzado.',
     
     // Home Page - Capabilities Section
-    'home.capabilities.title': '¿Qué puede hacer Tars por ti?',
-    'home.capabilities.subtitle': 'Desde la creación de contenido hasta el análisis de datos, Tars maneja en minutos el trabajo que te tomaría horas.',
+    'home.capabilities.title': '¿Qué puede hacer Echo por ti?',
+    'home.capabilities.subtitle': 'Desde la creación de contenido hasta el análisis de datos, Echo maneja en minutos el trabajo que te tomaría horas.',
     'home.capabilities.documents.title': 'Crea Documentos Profesionales',
     'home.capabilities.documents.description': 'Genera informes, propuestas, contratos y presentaciones que parecen salidos de una agencia de primer nivel. PDF, Word, PowerPoint - cualquier formato que necesites.',
     'home.capabilities.design.title': 'Diseña Gráficos y Visuales',
@@ -2942,7 +2942,7 @@ export const translations = {
     'home.capabilities.workflows.title': 'Gestiona Tus Flujos de Trabajo',
     'home.capabilities.workflows.description': 'Configura procesos automatizados para generación de leads, seguimiento de clientes, creación de contenido y operaciones comerciales diarias.',
     'home.capabilities.availability.title': 'Trabaja las 24 Horas',
-    'home.capabilities.availability.description': 'Tars nunca duerme. Programa tareas para que se ejecuten durante la noche, los fines de semana o cuando necesites que el trabajo se haga sin que estés presente.',
+    'home.capabilities.availability.description': 'Echo nunca duerme. Programa tareas para que se ejecuten durante la noche, los fines de semana o cuando necesites que el trabajo se haga sin que estés presente.',
     'common.welcome': 'Bienvenido a Thanus',
     'common.signIn': 'Iniciar Sesión',
     'common.signUp': 'Registrarse',
@@ -3567,7 +3567,7 @@ export const translations = {
     'knowledgeBase.tabManual': 'Escribir Conocimiento',
     
     // Home Page - Site Config
-    'home.site.name': 'Tars',
+    'home.site.name': 'Echo',
     'home.site.description': 'El Trabajador de IA Generalista que puede actuar en tu nombre.',
     'home.site.cta': 'Comenzar Gratis',
 
@@ -3580,9 +3580,9 @@ export const translations = {
 
     // Hero Section
     'home.hero.badge': '100% CÓDIGO ABIERTO',
-    'home.hero.title': 'Tars – Construye, gestiona y entrena tu Fuerza Laboral de IA.',
-    'home.hero.description': 'Tars – plataforma de código abierto para construir, gestionar y entrenar tu Fuerza Laboral de IA.',
-    'home.hero.inputPlaceholder': 'Pregunta a Tars...',
+    'home.hero.title': 'Echo – Construye, gestiona y entrena tu Fuerza Laboral de IA.',
+    'home.hero.description': 'Echo – plataforma de código abierto para construir, gestionar y entrenar tu Fuerza Laboral de IA.',
+    'home.hero.inputPlaceholder': 'Pregunta a Echo...',
 
     // Pricing Section
     'home.pricing.plus.name': 'Plus',
@@ -3632,7 +3632,7 @@ export const translations = {
 
     // Companies Section
     'home.companies.title': 'Confiado por equipos innovadores',
-    'home.companies.description': 'Únete a empresas que usan Tars para potenciar su fuerza laboral de IA',
+    'home.companies.description': 'Únete a empresas que usan Echo para potenciar su fuerza laboral de IA',
 
     // CTA Section
     'home.ctaSection.title': 'Lanza Tu Primer Trabajador de IA Hoy',
@@ -3643,7 +3643,7 @@ export const translations = {
     'home.cta.subtext': 'Sin necesidad de tarjeta de crédito',
 
     // Footer
-    'home.footer.tars': 'Tars',
+    'home.footer.tars': 'Echo',
     'home.footer.about': 'Acerca de',
     'home.footer.contact': 'Contacto',
     'home.footer.careers': 'Carreras',
@@ -3658,8 +3658,8 @@ export const translations = {
 
     // FAQ Section
     'home.faq.title': 'Preguntas Frecuentes',
-    'home.faq.items.1.question': '¿Qué es Tars?',
-    'home.faq.items.1.answer': 'Tars es una plataforma de código abierto para construir, gestionar y entrenar tu Fuerza Laboral de IA.',
+    'home.faq.items.1.question': '¿Qué es Echo?',
+    'home.faq.items.1.answer': 'Echo es una plataforma de código abierto para construir, gestionar y entrenar tu Fuerza Laboral de IA.',
     'home.faq.items.6.question': '¿Cómo empiezo?',
     'home.faq.items.6.answer': 'Crea una cuenta gratuita y comienza a construir tu fuerza laboral de IA en minutos.',
 
@@ -3781,12 +3781,12 @@ export const translations = {
     'workflowSidePanel.mcpDescription': 'Configuración del servidor MCP para {name}',
     
     // Página de Inicio
-    'home.hero.title.prefix': 'Contrata a Tars para ',
+    'home.hero.title.prefix': 'Contrata a Echo para ',
     'home.hero.title.rotatingTexts': 'Investigación,Presentaciones,Documentos,Hojas de Cálculo,Diseño,Análisis de Datos,Gestión de Correos,Redes Sociales,SEO,Generación de Leads,Atención al Cliente,Creación de Contenido,Gestión de Proyectos,Ventas,Marketing,Análisis',
     'home.hero.subtitle': 'Despliega Trabajadores de IA que gestionan tu negocio de forma autónoma.',
-    'home.hero.chatPlaceholder': 'Dale una tarea a Tars para completar...',
+    'home.hero.chatPlaceholder': 'Dale una tarea a Echo para completar...',
     'home.auth.signInTitle': 'Inicia sesión para continuar',
-    'home.auth.signInDescription': 'Inicia sesión o crea una cuenta para hablar con Tars',
+    'home.auth.signInDescription': 'Inicia sesión o crea una cuenta para hablar con Echo',
     'home.auth.orContinueWith': 'o continúa con correo electrónico',
     'home.auth.signInWithEmail': 'Iniciar sesión con correo',
     'home.auth.createNewAccount': 'Crear nueva cuenta',
