@@ -161,7 +161,7 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
     : null;
   const displayName = selectedAgent?.name || 'Echo';
   const agentAvatar = undefined;
-  const isTarsAgent = selectedAgent?.metadata?.is_suna_default || false;
+  const isEchoAgent = selectedAgent?.metadata?.is_suna_default || false;
 
   const threadQuery = useThreadQuery(initiatedThreadId || '');
 

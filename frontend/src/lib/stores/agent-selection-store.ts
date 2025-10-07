@@ -18,9 +18,9 @@ interface AgentSelectionState {
   initializeFromAgents: (agents: Agent[], threadAgentId?: string, onAgentSelect?: (agentId: string | undefined) => void) => void;
   autoSelectAgent: (agents: Agent[], onAgentSelect?: (agentId: string | undefined) => void, currentSelectedAgentId?: string) => void;
   clearSelection: () => void;
-  
+
   getCurrentAgent: (agents: Agent[]) => Agent | null;
-  isTarsAgent: (agents: Agent[]) => boolean;
+  isEchoAgent: (agents: Agent[]) => boolean;
 }
 
 export const useAgentSelectionStore = create<AgentSelectionState>()(
@@ -56,8 +56,8 @@ export const useAgentSelectionStore = create<AgentSelectionState>()(
           if (current && agents.some(a => a.agent_id === current)) {
             selectedId = current;
           } else if (agents.length > 0) {
-            const defaultTarsAgent = agents.find(agent => agent.metadata?.is_suna_default);
-            selectedId = defaultTarsAgent ? defaultTarsAgent.agent_id : agents[0].agent_id;
+            const defaultEchoAgent = agents.find(agent => agent.metadata?.is_suna_default);
+            selectedId = defaultEchoAgent ? defaultEchoAgent.agent_id : agents[0].agent_id;
           }
         }
 
@@ -76,8 +76,8 @@ export const useAgentSelectionStore = create<AgentSelectionState>()(
         if (agents.length === 0 || currentSelectedAgentId) {
           return;
         }
-        const defaultTarsAgent = agents.find(agent => agent.metadata?.is_suna_default);
-        const agentToSelect = defaultTarsAgent || agents[0];
+        const defaultEchoAgent = agents.find(agent => agent.metadata?.is_suna_default);
+        const agentToSelect = defaultEchoAgent || agents[0];
         
         if (agentToSelect) {
           if (onAgentSelect) {
@@ -99,9 +99,9 @@ export const useAgentSelectionStore = create<AgentSelectionState>()(
           : null;
       },
 
-      isTarsAgent: (agents: Agent[]) => {
+      isEchoAgent: (agents: Agent[]) => {
         const { selectedAgentId } = get();
-        const currentAgent = selectedAgentId 
+        const currentAgent = selectedAgentId
           ? agents.find(agent => agent.agent_id === selectedAgentId)
           : null;
         return currentAgent?.metadata?.is_suna_default || selectedAgentId === undefined;
@@ -127,6 +127,6 @@ export const useAgentSelection = () => {
     autoSelectAgent: store.autoSelectAgent,
     clearSelection: store.clearSelection,
     getCurrentAgent: store.getCurrentAgent,
-    isTarsAgent: store.isTarsAgent,
+    isEchoAgent: store.isEchoAgent,
   };
 }; 

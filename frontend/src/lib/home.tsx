@@ -58,7 +58,7 @@ export interface PricingTier {
 }
 
 export const siteConfig = {
-  name: 'Tars',
+  name: 'Echo',
   description: 'The Generalist AI Worker that can act on your behalf.',
   cta: 'Start Free',
   url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
@@ -109,10 +109,10 @@ export const siteConfig = {
     ),
     badge: '100% OPEN SOURCE',
     githubUrl: 'https://github.com/inventu-ai/tars',
-    title: 'Tars – Build, manage and train your AI Workforce.',
+    title: 'Echo – Build, manage and train your AI Workforce.',
     description:
-      'Tars – open-source platform to build, manage and train your AI Workforce.',
-    inputPlaceholder: 'Ask Tars to...',
+      'Echo – open-source platform to build, manage and train your AI Workforce.',
+    inputPlaceholder: 'Ask Echo to...',
   },
   cloudPricingItems: [
     {
@@ -499,15 +499,15 @@ export const siteConfig = {
     ],
   },
   featureSection: {
-    title: 'How Tars Works',
+    title: 'How Echo Works',
     description:
-      'Discover how Tars transforms your commands into action in four easy steps',
+      'Discover how Echo transforms your commands into action in four easy steps',
     items: [
       {
         id: 1,
         title: 'Request an Action',
         content:
-          'Speak or type your command—let Tars capture your intent. Your request instantly sets the process in motion.',
+          'Speak or type your command—let Echo capture your intent. Your request instantly sets the process in motion.',
         image:
           'https://images.unsplash.com/photo-1720371300677-ba4838fa0678?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       },
@@ -515,7 +515,7 @@ export const siteConfig = {
         id: 2,
         title: 'AI Understanding & Planning',
         content:
-          'Tars analyzes your request, understands the context, and develops a structured plan to complete the task efficiently.',
+          'Echo analyzes your request, understands the context, and develops a structured plan to complete the task efficiently.',
         image:
           'https://images.unsplash.com/photo-1686170287433-c95faf6d3608?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwzfHx8ZW58MHx8fHx8fA%3D%3D',
       },
@@ -523,7 +523,7 @@ export const siteConfig = {
         id: 3,
         title: 'Autonomous Execution',
         content:
-          'Using its capabilities and integrations, Tars executes the task independently, handling any complexities along the way.',
+          'Using its capabilities and integrations, Echo executes the task independently, handling any complexities along the way.',
         image:
           'https://images.unsplash.com/photo-1720378042271-60aff1e1c538?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwxMHx8fGVufDB8fHx8fA%3D%3D',
       },
@@ -531,30 +531,30 @@ export const siteConfig = {
         id: 4,
         title: 'Results & Learning',
         content:
-          'Tars delivers results and learns from each interaction, continuously improving its performance to better serve your needs.',
+          'Echo delivers results and learns from each interaction, continuously improving its performance to better serve your needs.',
         image:
           'https://images.unsplash.com/photo-1666882990322-e7f3b8df4f75?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1yZWxhdGVkfDF8fHxlbnwwfHx8fHw%3D',
       },
     ],
   },
   bentoSection: {
-    title: 'Empower Your Workflow with Tars',
+    title: 'Empower Your Workflow with Echo',
     description:
-      'Let Tars act on your behalf with advanced AI capabilities, seamless integrations, and autonomous task execution.',
+      'Let Echo act on your behalf with advanced AI capabilities, seamless integrations, and autonomous task execution.',
     items: [
       {
         id: 1,
         content: <FirstBentoAnimation />,
         title: 'Autonomous Task Execution',
         description:
-          'Experience true automation with Tars. Ask your AI Worker to complete tasks, research information, and handle complex workflows with minimal supervision.',
+          'Experience true automation with Echo. Ask your AI Worker to complete tasks, research information, and handle complex workflows with minimal supervision.',
       },
       {
         id: 2,
         content: <SecondBentoAnimation />,
         title: 'Seamless Integrations',
         description:
-          'Connect Tars to your existing tools for a unified workflow. Boost productivity through AI-powered interconnected systems.',
+          'Connect Echo to your existing tools for a unified workflow. Boost productivity through AI-powered interconnected systems.',
       },
       {
         id: 3,
@@ -568,21 +568,21 @@ export const siteConfig = {
         ),
         title: 'Intelligent Data Analysis',
         description:
-          "Transform raw data into actionable insights in seconds. Make better decisions with Tars's real-time, adaptive intelligence.",
+          "Transform raw data into actionable insights in seconds. Make better decisions with Echo's real-time, adaptive intelligence.",
       },
       {
         id: 4,
         content: <FourthBentoAnimation once={false} />,
         title: 'Complete Customization',
         description:
-          'Tailor Tars to your specific needs. As an open source solution, you have full control over its capabilities, integrations, and implementation.',
+          'Tailor Echo to your specific needs. As an open source solution, you have full control over its capabilities, integrations, and implementation.',
       },
     ],
   },
   benefits: [
     {
       id: 1,
-      text: "Automate everyday tasks with Tars's powerful AI capabilities.",
+      text: "Automate everyday tasks with Echo's powerful AI capabilities.",
       image: '/Device-6.png',
     },
     {
@@ -592,7 +592,7 @@ export const siteConfig = {
     },
     {
       id: 3,
-      text: 'Improve focus on high-value work as Tars handles the routine.',
+      text: 'Improve focus on high-value work as Echo handles the routine.',
       image: '/Device-8.png',
     },
     {
@@ -898,13 +898,13 @@ export const siteConfig = {
 
         title: 'Community Powered',
         description:
-          "Join a thriving community of developers and users continuously enhancing and expanding Tars's capabilities.",
+          "Join a thriving community of developers and users continuously enhancing and expanding Echo's capabilities.",
       },
     ],
   },
   quoteSection: {
     quote:
-      'Tars has transformed how we approach everyday tasks. The level of automation it provides, combined with its open source nature, makes it an invaluable tool for our entire organization.',
+      'Echo has transformed how we approach everyday tasks. The level of automation it provides, combined with its open source nature, makes it an invaluable tool for our entire organization.',
     author: {
       name: 'Alex Johnson',
       role: 'CTO, Innovatech',
@@ -914,7 +914,7 @@ export const siteConfig = {
   pricing: {
     title: 'Open Source & Free Forever',
     description:
-      'Tars is 100% open source and free to use. No hidden fees, no premium features locked behind paywalls.',
+      'Echo is 100% open source and free to use. No hidden fees, no premium features locked behind paywalls.',
     pricingItems: [
       {
         name: 'Community',
@@ -929,7 +929,7 @@ export const siteConfig = {
           // 'Community support',
         ],
         description: 'Perfect for individual users and developers',
-        buttonText: 'Hire Tars',
+        buttonText: 'Hire Echo',
         buttonColor: 'bg-accent text-primary',
         isPopular: false,
       },
@@ -1179,7 +1179,7 @@ export const siteConfig = {
   faqSection: {
     title: 'Frequently Asked Questions',
     description:
-      "Answers to common questions about Tars and its capabilities. If you have any other questions, please don't hesitate to contact us.",
+      "Answers to common questions about Echo and its capabilities. If you have any other questions, please don't hesitate to contact us.",
     faQitems: [
       {
         id: 1,
@@ -1189,33 +1189,33 @@ export const siteConfig = {
       },
       {
         id: 2,
-        question: 'How does Tars work?',
+        question: 'How does Echo work?',
         answer:
-          'Tars works by analyzing your requirements, leveraging advanced AI algorithms to understand context, and executing tasks based on your instructions. It can integrate with your workflow, learn from feedback, and continuously improve its performance.',
+          'Echo works by analyzing your requirements, leveraging advanced AI algorithms to understand context, and executing tasks based on your instructions. It can integrate with your workflow, learn from feedback, and continuously improve its performance.',
       },
       {
         id: 3,
-        question: 'Is Tars really free?',
+        question: 'Is Echo really free?',
         answer:
-          'Yes, Tars is completely free and open source. We believe in democratizing AI technology and making it accessible to everyone. You can use it, modify it, and contribute to its development without any cost.',
+          'Yes, Echo is completely free and open source. We believe in democratizing AI technology and making it accessible to everyone. You can use it, modify it, and contribute to its development without any cost.',
       },
       {
         id: 4,
-        question: 'Can I integrate Tars with my existing tools?',
+        question: 'Can I integrate Echo with my existing tools?',
         answer:
-          'Yes, Tars is designed to be highly compatible with popular tools and platforms. We offer APIs and pre-built integrations for seamless connection with your existing workflow tools and systems.',
+          'Yes, Echo is designed to be highly compatible with popular tools and platforms. We offer APIs and pre-built integrations for seamless connection with your existing workflow tools and systems.',
       },
       {
         id: 5,
-        question: 'How can I contribute to Tars?',
+        question: 'How can I contribute to Echo?',
         answer:
-          'You can contribute to Tars by submitting pull requests on GitHub, reporting bugs, suggesting new features, or helping with documentation. Join our Discord community to connect with other contributors and Hire Tars.',
+          'You can contribute to Echo by submitting pull requests on GitHub, reporting bugs, suggesting new features, or helping with documentation. Join our Discord community to connect with other contributors and Hire Echo.',
       },
       {
         id: 6,
-        question: 'How does Tars save me time?',
+        question: 'How does Echo save me time?',
         answer:
-          'Tars automates repetitive tasks, streamlines workflows, and provides quick solutions to common challenges. This automation and efficiency can save hours of manual work, allowing you to focus on more strategic activities.',
+          'Echo automates repetitive tasks, streamlines workflows, and provides quick solutions to common challenges. This automation and efficiency can save hours of manual work, allowing you to focus on more strategic activities.',
       },
     ],
   },
@@ -1231,7 +1231,7 @@ export const siteConfig = {
   },
   footerLinks: [
     {
-      title: 'Tars',
+      title: 'Echo',
       links: [
         { id: 1, title: 'About', url: '' },
         { id: 3, title: 'Contact', url: '' },

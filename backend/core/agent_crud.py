@@ -45,51 +45,51 @@ async def update_agent(
         restrictions = agent_metadata.get('restrictions', {})
         
         if is_suna_agent:
-            logger.warning(f"Update attempt on Tars default agent {agent_id} by user {user_id}")
-            
-            if (agent_data.name is not None and 
-                agent_data.name != existing_data.get('name') and 
+            logger.warning(f"Update attempt on Echo default agent {agent_id} by user {user_id}")
+
+            if (agent_data.name is not None and
+                agent_data.name != existing_data.get('name') and
                 restrictions.get('name_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted name of Tars agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted name of Echo agent {agent_id}")
                 raise HTTPException(
-                    status_code=403, 
-                    detail="Tars's name cannot be modified. This restriction is managed centrally."
+                    status_code=403,
+                    detail="Echo's name cannot be modified. This restriction is managed centrally."
                 )
             
             if (agent_data.description is not None and
-                agent_data.description != existing_data.get('description') and 
+                agent_data.description != existing_data.get('description') and
                 restrictions.get('description_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted description of Tars agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted description of Echo agent {agent_id}")
                 raise HTTPException(
-                    status_code=403, 
-                    detail="Tars's description cannot be modified."
+                    status_code=403,
+                    detail="Echo's description cannot be modified."
                 )
             
-            if (agent_data.system_prompt is not None and 
+            if (agent_data.system_prompt is not None and
                 restrictions.get('system_prompt_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted system prompt of Tars agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted system prompt of Echo agent {agent_id}")
                 raise HTTPException(
-                    status_code=403, 
-                    detail="Tars's system prompt cannot be modified. This is managed centrally to ensure optimal performance."
+                    status_code=403,
+                    detail="Echo's system prompt cannot be modified. This is managed centrally to ensure optimal performance."
                 )
             
-            if (agent_data.agentpress_tools is not None and 
+            if (agent_data.agentpress_tools is not None and
                 restrictions.get('tools_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted tools of Tars agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted tools of Echo agent {agent_id}")
                 raise HTTPException(
-                    status_code=403, 
-                    detail="Tars's default tools cannot be modified. These tools are optimized for Tars's capabilities."
+                    status_code=403,
+                    detail="Echo's default tools cannot be modified. These tools are optimized for Echo's capabilities."
                 )
             
-            if ((agent_data.configured_mcps is not None or agent_data.custom_mcps is not None) and 
+            if ((agent_data.configured_mcps is not None or agent_data.custom_mcps is not None) and
                 restrictions.get('mcps_editable') == False):
-                logger.error(f"User {user_id} attempted to modify restricted MCPs of Tars agent {agent_id}")
+                logger.error(f"User {user_id} attempted to modify restricted MCPs of Echo agent {agent_id}")
                 raise HTTPException(
-                    status_code=403, 
-                    detail="Tars's integrations cannot be modified."
+                    status_code=403,
+                    detail="Echo's integrations cannot be modified."
                 )
-            
-            logger.debug(f"Tars agent update validation passed for agent {agent_id} by user {user_id}")
+
+            logger.debug(f"Echo agent update validation passed for agent {agent_id} by user {user_id}")
 
         current_version_data = None
         if existing_data.get('current_version_id'):

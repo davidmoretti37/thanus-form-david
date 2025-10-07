@@ -155,11 +155,11 @@ export function AgentConfigurationDialog({
     setEditName(configSource.name || '');
   }, [agent, versionData]);
 
-  const isTarsAgent = agent?.metadata?.is_suna_default || false;
+  const isEchoAgent = agent?.metadata?.is_suna_default || false;
   const restrictions = agent?.metadata?.restrictions || {};
-  const isNameEditable = !isViewingOldVersion && (restrictions.name_editable !== false) && !isTarsAgent;
-  const isSystemPromptEditable = !isViewingOldVersion && (restrictions.system_prompt_editable !== false) && !isTarsAgent;
-  const areToolsEditable = !isViewingOldVersion && (restrictions.tools_editable !== false) && !isTarsAgent;
+  const isNameEditable = !isViewingOldVersion && (restrictions.name_editable !== false) && !isEchoAgent;
+  const isSystemPromptEditable = !isViewingOldVersion && (restrictions.system_prompt_editable !== false) && !isEchoAgent;
+  const areToolsEditable = !isViewingOldVersion && (restrictions.tools_editable !== false) && !isEchoAgent;
 
   const hasChanges = useMemo(() => {
     return JSON.stringify(formData) !== JSON.stringify(originalFormData);
@@ -226,9 +226,9 @@ export function AgentConfigurationDialog({
     }
 
     if (!isNameEditable) {
-      if (isTarsAgent) {
+      if (isEchoAgent) {
         toast.error("Name cannot be edited", {
-          description: "Tars's name is managed centrally and cannot be changed.",
+          description: "Echo's name is managed centrally and cannot be changed.",
         });
       }
       setEditName(formData.name);
@@ -242,7 +242,7 @@ export function AgentConfigurationDialog({
 
   const handleSystemPromptChange = (value: string) => {
     if (!isSystemPromptEditable) {
-      if (isTarsAgent) {
+      if (isEchoAgent) {
         toast.error("System prompt cannot be edited", {
           description: "Tars's system prompt is managed centrally.",
         });
@@ -259,7 +259,7 @@ export function AgentConfigurationDialog({
 
   const handleToolsChange = (tools: Record<string, boolean | { enabled: boolean; description: string }>) => {
     if (!areToolsEditable) {
-      if (isTarsAgent) {
+      if (isEchoAgent) {
         toast.error("Tools cannot be edited", {
           description: "Tars's tools are managed centrally.",
         });
@@ -368,8 +368,8 @@ export function AgentConfigurationDialog({
 
   const tabItems = [
     // { id: 'general', label: 'General', icon: Settings, disabled: false },
-    { id: 'instructions', label: 'Instructions', icon: Brain, disabled: isTarsAgent },
-    { id: 'tools', label: 'Tools', icon: Wrench, disabled: isTarsAgent },
+    { id: 'instructions', label: 'Instructions', icon: Brain, disabled: isEchoAgent },
+    { id: 'tools', label: 'Tools', icon: Wrench, disabled: isEchoAgent },
     { id: 'integrations', label: 'Integrations', icon: Server, disabled: false },
     { id: 'knowledge', label: 'Knowledge', icon: BookOpen, disabled: false },
     { id: 'triggers', label: 'Triggers', icon: Zap, disabled: false },
@@ -385,7 +385,7 @@ export function AgentConfigurationDialog({
                 <div
                   className="flex-shrink-0"
                 >
-                  {isTarsAgent ? (
+                  {isEchoAgent ? (
                     <AgentAvatar
                       isSunaDefault={true}
                       agentName={formData.name}
@@ -649,7 +649,7 @@ export function AgentConfigurationDialog({
                       tools={formData.agentpress_tools}
                       onToolsChange={handleToolsChange}
                       disabled={!areToolsEditable}
-                      isTarsAgent={isTarsAgent}
+                      isEchoAgent={isEchoAgent}
                       isLoading={isLoading}
                     />
                   </div>
