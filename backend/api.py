@@ -235,7 +235,7 @@ if __name__ == "__main__":
     
     # Enable reload mode for local and staging environments
     is_dev_env = config.ENV_MODE in [EnvMode.LOCAL, EnvMode.STAGING]
-    workers = 1 if is_dev_env else 4
+    workers = 4
     reload = is_dev_env
     
     logger.debug(f"Starting server on 0.0.0.0:8000 with {workers} workers (reload={reload})")
