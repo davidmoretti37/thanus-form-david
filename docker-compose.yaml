@@ -8,7 +8,7 @@ services:
       - ./backend/services/docker/redis.conf:/usr/local/etc/redis/redis.conf:ro
     command: redis-server /usr/local/etc/redis/redis.conf --save 60 1 --loglevel warning
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "NKQ6TRkA9ZLnxuEQMDlx82hs2R", "ping"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -28,7 +28,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=NKQ6TRkA9ZLnxuEQMDlx82hs2R
+      - REDIS_PASSWORD=
       - REDIS_SSL=False
     depends_on:
       redis:
@@ -50,7 +50,7 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - REDIS_PASSWORD=NKQ6TRkA9ZLnxuEQMDlx82hs2R
+      - REDIS_PASSWORD=
       - REDIS_SSL=False
     depends_on:
       redis:
