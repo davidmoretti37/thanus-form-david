@@ -45,6 +45,7 @@ import { GetProjectStructureView } from '../web-dev/GetProjectStructureView';
 import { ImageEditGenerateToolView } from '../image-edit-generate-tool/ImageEditGenerateToolView';
 import { DesignerToolView } from '../designer-tool/DesignerToolView';
 import { UploadFileToolView } from '../UploadFileToolView';
+import { VideoToolView } from '../video-tool/VideoToolView';
 import { DocsToolView, ListDocumentsToolView, DeleteDocumentToolView } from '../docs-tool';
 import { CreateNewAgentToolView } from '../create-new-agent/create-new-agent';
 import { SearchMcpServersForAgentToolView } from '../search-mcp-servers-for-agent/search-mcp-servers-for-agent';
@@ -113,9 +114,13 @@ const defaultRegistry: ToolViewRegistryType = {
 
   'load-image': SeeImageToolView,
   'clear-images-from-context': SeeImageToolView,
-  'image-edit-or-generate': ImageEditGenerateToolView,
+  'image-edit-or-generate': DesignerToolView,
   'designer-create-or-edit': DesignerToolView,
   'designer_create_or_edit': DesignerToolView,
+  'video-generate-or-edit': VideoToolView,
+  'video_generate_or_edit': VideoToolView,
+  'generate_video': VideoToolView,
+  'edit_video': VideoToolView,
 
   'ask': AskToolView,
   'complete': CompleteToolView,

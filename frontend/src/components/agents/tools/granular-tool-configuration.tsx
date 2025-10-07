@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, ChevronDown, ChevronRight, Settings2, Wrench } from 'lucide-react';
 import { icons } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -351,83 +352,87 @@ export const GranularToolConfiguration = ({
                   {hasGranular && isExpanded && isGroupEnabled && (
                     <Collapsible open={isExpanded}>
                       <CollapsibleContent className="mt-4 pt-4 border-t">
-                        <div className="space-y-3">
+                          <div className="space-y-3">
                           <div className="flex items-center gap-2 mb-3">
                             <Settings2 className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm font-medium text-muted-foreground">
                               Individual Capabilities
                             </span>
                           </div>
-
-                          {(toolGroup.name === 'sb_image_edit_tool' || toolGroup.name === 'sb_design_tool') && (
-                            <div className="pl-6 mb-3 space-y-3">
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">
-                                  Fal AI model for Generate (text → image)
-                                </Label>
-                                <Input
-                                  placeholder="e.g. fal-ai/flux-pro"
-                                  value={getToolSettings(toolGroup.name).fal_model_generate ?? ''}
-                                  onChange={(e) => handleToolSettingChange(toolGroup.name, 'fal_model_generate', e.target.value)}
-                                  className="max-w-sm"
-                                  disabled={disabled || isLoading}
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">
-                                  Fal AI model for Edit (img2img)
-                                </Label>
-                                <Input
-                                  placeholder="e.g. fal-ai/stable-diffusion-xl"
-                                  value={getToolSettings(toolGroup.name).fal_model_edit ?? ''}
-                                  onChange={(e) => handleToolSettingChange(toolGroup.name, 'fal_model_edit', e.target.value)}
-                                  className="max-w-sm"
-                                  disabled={disabled || isLoading}
-                                />
-                              </div>
-
-                              <div className="space-y-2">
-                                <Label className="text-xs text-muted-foreground">
-                                  Optional fallback model (used if the specific one is empty)
-                                </Label>
-                                <Input
-                                  placeholder="optional fallback, e.g. fal-ai/flux-pro"
-                                  value={getToolSettings(toolGroup.name).fal_model ?? ''}
-                                  onChange={(e) => handleToolSettingChange(toolGroup.name, 'fal_model', e.target.value)}
-                                  className="max-w-sm"
-                                  disabled={disabled || isLoading}
-                                />
-                              </div>
-                            </div>
-                          )}
                           
                           {toolGroup.methods.map((method) => {
                             const isMethodEnabledState = isMethodEnabled(toolGroup.name, method.name);
+                            const hasSettings = method.settings && Object.keys(method.settings).length > 0;
                             
                             return (
-                              <div key={method.name} className="flex items-center justify-between pl-6">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2">
-                                    <h5 className="text-sm font-medium truncate">
-                                      {method.displayName}
-                                    </h5>
-                                    {method.isCore && (
-                                      <Badge variant="outline" className="text-xs">Core</Badge>
-                                    )}
+                              <div key={method.name} className="space-y-3">
+                                <div className="flex items-center justify-between pl-6">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <h5 className="text-sm font-medium truncate">
+                                        {method.displayName}
+                                      </h5>
+                                      {method.isCore && (
+                                        <Badge variant="outline" className="text-xs">Core</Badge>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {method.description}
+                                    </p>
                                   </div>
-                                  <p className="text-xs text-muted-foreground truncate">
-                                    {method.description}
-                                  </p>
+                                  
+                                  <Switch
+                                    checked={isMethodEnabledState}
+                                    onCheckedChange={(enabled) => 
+                                      handleMethodToggle(toolGroup.name, method.name, enabled)
+                                    }
+                                    disabled={disabled || method.isCore || isLoading}
+                                  />
                                 </div>
-                                
-                                <Switch
-                                  checked={isMethodEnabledState}
-                                  onCheckedChange={(enabled) => 
-                                    handleMethodToggle(toolGroup.name, method.name, enabled)
-                                  }
-                                  disabled={disabled || method.isCore || isLoading}
-                                />
+
+                                {hasSettings && isMethodEnabledState && (
+                                  <div className="pl-12 space-y-2">
+                                    {Object.entries(method.settings!).map(([settingKey, settingField]) => (
+                                      <div key={settingKey} className="space-y-1.5">
+                                        <Label className="text-xs text-muted-foreground">
+                                          {settingField.label}
+                                        </Label>
+                                        {settingField.description && (
+                                          <p className="text-xs text-muted-foreground/70">
+                                            {settingField.description}
+                                          </p>
+                                        )}
+                                        {settingField.type === 'select' ? (
+                                          <Select
+                                            value={getToolSettings(toolGroup.name)[settingKey] ?? settingField.defaultValue ?? ''}
+                                            onValueChange={(value) => handleToolSettingChange(toolGroup.name, settingKey, value)}
+                                            disabled={disabled || isLoading}
+                                          >
+                                            <SelectTrigger className="max-w-sm">
+                                              <SelectValue placeholder={settingField.placeholder ?? 'Select a model'} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {settingField.options?.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                  {option.label}
+                                                </SelectItem>
+                                              ))}
+                                            </SelectContent>
+                                          </Select>
+                                        ) : (
+                                          <Input
+                                            type={settingField.type === 'number' ? 'number' : 'text'}
+                                            placeholder={settingField.placeholder}
+                                            value={getToolSettings(toolGroup.name)[settingKey] ?? settingField.defaultValue ?? ''}
+                                            onChange={(e) => handleToolSettingChange(toolGroup.name, settingKey, e.target.value)}
+                                            className="max-w-sm"
+                                            disabled={disabled || isLoading}
+                                          />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             );
                           })}

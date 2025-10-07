@@ -1,9 +1,19 @@
+export interface ToolMethodSettingField {
+  type: 'text' | 'number' | 'select' | 'boolean';
+  label: string;
+  placeholder?: string;
+  description?: string;
+  options?: { value: string; label: string }[];
+  defaultValue?: any;
+}
+
 export interface ToolMethod {
   name: string;
   displayName: string;
   description: string;
   enabled: boolean;
   isCore?: boolean;
+  settings?: Record<string, ToolMethodSettingField>;
 }
 
 export interface ToolGroup {
