@@ -66,6 +66,10 @@ class MCPToolExecutor:
             except Exception as e:
                 logger.error(f"Failed to resolve Composio profile {profile_id}: {str(e)}")
                 return self._create_error_result(f"Failed to resolve Composio profile: {str(e)}")
+        
+        elif custom_type == 'pipedream':
+            # Pipedream tools already have resolved config from initialization
+            return await self._execute_pipedream_tool(tool_name, arguments, tool_info)
                 
         elif custom_type == 'sse':
             return await self._execute_sse_tool(tool_name, arguments, tool_info)
@@ -101,15 +105,36 @@ class MCPToolExecutor:
                 else:
                     raise
     
+    async def _execute_pipedream_tool(self, tool_name: str, arguments: Dict[str, Any], tool_info: Dict[str, Any]) -> ToolResult:
+        """Execute Pipedream MCP tool with proper headers"""
+        custom_config = tool_info['custom_config']
+        original_tool_name = tool_info['original_name']
+        
+        url = custom_config.get('url', 'https://remote.mcp.pipedream.net')
+        headers = custom_config.get('headers', {})
+        
+        try:
+            async with asyncio.timeout(30):
+                async with streamablehttp_client(url, headers=headers) as (read, write, _):
+                    async with ClientSession(read, write) as session:
+                        await session.initialize()
+                        result = await session.call_tool(original_tool_name, arguments)
+                        return self._create_success_result(self._extract_content(result))
+                        
+        except Exception as e:
+            logger.error(f"Error executing Pipedream MCP tool: {str(e)}")
+            return self._create_error_result(f"Error executing Pipedream tool: {str(e)}")
+    
     async def _execute_http_tool(self, tool_name: str, arguments: Dict[str, Any], tool_info: Dict[str, Any]) -> ToolResult:
         custom_config = tool_info['custom_config']
         original_tool_name = tool_info['original_name']
         
         url = custom_config['url']
+        headers = custom_config.get('headers', {})
         
         try:
             async with asyncio.timeout(30):
-                async with streamablehttp_client(url) as (read, write, _):
+                async with streamablehttp_client(url, headers=headers) as (read, write, _):
                     async with ClientSession(read, write) as session:
                         await session.initialize()
                         result = await session.call_tool(original_tool_name, arguments)
@@ -198,4 +223,4 @@ class MCPToolExecutor:
             success=False,
             content=error_message,
             metadata={}
-        ) 
+        )

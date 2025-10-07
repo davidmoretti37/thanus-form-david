@@ -120,7 +120,7 @@ class MCPService:
         
         try:
             server_url = await self._get_server_url(request.qualified_name, request.config, request.provider)
-            headers = self._get_headers(request.qualified_name, request.config, request.provider, request.external_user_id)
+            headers = await self._get_headers(request.qualified_name, request.config, request.provider, request.external_user_id)
             
             # Add debugging
             self._logger.debug(f"MCP connection details - Provider: {request.provider}, URL: {server_url}, Headers: {headers}")
@@ -446,14 +446,18 @@ class MCPService:
             return await self._get_custom_server_url(qualified_name, config)
         elif provider == 'composio':
             return await self._get_composio_server_url(qualified_name, config)
+        elif provider == 'pipedream':
+            return await self._get_pipedream_server_url(qualified_name, config)
         else:
             raise MCPProviderError(f"Unknown provider type: {provider}")
     
-    def _get_headers(self, qualified_name: str, config: Dict[str, Any], provider: str, external_user_id: Optional[str] = None) -> Dict[str, str]:
+    async def _get_headers(self, qualified_name: str, config: Dict[str, Any], provider: str, external_user_id: Optional[str] = None) -> Dict[str, str]:
         if provider in ['custom', 'http', 'sse']:
             return self._get_custom_headers(qualified_name, config, external_user_id)
         elif provider == 'composio':
             return self._get_composio_headers(qualified_name, config, external_user_id)
+        elif provider == 'pipedream':
+            return await self._get_pipedream_headers(qualified_name, config, external_user_id)
         else:
             raise MCPProviderError(f"Unknown provider type: {provider}")
     
@@ -501,6 +505,71 @@ class MCPService:
         headers = {"Content-Type": "application/json"}
         # Composio handles auth through the URL itself
         return headers
+    
+    async def _get_pipedream_server_url(self, qualified_name: str, config: Dict[str, Any]) -> str:
+        """Get Pipedream MCP server URL (always the same)"""
+        return config.get("url", "https://remote.mcp.pipedream.net")
+    
+    async def _get_pipedream_headers(self, qualified_name: str, config: Dict[str, Any], external_user_id: Optional[str] = None) -> Dict[str, str]:
+        """Get headers for Pipedream MCP connection by resolving profile_id"""
+        profile_id = config.get("profile_id")
+        if not profile_id:
+            raise MCPProviderError(f"profile_id not provided for Pipedream MCP server: {qualified_name}")
+        
+        try:
+            from core.services.supabase import DBConnection
+            from core.utils.encryption import decrypt_data
+            import os
+            from core.pipedream import connection_service
+            
+            db = DBConnection()
+            supabase = await db.client
+            
+            result = await supabase.table('user_mcp_credential_profiles').select(
+                'encrypted_config'
+            ).eq('profile_id', profile_id).single().execute()
+            
+            if not result.data:
+                raise MCPProviderError(f"Pipedream profile {profile_id} not found")
+            
+            decrypted_config = decrypt_data(result.data['encrypted_config'])
+            config_data = json.loads(decrypted_config)
+            
+            resolved_external_user_id = config_data.get('external_user_id')
+            app_slug = config_data.get('app_slug')
+            oauth_app_id = config_data.get('oauth_app_id')
+            
+            if not resolved_external_user_id or not app_slug:
+                raise MCPProviderError(f"Missing external_user_id or app_slug in Pipedream profile {profile_id}")
+            
+            # Get Pipedream access token
+            access_token = await connection_service._ensure_access_token()
+            project_id = os.getenv("PIPEDREAM_PROJECT_ID")
+            environment = os.getenv("PIPEDREAM_X_PD_ENVIRONMENT", "development")
+            
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {access_token}",
+                "x-pd-project-id": project_id,
+                "x-pd-environment": environment,
+                "x-pd-external-user-id": resolved_external_user_id,
+                "x-pd-app-slug": app_slug
+            }
+            
+            # Add rate limit token if available
+            if hasattr(connection_service, 'rate_limit_token') and connection_service.rate_limit_token:
+                headers["x-pd-rate-limit"] = connection_service.rate_limit_token
+            
+            # Add OAuth app ID if available
+            if oauth_app_id:
+                headers["x-pd-oauth-app-id"] = oauth_app_id
+            
+            self._logger.debug(f"Resolved Pipedream profile {profile_id} to external_user_id {resolved_external_user_id} and app_slug {app_slug}")
+            return headers
+            
+        except Exception as e:
+            self._logger.error(f"Failed to resolve Pipedream profile {profile_id}: {str(e)}")
+            raise MCPProviderError(f"Failed to resolve Pipedream profile: {str(e)}")
 
 
-mcp_service = MCPService() 
+mcp_service = MCPService()

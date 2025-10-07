@@ -40,7 +40,7 @@ class CustomMCPHandler:
             return e
     
     async def _initialize_single_custom_mcp(self, config: Dict[str, Any]):
-        custom_type = config.get('customType', 'sse')
+        custom_type = config.get('customType', config.get('type', 'sse'))
         server_config = config.get('config', {})
         enabled_tools = config.get('enabledTools', config.get('enabled_tools', []))
         server_name = config.get('name', 'Unknown')
@@ -49,6 +49,8 @@ class CustomMCPHandler:
         
         if custom_type == 'composio':
             await self._initialize_composio_mcp(server_name, server_config, enabled_tools)
+        elif custom_type == 'pipedream':
+            await self._initialize_pipedream_mcp(server_name, server_config, enabled_tools)
         elif custom_type == 'sse':
             await self._initialize_sse_mcp(server_name, server_config, enabled_tools)
         elif custom_type == 'http':
@@ -85,6 +87,93 @@ class CustomMCPHandler:
             
         except Exception as e:
             logger.error(f"Failed to initialize Composio MCP {server_name}: {str(e)}")
+    
+    async def _initialize_pipedream_mcp(self, server_name: str, server_config: Dict[str, Any], enabled_tools: List[str]):
+        """Initialize Pipedream MCP connection using profile_id to resolve external_user_id"""
+        profile_id = server_config.get('profile_id')
+        if not profile_id:
+            logger.error(f"Pipedream MCP {server_name}: Missing profile_id in config")
+            return
+        
+        try:
+            # Resolve external_user_id from profile
+            external_user_id = await self._resolve_external_user_id(server_config)
+            if not external_user_id:
+                logger.error(f"Pipedream MCP {server_name}: Failed to resolve external_user_id from profile {profile_id}")
+                return
+            
+            # Get app_slug and oauth_app_id from profile config
+            from core.services.supabase import DBConnection
+            from core.utils.encryption import decrypt_data
+            
+            db = DBConnection()
+            supabase = await db.client
+            
+            result = await supabase.table('user_mcp_credential_profiles').select(
+                'encrypted_config'
+            ).eq('profile_id', profile_id).single().execute()
+            
+            if not result.data:
+                logger.error(f"Pipedream MCP {server_name}: Profile {profile_id} not found")
+                return
+            
+            decrypted_config = decrypt_data(result.data['encrypted_config'])
+            config_data = json.loads(decrypted_config)
+            app_slug = config_data.get('app_slug')
+            oauth_app_id = config_data.get('oauth_app_id')
+            
+            if not app_slug:
+                logger.error(f"Pipedream MCP {server_name}: Missing app_slug in profile config")
+                return
+            
+            # Get Pipedream access token and build headers
+            import os
+            from core.pipedream import connection_service
+            
+            access_token = await connection_service._ensure_access_token()
+            project_id = os.getenv("PIPEDREAM_PROJECT_ID")
+            environment = os.getenv("PIPEDREAM_X_PD_ENVIRONMENT", "development")
+            
+            url = server_config.get('url', 'https://remote.mcp.pipedream.net')
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+                "x-pd-project-id": project_id,
+                "x-pd-environment": environment,
+                "x-pd-external-user-id": external_user_id,
+                "x-pd-app-slug": app_slug
+            }
+            
+            # Add rate limit token if available
+            if hasattr(connection_service, 'rate_limit_token') and connection_service.rate_limit_token:
+                headers["x-pd-rate-limit"] = connection_service.rate_limit_token
+            
+            # Add OAuth app ID if available
+            if oauth_app_id:
+                headers["x-pd-oauth-app-id"] = oauth_app_id
+            
+            logger.debug(f"Connecting to Pipedream MCP for {app_slug} with external_user_id {external_user_id}")
+            
+            async with streamablehttp_client(url, headers=headers) as (read_stream, write_stream, _):
+                async with ClientSession(read_stream, write_stream) as session:
+                    await session.initialize()
+                    tools_result = await session.list_tools()
+                    tools = tools_result.tools if hasattr(tools_result, 'tools') else tools_result
+                    
+                    # Update server_config with resolved values for runtime
+                    runtime_config = {
+                        **server_config,
+                        'url': url,
+                        'headers': headers,
+                        'external_user_id': external_user_id,
+                        'app_slug': app_slug,
+                        'oauth_app_id': oauth_app_id
+                    }
+                    
+                    self._register_custom_tools(tools, server_name, enabled_tools, 'pipedream', runtime_config)
+                    logger.debug(f"Registered {len(tools)} tools from Pipedream MCP {server_name}")
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize Pipedream MCP {server_name}: {str(e)}")
     
     async def _initialize_sse_mcp(self, server_name: str, server_config: Dict[str, Any], enabled_tools: List[str]):
         if 'url' not in server_config:
@@ -205,4 +294,4 @@ class CustomMCPHandler:
         logger.debug(f"Successfully initialized custom MCP {server_name} with {tools_registered} tools")
     
     def get_custom_tools(self) -> Dict[str, Dict[str, Any]]:
-        return self.custom_tools.copy() 
+        return self.custom_tools.copy()

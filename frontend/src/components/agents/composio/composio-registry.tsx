@@ -58,22 +58,61 @@ interface ComposioRegistryProps {
 const getAgentConnectedApps = (
   agent: any,
   profiles: ComposioProfile[] = [],
-  toolkits: ComposioToolkit[] = []
+  toolkits: ComposioToolkit[] = [],
+  pipedreamApps: any[] = []
 ): ConnectedApp[] => {
-  if (!agent?.custom_mcps || !profiles?.length || !toolkits?.length) return [];
+  if (!agent?.custom_mcps) return [];
 
   const connectedApps: ConnectedApp[] = [];
 
   agent.custom_mcps.forEach((mcpConfig: any) => {
     if (mcpConfig.config?.profile_id) {
+      // Try to find in Composio profiles first
       const profile = profiles.find(p => p.profile_id === mcpConfig.config.profile_id);
-      const toolkit = toolkits.find(t => t.slug === profile?.toolkit_slug);
-      if (profile && toolkit) {
-        connectedApps.push({
-          toolkit,
-          profile,
-          mcpConfig
-        });
+      
+      if (profile) {
+        // Composio app
+        const toolkit = toolkits.find(t => t.slug === profile?.toolkit_slug);
+        if (toolkit) {
+          connectedApps.push({
+            toolkit,
+            profile,
+            mcpConfig
+          });
+        }
+      } else if (mcpConfig.type === 'pipedream') {
+        // Pipedream app - create a mock toolkit from the config
+        const pipedreamApp = pipedreamApps.find(app => 
+          app.name_slug === mcpConfig.name || 
+          app.slug === mcpConfig.name
+        );
+        
+        if (pipedreamApp || mcpConfig.name) {
+          const mockToolkit: ComposioToolkit = {
+            name: pipedreamApp?.name || mcpConfig.name || 'Pipedream App',
+            slug: pipedreamApp?.name_slug || mcpConfig.name || 'pipedream-app',
+            description: pipedreamApp?.description || `Pipedream integration for ${mcpConfig.name}`,
+            logo: pipedreamApp?.img_src || '',
+            tags: [],
+            categories: []
+          };
+          
+          const mockProfile: ComposioProfile = {
+            profile_id: mcpConfig.config.profile_id,
+            profile_name: mcpConfig.name || 'Pipedream Profile',
+            toolkit_slug: mockToolkit.slug,
+            is_connected: true,
+            is_default: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          };
+          
+          connectedApps.push({
+            toolkit: mockToolkit,
+            profile: mockProfile,
+            mcpConfig
+          });
+        }
       }
     }
   });
@@ -577,8 +616,8 @@ export const ComposioRegistry: React.FC<ComposioRegistryProps> = ({
 
   const connectedApps = useMemo(() => {
     if (!currentAgentId || !agent) return [];
-    return getAgentConnectedApps(agent, profiles || [], allToolkits);
-  }, [agent, profiles, allToolkits, currentAgentId]);
+    return getAgentConnectedApps(agent, profiles || [], allToolkits, pipedreamApps);
+  }, [agent, profiles, allToolkits, pipedreamApps, currentAgentId]);
   
   const profilesByToolkit = useMemo(() => {
     if (!profiles) return {};

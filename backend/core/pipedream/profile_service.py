@@ -437,4 +437,4 @@ def get_profile_service() -> ProfileService:
     global _profile_service
     if _profile_service is None:
         _profile_service = ProfileService()
-    return _profile_service 
+    return _profile_service
