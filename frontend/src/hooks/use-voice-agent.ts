@@ -25,14 +25,12 @@ export function useVoiceAgent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  const startAgent = useCallback(async (apiKey: string) => {
+  const startAgent = useCallback(async () => {
     try {
       store.setActive(true);
       store.setError(null);
-      
-      await openAIRealtimeService.connect(apiKey);
-      
-      console.log('✅ Voice agent started successfully');
+
+      await openAIRealtimeService.connect();
     } catch (error: any) {
       console.error('❌ Failed to start voice agent:', error);
       store.setError(error.message || 'Falha ao iniciar agente de voz');
@@ -44,17 +42,16 @@ export function useVoiceAgent() {
     try {
       await openAIRealtimeService.disconnect();
       store.setActive(false);
-      console.log('Voice agent stopped');
     } catch (error) {
       console.error('Failed to stop voice agent:', error);
     }
   }, [store]);
 
-  const toggleAgent = useCallback(async (apiKey: string) => {
+  const toggleAgent = useCallback(async () => {
     if (store.isActive) {
       await stopAgent();
     } else {
-      await startAgent(apiKey);
+      await startAgent();
     }
   }, [store.isActive, startAgent, stopAgent]);
 

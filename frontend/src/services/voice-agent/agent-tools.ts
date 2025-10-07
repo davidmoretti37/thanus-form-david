@@ -1,7 +1,8 @@
 import { useRouter } from 'next/navigation';
+import { tool } from '@openai/agents-realtime';
+import { z } from 'zod';
 
 export interface AgentToolDefinition {
-  type: 'function';
   name: string;
   description: string;
   parameters: {
@@ -11,10 +12,9 @@ export interface AgentToolDefinition {
   };
 }
 
-// Definições das tools disponíveis para o agente
+// Legacy tool definitions (kept for reference)
 export const AGENT_TOOLS: AgentToolDefinition[] = [
   {
-    type: 'function',
     name: 'navigate_to_page',
     description: 'Navega para uma página específica da aplicação. Use esta função sempre que o usuário pedir para ir para algum lugar ou quando você quiser mostrar algo específico.',
     parameters: {
@@ -33,7 +33,6 @@ export const AGENT_TOOLS: AgentToolDefinition[] = [
     },
   },
   {
-    type: 'function',
     name: 'describe_current_page',
     description: 'Obtém informações sobre a página atual e seus elementos principais',
     parameters: {
@@ -136,10 +135,13 @@ export class AgentToolExecutor {
     switch (toolName) {
       case 'navigate_to_page':
         return this.navigateToPage(parameters.path, parameters.reason);
-      
+
       case 'describe_current_page':
         return this.describeCurrentPage();
-      
+
+      case 'type_in_builder_chat':
+        return await this.typeInBuilderChat(parameters.text);
+
       default:
         return `Tool ${toolName} não encontrada.`;
     }
@@ -160,7 +162,7 @@ export class AgentToolExecutor {
       PAGE_DESCRIPTIONS[this.normalizePath(window?.location?.pathname ?? '')] ||
       'Esta é uma página da aplicação.';
     const reasonText = reason ? ` ${reason}` : '';
-    
+
     return `Navegando para ${targetPath}.${reasonText} ${description}`;
   }
 
@@ -183,6 +185,58 @@ export class AgentToolExecutor {
 
     return `Você está em ${normalizedPath}. ${description} A página contém ${buttons} botões, ${links} links e ${inputs} campos de entrada.`;
   }
+
+  private async typeInBuilderChat(text: string): Promise<string> {
+    if (typeof window === 'undefined') {
+      return 'Erro: Esta ação só funciona no navegador.';
+    }
+
+    // Find the chat input using data-tour attribute (most reliable)
+    const chatInput = document.querySelector('[data-tour="chat-input"] textarea') as HTMLTextAreaElement;
+
+    if (!chatInput) {
+      return 'Erro: Campo de chat não encontrado. Certifique-se de estar na página do construtor (/construtor).';
+    }
+
+    // Get native setter for React compatibility
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+      window.HTMLTextAreaElement.prototype,
+      'value'
+    )?.set;
+
+    // Clear existing text and focus
+    if (nativeInputValueSetter) {
+      nativeInputValueSetter.call(chatInput, '');
+    } else {
+      chatInput.value = '';
+    }
+    chatInput.focus();
+
+    // Split text into words for word-by-word typing
+    const words = text.split(' ');
+
+    // Type word by word with animation
+    for (let i = 0; i < words.length; i++) {
+      const currentText = words.slice(0, i + 1).join(' ');
+
+      // Set value using native setter
+      if (nativeInputValueSetter) {
+        nativeInputValueSetter.call(chatInput, currentText);
+      } else {
+        chatInput.value = currentText;
+      }
+
+      // Trigger React's onChange events
+      const inputEvent = new Event('input', { bubbles: true });
+      chatInput.dispatchEvent(inputEvent);
+
+      // Wait before next word (150ms for natural typing speed)
+      await new Promise(resolve => setTimeout(resolve, 150));
+    }
+
+    return `Terminei de digitar. Você pode revisar e enviar quando estiver pronto.`;
+  }
+
   private normalizePath(rawPath: string): string {
     const fallback = '/home';
 
@@ -215,3 +269,47 @@ export class AgentToolExecutor {
 
 // Instância singleton
 export const agentToolExecutor = new AgentToolExecutor();
+
+// ===== SDK-Compatible Tools (NEW) =====
+
+// Tool 1: Navigate to page
+export const navigateToPageTool = tool({
+  name: 'navigate_to_page',
+  description: 'Navega para uma página específica da aplicação. Use esta função sempre que o usuário pedir para ir para algum lugar ou quando você quiser mostrar algo específico.',
+  parameters: z.object({
+    path: z.string().describe('O caminho da página para navegar. Exemplos: /home, /construtor, /agents?tab=my-agents, /agents?tab=marketplace, /tasks, /artefatos, /settings'),
+    reason: z.string().nullable().describe('Breve explicação do por que está navegando para essa página')
+  }),
+  execute: async ({ path, reason }) => {
+    return await agentToolExecutor.executeTool('navigate_to_page', { path, reason });
+  }
+});
+
+// Tool 2: Describe current page
+export const describeCurrentPageTool = tool({
+  name: 'describe_current_page',
+  description: 'Obtém informações sobre a página atual e seus elementos principais',
+  parameters: z.object({}),
+  execute: async () => {
+    return await agentToolExecutor.executeTool('describe_current_page', {});
+  }
+});
+
+// Tool 3: Type in builder chat
+export const typeInBuilderChatTool = tool({
+  name: 'type_in_builder_chat',
+  description: 'Digita texto palavra por palavra no chat do construtor (/construtor) com efeito de animação. Use APENAS quando o usuário pedir EXPLICITAMENTE para criar um agente. NUNCA use ao apenas navegar para /construtor. Sempre explique verbalmente o que vai digitar ANTES de usar esta ferramenta.',
+  parameters: z.object({
+    text: z.string().describe('O prompt completo que será digitado palavra por palavra no construtor. Deve ser uma descrição detalhada do agente que o usuário quer criar. Exemplo: "Crie um agente de vendas especializado em fechar negócios, gerenciar leads e automatizar follow-ups"')
+  }),
+  execute: async ({ text }) => {
+    return await agentToolExecutor.executeTool('type_in_builder_chat', { text });
+  }
+});
+
+// Export tools array for RealtimeAgent
+export const REALTIME_TOOLS = [
+  navigateToPageTool,
+  describeCurrentPageTool,
+  typeInBuilderChatTool
+];
