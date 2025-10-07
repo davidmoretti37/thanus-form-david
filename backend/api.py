@@ -69,6 +69,7 @@ async def lifespan(app: FastAPI):
         # asyncio.create_task(core_api.restore_running_agent_runs())
         
         triggers_api.initialize(db)
+        pipedream_api.initialize(db)
         credentials_api.initialize(db)
         template_api.initialize(db)
         composio_api.initialize(db)
@@ -177,6 +178,9 @@ api_router.include_router(email_api.router)
 
 from core.knowledge_base import api as knowledge_base_api
 api_router.include_router(knowledge_base_api.router)
+
+from core.pipedream import api as pipedream_api
+api_router.include_router(pipedream_api.router)
 
 api_router.include_router(triggers_api.router)
 
