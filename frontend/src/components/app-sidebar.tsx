@@ -84,11 +84,6 @@ const data = {
           url: "https://github.com/inventu-ai/suna",
           external: true,
         },
-        {
-          title: "Discord Community",
-          url: "https://discord.gg/Py6pCBUUPw",
-          external: true,
-        },
       ],
     },
   ],
@@ -172,4 +167,3 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     </Sidebar>
   )
 }
-

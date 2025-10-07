@@ -1,42 +1,53 @@
-from typing import Optional, Any
+from typing import Optional
 from core.agentpress.tool import ToolResult, openapi_schema
-from core.sandbox.tool_base import SandboxToolsBase
+from core.tools.fal_image_base import FalImageToolBase
 from core.agentpress.thread_manager import ThreadManager
 import httpx
-from io import BytesIO
-import uuid
-import os
-import asyncio
-import tempfile
-
-# FAL AI client (requires dependency: fal-client; env var FAL_KEY must be set)
-# Usage is synchronous; we wrap calls with asyncio.to_thread to avoid blocking.
-try:
-    from fal_client import submit, upload
-    _FAL_AVAILABLE = True
-except Exception:
-    _FAL_AVAILABLE = False
 
 
-class SandboxImageEditTool(SandboxToolsBase):
+class SandboxImageEditTool(FalImageToolBase):
     """
     Tool for generating or editing images using Fal AI models.
-
-    This replaces the previous GPT Image 1 integration and routes generation/edit
-    to Fal AI models via fal-client. It supports:
-    - Generate: prompt-only image generation
-    - Edit (img2img): uses an initial image (URL or /workspace path) plus prompt
-
+    
+    Inherits all Fal AI functionality from FalImageToolBase.
+    Provides simple image generation and editing without design enhancements.
+    
+    Use this for:
+    - General image generation
+    - Simple image editing
+    - Artistic images without professional design requirements
+    
     Notes:
-    - Requires env var FAL_KEY to be configured (already present in backend/.env).
-    - Depends on package 'fal-client' in backend/pyproject.toml.
-    - Saves the resulting PNG into the sandbox /workspace and returns the filename.
+    - Inherits from FalImageToolBase for all Fal AI operations
+    - Saves images to /workspace/designs/ (shared with designer tool)
+    - Returns structured data compatible with DesignerToolView
     """
 
     def __init__(self, project_id: str, thread_id: str, thread_manager: ThreadManager):
-        super().__init__(project_id, thread_manager)
-        self.thread_id = thread_id
-        self.thread_manager = thread_manager
+        super().__init__(project_id, thread_id, thread_manager)
+
+    # Aliases for frontend capability separation
+    async def generate_image(self, prompt: str, fal_model: str = "", image_size: str = "1024x1024", **kwargs) -> ToolResult:
+        """Alias for image_edit_or_generate in 'generate' mode."""
+        return await self.image_edit_or_generate(
+            mode="generate",
+            prompt=prompt,
+            fal_model=fal_model,
+            image_size=image_size,
+            **kwargs
+        )
+
+    async def edit_image(self, prompt: str, image_path: str, fal_model: str = "", image_size: str = "1024x1024", strength: float = 0.7, **kwargs) -> ToolResult:
+        """Alias for image_edit_or_generate in 'edit' mode."""
+        return await self.image_edit_or_generate(
+            mode="edit",
+            prompt=prompt,
+            image_path=image_path,
+            fal_model=fal_model,
+            image_size=image_size,
+            strength=strength,
+            **kwargs
+        )
 
     @openapi_schema(
         {
@@ -62,8 +73,7 @@ class SandboxImageEditTool(SandboxToolsBase):
                         },
                         "fal_model": {
                             "type": "string",
-                            "description": "Fal model identifier to use (e.g., 'fal-ai/flux-pro', 'fal-ai/stable-diffusion-xl').",
-                            "default": "fal-ai/flux-pro"
+                            "description": "Fal model identifier to use (e.g., 'fal-ai/nano-banana', 'fal-ai/nano-banana/edit', 'fal-ai/stable-diffusion-xl'). If not provided, uses the model configured in agent settings."
                         },
                         "image_size": {
                             "type": "string",
@@ -92,52 +102,92 @@ class SandboxImageEditTool(SandboxToolsBase):
     ) -> ToolResult:
         """Generate or edit images using Fal AI models."""
         try:
-            # Ensure sandbox can save files
-            await self._ensure_sandbox()
+            # Ensure sandbox and designs directory exist
+            await self._ensure_designs_directory()
 
-            # Check Fal SDK availability and API key
-            if not _FAL_AVAILABLE:
-                return self.fail_response(
-                    "Fal client not available. Please ensure 'fal-client' is installed in backend and restart the server."
-                )
-            if not os.getenv("FAL_KEY"):
-                return self.fail_response(
-                    "FAL_KEY was not found in environment. Please set FAL_KEY in backend/.env and restart the server."
-                )
+            # Check Fal AI availability (inherited method)
+            fal_check = self._check_fal_availability()
+            if fal_check:
+                return fal_check
 
-            # Resolve model to use: explicit param > agent config default (per mode) > hard default
-            model_to_use = fal_model or self._get_default_fal_model(mode) or "fal-ai/flux-pro"
+            # Resolve model to use (inherited method)
+            # Treat empty string as no model specified
+            model_from_param = fal_model.strip() if fal_model else ""
+            model_from_config = self._get_default_fal_model(mode) or ""
+            model_to_use = model_from_param or model_from_config
+            
+            from core.utils.logger import logger
+            logger.info(f"[IMAGE TOOL] Mode: {mode}, Model from param: '{model_from_param}', Model from config: '{model_from_config}', Final model: '{model_to_use}'")
+            
+            # Require model configuration - no default fallback
+            if not model_to_use:
+                return self.fail_response(
+                    f"No Fal AI model configured for mode '{mode}'. Please configure 'fal_model_{mode}' in agent settings under Tools > Image > Individual Capabilities, "
+                    f"or pass a model via the fal_model parameter."
+                )
 
             if mode == "generate":
-                # Prompt-only generation
+                # Prompt-only generation (inherited method)
                 image_url = await self._fal_generate_image(
                     prompt=prompt, fal_model=model_to_use, image_size=image_size
                 )
                 if isinstance(image_url, ToolResult):
                     return image_url
 
-                image_filename = await self._save_image_from_url(image_url)
-                if isinstance(image_filename, ToolResult):
-                    return image_filename
+                # Save image (inherited method)
+                full_path = await self._save_image_from_url(image_url)
+                if isinstance(full_path, ToolResult):
+                    return full_path
 
-                return self.success_response(
-                    f"Successfully generated image using Fal model '{model_to_use}'. Image saved as: {image_filename}. You can use the ask tool to display the image."
-                )
+                # Build response
+                relative_path = full_path.replace("/workspace/", "") if full_path.startswith("/workspace/") else full_path
+                sandbox_file_url = f"/api/sandboxes/{self.sandbox_id}/files?path={relative_path}"
+
+                return self.success_response({
+                    "success": True,
+                    "design_path": full_path,
+                    "design_url": sandbox_file_url,
+                    "sandbox_id": self.sandbox_id,
+                    "mode": "generate",
+                    "model": model_to_use,
+                    "fal_image_url": image_url,  # Store original Fal URL for editing
+                    "message": f"Successfully generated image using Fal model '{model_to_use}'. Image saved at: {full_path}. Use fal_image_url for edits."
+                })
 
             elif mode == "edit":
                 # Img2img: need initial image
                 if not image_path:
                     return self.fail_response("'image_path' is required for edit mode.")
 
-                # Get bytes from URL or /workspace, upload to Fal, then run img2img
-                image_bytes = await self._get_image_bytes(image_path)
-                if isinstance(image_bytes, ToolResult):
-                    return image_bytes
+                from core.utils.logger import logger
+                logger.info(f"[IMAGE EDIT] Starting edit with image_path: {image_path}")
 
-                init_image_url = await self._fal_upload_image(image_bytes)
-                if isinstance(init_image_url, ToolResult):
-                    return init_image_url
+                # Determine initial image URL for editing
+                if image_path.startswith(("http://", "https://")):
+                    logger.info(f"[IMAGE EDIT] Using provided URL: {image_path}")
+                    init_image_url = image_path
+                else:
+                    # Try to reuse stored Fal source URL from sidecar metadata
+                    resolved_path = await self._resolve_design_full_path(image_path) or image_path
+                    meta = await self._read_design_metadata(resolved_path)
+                    if meta and isinstance(meta.get("source_url"), str) and meta["source_url"].startswith("http"):
+                        init_image_url = meta["source_url"]
+                        logger.info(f"[IMAGE EDIT] Reusing source_url from metadata: {init_image_url}")
+                    else:
+                        # Fallback: upload the local image to Fal to obtain a temporary URL
+                        logger.info(f"[IMAGE EDIT] Uploading local image for edit...")
+                        image_bytes = await self._get_image_bytes(image_path)
+                        if isinstance(image_bytes, ToolResult):
+                            return image_bytes
+                        uploaded_url_or_err = await self._fal_upload_image(image_bytes)
+                        if isinstance(uploaded_url_or_err, ToolResult):
+                            return uploaded_url_or_err
+                        init_image_url = uploaded_url_or_err
+                        logger.info(f"[IMAGE EDIT] Uploaded image. URL: {init_image_url}")
 
+                logger.info(f"[IMAGE EDIT] Calling Fal model '{model_to_use}' for edit with URL: {init_image_url}")
+
+                # Edit image (inherited method) - uses model-specific payload
                 image_url = await self._fal_edit_image(
                     prompt=prompt,
                     fal_model=model_to_use,
@@ -147,215 +197,36 @@ class SandboxImageEditTool(SandboxToolsBase):
                 )
                 if isinstance(image_url, ToolResult):
                     return image_url
+                
+                logger.info(f"[IMAGE EDIT] Received edited image URL from Fal: {image_url}")
 
-                image_filename = await self._save_image_from_url(image_url)
-                if isinstance(image_filename, ToolResult):
-                    return image_filename
+                # Save result (inherited method)
+                full_path = await self._save_image_from_url(image_url)
+                if isinstance(full_path, ToolResult):
+                    return full_path
+                
+                logger.info(f"[IMAGE EDIT] Saved edited image to: {full_path}")
 
-                return self.success_response(
-                    f"Successfully edited image with Fal model '{model_to_use}'. Image saved as: {image_filename}. You can use the ask tool to display the image."
-                )
+                # Build response
+                relative_path = full_path.replace("/workspace/", "") if full_path.startswith("/workspace/") else full_path
+                sandbox_file_url = f"/api/sandboxes/{self.sandbox_id}/files?path={relative_path}"
+
+                return self.success_response({
+                    "success": True,
+                    "design_path": full_path,
+                    "design_url": sandbox_file_url,
+                    "sandbox_id": self.sandbox_id,
+                    "mode": "edit",
+                    "model": model_to_use,
+                    "original_image": image_path,
+                    "fal_init_image_url": init_image_url,
+                    "fal_image_url": image_url,
+                    "message": f"Successfully edited image with Fal model '{model_to_use}'. Image saved at: {full_path}"
+                })
             else:
                 return self.fail_response("Invalid mode. Use 'generate' or 'edit'.")
 
         except Exception as e:
             return self.fail_response(
                 f"An error occurred during Fal AI image generation/editing: {str(e)}"
-            )
-
-    def _get_default_fal_model(self, mode: Optional[str] = None) -> Optional[str]:
-        """
-        Read default Fal model from the agent configuration if set in frontend.
-
-        Supported keys in settings:
-          - fal_model_generate: model for 'generate' mode
-          - fal_model_edit:     model for 'edit' (img2img) mode
-          - fal_model:          legacy default (used when specific one is missing)
-        Path:
-          thread_manager.agent_config.agentpress_tools.sb_image_edit_tool.settings
-        """
-        try:
-            cfg = getattr(self.thread_manager, "agent_config", None) or {}
-            tools_cfg = (cfg.get("agentpress_tools") or cfg.get("agentpress") or {})
-            tool_cfg = tools_cfg.get("sb_image_edit_tool") or {}
-            settings = tool_cfg.get("settings") or {}
-
-            # Prefer per-mode setting if provided
-            if isinstance(mode, str):
-                if mode == "generate" and isinstance(settings.get("fal_model_generate"), str):
-                    val = settings.get("fal_model_generate", "").strip()
-                    if val:
-                        return val
-                if mode == "edit" and isinstance(settings.get("fal_model_edit"), str):
-                    val = settings.get("fal_model_edit", "").strip()
-                    if val:
-                        return val
-
-            # Fallback to legacy single-model setting
-            val = settings.get("fal_model")
-            if isinstance(val, str):
-                val = val.strip()
-                if val:
-                    return val
-        except Exception:
-            pass
-        return None
-
-    # ---------- Fal helpers ----------
-
-    async def _fal_generate_image(
-        self, prompt: str, fal_model: str, image_size: str = "1024x1024"
-    ) -> str | ToolResult:
-        """Call Fal AI model for pure text-to-image generation and return image URL."""
-        try:
-            # Some Fal models accept different argument keys. We provide common ones.
-            args = {
-                "prompt": prompt,
-                "image_size": image_size,
-                "num_images": 1,
-            }
-            handler = await asyncio.to_thread(submit, fal_model, arguments=args)
-            result = await asyncio.to_thread(handler.get)
-            url = self._extract_first_image_url(result)
-            if not url:
-                return self.fail_response("Fal AI did not return an image URL.")
-            return url
-        except Exception as e:
-            return self.fail_response(f"Fal AI generation failed: {str(e)}")
-
-    async def _fal_edit_image(
-        self,
-        prompt: str,
-        fal_model: str,
-        init_image_url: str,
-        image_size: str = "1024x1024",
-        strength: float = 0.7,
-    ) -> str | ToolResult:
-        """Call Fal AI model for img2img (edit) and return image URL."""
-        try:
-            # Many Fal img2img endpoints accept 'image_url' and 'strength'.
-            args = {
-                "prompt": prompt,
-                "image_url": init_image_url,
-                "strength": max(0.0, min(1.0, strength)),
-                "image_size": image_size,
-                "num_images": 1,
-            }
-            handler = await asyncio.to_thread(submit, fal_model, arguments=args)
-            result = await asyncio.to_thread(handler.get)
-            url = self._extract_first_image_url(result)
-            if not url:
-                return self.fail_response("Fal AI (edit) did not return an image URL.")
-            return url
-        except Exception as e:
-            return self.fail_response(f"Fal AI edit failed: {str(e)}")
-
-    async def _fal_upload_image(self, image_bytes: bytes) -> str | ToolResult:
-        """
-        Upload local bytes to Fal to obtain a temporary URL usable in arguments.
-        """
-        try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
-                tmp.write(image_bytes)
-                tmp.flush()
-                tmp_path = tmp.name
-
-            try:
-                uploaded_url = await asyncio.to_thread(upload, tmp_path)
-            finally:
-                try:
-                    os.unlink(tmp_path)
-                except Exception:
-                    pass
-
-            if not uploaded_url or not isinstance(uploaded_url, str):
-                return self.fail_response("Failed to upload image to Fal.")
-            return uploaded_url
-        except Exception as e:
-            return self.fail_response(f"Fal upload failed: {str(e)}")
-
-    def _extract_first_image_url(self, response: Any) -> Optional[str]:
-        """
-        Try to extract the first image URL from Fal response, being defensive across models.
-        Typical shapes:
-          - {'images': [{'url': '...'}]}
-          - {'image': {'url': '...'}}
-          - {'output': [{'url': '...'}]}
-        """
-        # Depth-first search for a value that looks like an http(s) URL
-        def _dfs(obj: Any) -> Optional[str]:
-            if isinstance(obj, dict):
-                # Try common keys first
-                for k in ("url", "signed_url", "uri"):
-                    v = obj.get(k)
-                    if isinstance(v, str) and v.startswith("http"):
-                        return v
-                for v in obj.values():
-                    found = _dfs(v)
-                    if found:
-                        return found
-            elif isinstance(obj, list):
-                for item in obj:
-                    found = _dfs(item)
-                    if found:
-                        return found
-            elif isinstance(obj, str):
-                if obj.startswith("http"):
-                    return obj
-            return None
-
-        return _dfs(response)
-
-    async def _save_image_from_url(self, url: str) -> str | ToolResult:
-        """Download image from a URL and save into /workspace with random filename."""
-        try:
-            async with httpx.AsyncClient() as client:
-                r = await client.get(url, timeout=60)
-                r.raise_for_status()
-                data = r.content
-
-            random_filename = f"generated_image_{uuid.uuid4().hex[:8]}.png"
-            sandbox_path = f"{self.workspace_path}/{random_filename}"
-            await self.sandbox.fs.upload_file(data, sandbox_path)
-            return random_filename
-        except Exception as e:
-            return self.fail_response(f"Failed to download and save Fal image: {str(e)}")
-
-    # ---------- Existing helpers for input handling ----------
-
-    async def _get_image_bytes(self, image_path: str) -> bytes | ToolResult:
-        """Get image bytes from URL or local file path."""
-        if image_path.startswith(("http://", "https://")):
-            return await self._download_image_from_url(image_path)
-        else:
-            return await self._read_image_from_sandbox(image_path)
-
-    async def _download_image_from_url(self, url: str) -> bytes | ToolResult:
-        """Download image from URL."""
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(url, timeout=60)
-                response.raise_for_status()
-                return response.content
-        except Exception:
-            return self.fail_response(f"Could not download image from URL: {url}")
-
-    async def _read_image_from_sandbox(self, image_path: str) -> bytes | ToolResult:
-        """Read image from sandbox filesystem."""
-        try:
-            cleaned_path = self.clean_path(image_path)
-            full_path = f"{self.workspace_path}/{cleaned_path}"
-
-            # Check if file exists and is not a directory
-            file_info = await self.sandbox.fs.get_file_info(full_path)
-            if file_info.is_dir:
-                return self.fail_response(
-                    f"Path '{cleaned_path}' is a directory, not an image file."
-                )
-
-            return await self.sandbox.fs.download_file(full_path)
-
-        except Exception as e:
-            return self.fail_response(
-                f"Could not read image file from sandbox: {image_path} - {str(e)}"
             )

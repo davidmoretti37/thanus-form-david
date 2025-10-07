@@ -48,7 +48,7 @@ const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
   const dashboardTourSteps: Step[] = [
     {
       target: '[data-tour="chat-input"]',
-      content: 'Type your questions or tasks here. Tars can help with research, analysis, automation, and much more.',
+      content: 'Type your questions or tasks here. Echo can help with research, analysis, automation, and much more.',
       title: 'Start a Conversation',
       placement: 'top',
       disableBeacon: true,
@@ -111,9 +111,9 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
   const chatInputRef = React.useRef<ChatInputHandles>(null);
   const initiateAgentMutation = useInitiateAgentWithInvalidation();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const disableTours = evaMode === 'only';
+  const disableTours = true; // Desabilitar tour completamente
 
-  // Tour integration
+  // Tour integration (disabled)
   const {
     run,
     stepIndex,
@@ -124,12 +124,10 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
     handleWelcomeDecline,
   } = useDashboardTour();
 
-  // Ensure tour is completely disabled on pages that pass evaMode="only" (e.g., /construtor)
+  // Ensure tour is completely disabled
   useEffect(() => {
-    if (disableTours) {
-      stopTour();
-    }
-  }, [disableTours, stopTour]);
+    stopTour();
+  }, [stopTour]);
 
   // Feature flag for custom agents section
 
@@ -161,7 +159,7 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
   const selectedAgent = selectedAgentId
     ? filteredAgents.find(agent => agent.agent_id === selectedAgentId)
     : null;
-  const displayName = selectedAgent?.name || 'Tars';
+  const displayName = selectedAgent?.name || 'Echo';
   const agentAvatar = undefined;
   const isTarsAgent = selectedAgent?.metadata?.is_suna_default || false;
 
@@ -302,82 +300,8 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
 
   return (
     <>
-      {!disableTours && (
-        <Joyride
-        steps={dashboardTourSteps}
-        run={run && !disableTours}
-        stepIndex={stepIndex}
-        callback={handleTourCallback}
-        continuous
-        showProgress
-        showSkipButton
-        disableOverlayClose
-        disableScrollParentFix
-        styles={{
-          options: {
-            primaryColor: '#000000',
-            backgroundColor: '#ffffff',
-            textColor: '#000000',
-            overlayColor: 'rgba(0, 0, 0, 0.7)',
-            arrowColor: '#ffffff',
-            zIndex: 1000,
-          },
-          tooltip: {
-            backgroundColor: '#ffffff',
-            borderRadius: 8,
-            fontSize: 14,
-            padding: 20,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            border: '1px solid #e5e7eb',
-          },
-          tooltipTitle: {
-            color: '#000000',
-            fontSize: 16,
-            fontWeight: 600,
-            marginBottom: 8,
-          },
-          tooltipContent: {
-            color: '#000000',
-            fontSize: 14,
-            lineHeight: 1.5,
-          },
-          buttonNext: {
-            backgroundColor: '#000000',
-            color: '#ffffff',
-            fontSize: 12,
-            padding: '8px 16px',
-            borderRadius: 6,
-            border: 'none',
-            fontWeight: 500,
-          },
-          buttonBack: {
-            color: '#6b7280',
-            backgroundColor: 'transparent',
-            fontSize: 12,
-            padding: '8px 16px',
-            border: '1px solid #e5e7eb',
-            borderRadius: 6,
-          },
-          buttonSkip: {
-            color: '#6b7280',
-            backgroundColor: 'transparent',
-            fontSize: 12,
-            border: 'none',
-          },
-          buttonClose: {
-            color: '#6b7280',
-            backgroundColor: 'transparent',
-          },
-        }}
-      />
-      )}
+      {/* Tour completamente desabilitado */}
       
-      <TourConfirmationDialog
-        open={showWelcome && !disableTours}
-        onAccept={handleWelcomeAccept}
-        onDecline={handleWelcomeDecline}
-      />
-
       <BillingModal 
         open={showPaymentModal} 
         onOpenChange={setShowPaymentModal}

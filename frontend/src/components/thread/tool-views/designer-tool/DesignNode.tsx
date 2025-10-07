@@ -13,6 +13,7 @@ export interface DesignNodeData extends Record<string, unknown> {
   height: number;
   locked: boolean;
   onSelect: () => void;
+  onResize?: (size: { width: number; height: number }) => void;
 }
 
 interface DesignNodeProps {
@@ -63,6 +64,43 @@ export function DesignNode({ data, selected }: DesignNodeProps) {
           alt={data.name}
           className="w-full h-full object-contain"
           draggable={false}
+          onLoad={(e) => {
+            const img = e.currentTarget;
+            const naturalWidth = img.naturalWidth || data.width;
+            const naturalHeight = img.naturalHeight || data.height;
+            if (!naturalWidth || !naturalHeight) return;
+
+            // Snap to closest supported aspect ratio: 9:16, 1:1, 4:5
+            const aspect = naturalWidth / naturalHeight;
+            const candidates = [9 / 16, 1, 4 / 5];
+            let target = candidates[0];
+            let minDiff = Math.abs(aspect - target);
+            for (const r of candidates) {
+              const d = Math.abs(aspect - r);
+              if (d < minDiff) {
+                minDiff = d;
+                target = r;
+              }
+            }
+
+            const MAX_DISPLAY_SIZE = 600;
+            let w = 0;
+            let h = 0;
+            if (target <= 1) {
+              // Portrait or square: fix height
+              h = MAX_DISPLAY_SIZE;
+              w = Math.round(MAX_DISPLAY_SIZE * target);
+            } else {
+              // Landscape (fallback)
+              w = MAX_DISPLAY_SIZE;
+              h = Math.round(MAX_DISPLAY_SIZE / target);
+            }
+
+            // Notify parent to adapt the node size if it changed
+            if (Math.abs((data.width || 0) - w) > 1 || Math.abs((data.height || 0) - h) > 1) {
+              data.onResize?.({ width: w, height: h });
+            }
+          }}
           onError={() => setImageError(true)}
           loading="eager"
         />

@@ -111,7 +111,7 @@ export default function ActivateTrialPage() {
           <div>
             <CardTitle className="text-2xl font-bold flex items-center justify-center gap-2">
               <KortixLogo/>
-              <span>Welcome to Tars</span>
+              <span>Welcome to Echo AI First</span>
             </CardTitle>
             <CardDescription className="mt-2">
               Start your journey with a 7-day free trial
@@ -190,4 +190,4 @@ export default function ActivateTrialPage() {
       </Card>
     </div>
   );
-} 
+}

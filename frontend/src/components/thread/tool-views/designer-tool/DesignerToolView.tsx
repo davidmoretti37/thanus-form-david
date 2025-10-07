@@ -92,7 +92,7 @@ export function DesignerToolView({
       const sandboxId = sandbox_id || project?.sandbox?.id || project?.id;
       
       if (!sandboxId) {
-        console.warn('Designer Tool: No sandbox ID available');
+        console.warn('Designer Tool: No sandbox ID available', { sandbox_id, project });
         return;
       }
       
@@ -103,51 +103,100 @@ export function DesignerToolView({
         relativePath = relativePath.substring(1);
       }
       
-      const contentKey = `${relativePath}-${designUrl || ''}-${JSON.stringify(toolContent)}`;
+      // Create a unique key based on the generated content, not nodes
+      const contentKey = `${sandboxId}-${relativePath}-${designUrl || ''}`;
       
       if (lastProcessedPath.current === contentKey) {
-        console.log('Designer Tool: Skipping duplicate content');
+        console.log('Designer Tool: Skipping duplicate content', contentKey);
         return;
       }
       
       lastProcessedPath.current = contentKey;
       const elementId = `design-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       
-      // Calculate position for new node
-      let x = 100;
-      let y = 100;
+      console.log('Designer Tool: Adding node to canvas', {
+        elementId,
+        sandboxId,
+        relativePath,
+        designUrl,
+        width,
+        height,
+      });
       
-      if (nodes.length > 0) {
-        const rightmostNode = nodes.reduce((rightmost, node) => {
-          const rightmostRight = node.position.x + (node.data.width || 400);
-          const currentRight = node.position.x + (node.data.width || 400);
-          return currentRight > rightmostRight ? node : rightmost;
-        }, nodes[0]);
+      // Calculate position for new node - use a callback to get latest nodes
+      setNodes((currentNodes) => {
+        let x = 100;
+        let y = 100;
         
-        x = rightmostNode.position.x + (rightmostNode.data.width || 400) + 50;
-        y = rightmostNode.position.y;
-      }
+        if (currentNodes.length > 0) {
+          const rightmostNode = currentNodes.reduce((rightmost, node) => {
+            const rightmostRight = rightmost.position.x + (rightmost.data.width || 400);
+            const currentRight = node.position.x + (node.data.width || 400);
+            return currentRight > rightmostRight ? node : rightmost;
+          }, currentNodes[0]);
+          
+          x = rightmostNode.position.x + (rightmostNode.data.width || 400) + 50;
+          y = rightmostNode.position.y;
+        }
+        
+        // Compute display size snapped to supported ratios (9:16, 1:1, 4:5)
+        const naturalW = width || 512;
+        const naturalH = height || 512;
+        const aspect = naturalW / naturalH;
+        const candidates = [9 / 16, 1, 4 / 5];
+        let target = candidates[0];
+        let minDiff = Math.abs(aspect - target);
+        for (const r of candidates) {
+          const d = Math.abs(aspect - r);
+          if (d < minDiff) {
+            minDiff = d;
+            target = r;
+          }
+        }
+        const MAX_DISPLAY_SIZE = 600;
+        let displayWidth = 0;
+        let displayHeight = 0;
+        if (target <= 1) {
+          // Portrait or square: fix height
+          displayHeight = MAX_DISPLAY_SIZE;
+          displayWidth = Math.round(MAX_DISPLAY_SIZE * target);
+        } else {
+          // Landscape (fallback)
+          displayWidth = MAX_DISPLAY_SIZE;
+          displayHeight = Math.round(MAX_DISPLAY_SIZE / target);
+        }
+        
+        const newNode: Node<DesignNodeData> = {
+          id: elementId,
+          type: 'designNode',
+          position: { x, y },
+          data: {
+            sandboxId: sandboxId,
+            filePath: relativePath,
+            directUrl: designUrl,
+            name: relativePath.split('/').pop() || 'design',
+            width: Math.round(displayWidth),
+            height: Math.round(displayHeight),
+            locked: false,
+            onSelect: () => setSelectedNodeId(elementId),
+            onResize: (size) => {
+              setNodes((ns) =>
+                ns.map((n) =>
+                  n.id === elementId
+                    ? { ...n, data: { ...n.data, width: size.width, height: size.height } }
+                    : n
+                )
+              );
+            },
+          },
+        };
+        
+        return [...currentNodes, newNode];
+      });
       
-      const newNode: Node<DesignNodeData> = {
-        id: elementId,
-        type: 'designNode',
-        position: { x, y },
-        data: {
-          sandboxId: sandboxId,
-          filePath: relativePath,
-          directUrl: designUrl,
-          name: relativePath.split('/').pop() || 'design',
-          width: width ? width / 2 : 200,
-          height: height ? height / 2 : 200,
-          locked: false,
-          onSelect: () => setSelectedNodeId(elementId),
-        },
-      };
-      
-      setNodes((nds) => [...nds, newNode]);
       setSelectedNodeId(elementId);
     }
-  }, [generatedImagePath, designUrl, sandbox_id, project, width, height, isStreaming, toolContent, nodes.length]);
+  }, [generatedImagePath, designUrl, sandbox_id, project, width, height, isStreaming, setNodes]);
 
   const handleDownload = () => {
     const node = nodes.find((n) => n.id === selectedNodeId);
@@ -226,7 +275,7 @@ export function DesignerToolView({
               </div>
             </TooltipProvider>
 
-            {!isStreaming && (
+            {!isStreaming && generatedImagePath && (
               <Badge
                 className={cn(
                   "px-3",
@@ -241,6 +290,13 @@ export function DesignerToolView({
                   <AlertTriangle className="h-3.5 w-3.5 mr-1" />
                 )}
                 {actualIsSuccess ? 'Ready' : 'Failed'}
+              </Badge>
+            )}
+            
+            {!isStreaming && !generatedImagePath && error && (
+              <Badge className="px-3 bg-gradient-to-r from-rose-500 to-rose-600 text-white">
+                <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+                Failed
               </Badge>
             )}
 

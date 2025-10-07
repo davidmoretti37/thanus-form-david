@@ -574,6 +574,33 @@ TOOL_GROUPS: Dict[str, ToolGroup] = {
         ]
     ),
 
+    "sb_video_tool": ToolGroup(
+        name="sb_video_tool",
+        display_name="Video Generation & Editing",
+        description="Generate and edit videos using Fal AI models",
+        tool_class="SandboxVideoTool",
+        methods=[
+            ToolMethod(
+                name="video_generate_or_edit",
+                display_name="Generate or Edit Video",
+                description="Generate a new video from text or edit an existing video using Fal AI",
+                enabled=True
+            ),
+            ToolMethod(
+                name="generate_video",
+                display_name="Generate Video (text → video)",
+                description="Generate video from a text prompt using Fal AI",
+                enabled=True
+            ),
+            ToolMethod(
+                name="edit_video",
+                display_name="Edit Video (vid2vid/img2vid)",
+                description="Edit an existing video or drive image-to-video with supported models",
+                enabled=True
+            ),
+        ]
+    ),
+
     "sb_design_tool": ToolGroup(
         name="sb_design_tool",
         display_name="Design Tool",
