@@ -55,7 +55,7 @@ async function startTask(prompt: string, token?: string) {
     }
     const payload = {
       prompt: prompt + "\nApós a conclusão, me envie os arquivos criados na tarefa pelo Whatsapp.",
-      model_name: "anthropic/claude-sonnet-4-20250514",
+      model_name: "openrouter/deepseek/deepseek-chat-v3.1",
       enable_thinking: false,
       stream: true
     }
@@ -163,7 +163,7 @@ async function startAgentTask(prompt: string, agent_id: string, token?: string) 
     }
     const payload = {
       prompt: prompt + "\nApós a conclusão, me envie os arquivos criados na tarefa pelo Whatsapp.",
-      model_name: "anthropic/claude-sonnet-4-20250514",
+      model_name: "openrouter/deepseek/deepseek-chat-v3.1",
       agent_id: agent_id,
       enable_thinking: false,
       stream: true
