@@ -109,7 +109,7 @@ export const MarketplaceAgentPreviewDialog: React.FC<MarketplaceAgentPreviewDial
   
   if (!agent) return null;
 
-  const isTarsAgent = agent.is_kortix_team || false;
+  const isEchoAgent = agent.is_kortix_team || false;
   
   const tools = agent.mcp_requirements || [];
   

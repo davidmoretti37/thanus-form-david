@@ -515,13 +515,13 @@ async def stream_agent_run(
                      terminate_stream = True
                      break
                 except Exception as loop_err:
-                    logger.error(f"Error in stream generator main loop for {agent_run_id}: {loop_err}", exc_info=True)
+                    logger.error(f"Error in stream generator main loop for {agent_run_id}: {loop_err}\n{traceback.format_exc()}")
                     terminate_stream = True
                     yield f"data: {json.dumps({'type': 'status', 'status': 'error', 'message': f'Stream failed: {loop_err}'})}\n\n"
                     break
 
         except Exception as e:
-            logger.error(f"Error setting up stream for agent run {agent_run_id}: {e}", exc_info=True)
+            logger.error(f"Error setting up stream for agent run {agent_run_id}: {e}\n{traceback.format_exc()}")
             # Only yield error if initial yield didn't happen
             if not initial_yield_complete:
                  yield f"data: {json.dumps({'type': 'status', 'status': 'error', 'message': f'Failed to start stream: {e}'})}\n\n"

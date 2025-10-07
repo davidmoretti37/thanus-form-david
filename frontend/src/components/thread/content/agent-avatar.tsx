@@ -27,11 +27,11 @@ interface AgentAvatarProps {
   className?: string;
 }
 
-export const AgentAvatar: React.FC<AgentAvatarProps> = ({ 
+export const AgentAvatar: React.FC<AgentAvatarProps> = ({
   // Agent data props
   agent: propAgent,
-  agentId, 
-  fallbackName = "Suna",
+  agentId,
+  fallbackName = "Echo",
   
   // Direct props
   iconName: propIconName,

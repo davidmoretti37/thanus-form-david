@@ -412,7 +412,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
     project,
     debugMode = false,
     isPreviewMode = false,
-    agentName = 'Tars',
+    agentName = 'Echo',
     agentAvatar = <KortixLogo size={16} />,
     emptyStateComponent,
     threadMetadata,
@@ -453,15 +453,15 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
     // Helper function to get agent info robustly
     const getAgentInfo = useCallback(() => {
 
-        // Check if this is a Tars default agent from metadata
-        const isTarsDefaultAgent = agentMetadata?.is_suna_default || false;
+        // Check if this is an Echo default agent from metadata
+        const isEchoDefaultAgent = agentMetadata?.is_suna_default || false;
 
         // Then check recent messages for agent info
         const recentAssistantWithAgent = [...displayMessages].reverse().find(msg =>
             msg.type === 'assistant' && msg.agents?.name
         );
 
-        if (agentData && !isTarsDefaultAgent) {
+        if (agentData && !isEchoDefaultAgent) {
             // Use modern icon system for agent display
             const avatar = (
                 <div className="h-5 w-5 flex items-center justify-center rounded text-xs">
@@ -475,11 +475,11 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
         }
 
         if (recentAssistantWithAgent?.agents?.name) {
-            const isTarsAgent = recentAssistantWithAgent.agents.name === 'Tars' || isTarsDefaultAgent;
-            // Use modern icon system for agent display  
-            const avatar = !isTarsDefaultAgent ? (
+            const isEchoAgent = recentAssistantWithAgent.agents.name === 'Echo' || isEchoDefaultAgent;
+            // Use modern icon system for agent display
+            const avatar = !isEchoDefaultAgent ? (
                 <>
-                    {isTarsAgent ? (
+                    {isEchoAgent ? (
                         <div className="h-5 w-5 flex items-center justify-center rounded text-xs">
                             <KortixLogo size={16} />
                         </div>
@@ -500,10 +500,10 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
             };
         }
 
-        // Fallback: if this is a Tars default agent, always show KortixLogo
-        if (isTarsDefaultAgent) {
+        // Fallback: if this is an Echo default agent, always show KortixLogo
+        if (isEchoDefaultAgent) {
             return {
-                name: agentName || 'Tars',
+                name: agentName || 'Echo',
                 avatar: (
                     <div className="h-5 w-5 flex items-center justify-center rounded text-xs">
                         <KortixLogo size={16} />
@@ -513,7 +513,7 @@ export const ThreadContent: React.FC<ThreadContentProps> = ({
         }
 
         return {
-            name: agentName || 'Tars',
+            name: agentName || 'Echo',
             avatar: agentAvatar
         };
     }, [threadMetadata, displayMessages, agentName, agentAvatar, agentMetadata, agentData]);
