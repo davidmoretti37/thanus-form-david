@@ -65,6 +65,7 @@ export interface ChatInputProps {
   onChange?: (value: string) => void;
   onFileBrowse?: () => void;
   sandboxId?: string;
+  projectId?: string;
   hideAttachments?: boolean;
   selectedAgentId?: string;
   onAgentSelect?: (agentId: string | undefined) => void;
@@ -112,6 +113,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     onChange: controlledOnChange,
     onFileBrowse,
     sandboxId,
+    projectId,
     hideAttachments = false,
     selectedAgentId,
     onAgentSelect,
@@ -136,19 +138,15 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     ref,
   ) => {
     const isControlled = controlledValue !== undefined && controlledOnChange !== undefined;
-    const value = isControlled ? controlledValue : '';
-    const onChange = isControlled ? controlledOnChange : () => {};
 
     const [uncontrolledValue, setUncontrolledValue] = useState('');
-    const isEchoAgent = agentMetadata?.is_suna_default || false;
+    const value = isControlled ? controlledValue : uncontrolledValue;
 
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
-    const [isDragging, setIsDragging] = useState(false);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
-    
+
     const { t } = useLanguage();
 
     const [registryDialogOpen, setRegistryDialogOpen] = useState(false);
@@ -258,33 +256,6 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     }, [value]);
 
     useEffect(() => {
-      setMounted(true);
-    }, []);
-
-    // Auto-resize textarea
-    useEffect(() => {
-      if (!textareaRef.current) return;
-
-      const adjustHeight = () => {
-        const el = textareaRef.current;
-        if (!el) return;
-        el.style.height = 'auto';
-        el.style.maxHeight = '200px';
-        el.style.overflowY = el.scrollHeight > 200 ? 'auto' : 'hidden';
-
-        const newHeight = Math.min(el.scrollHeight, 200);
-        el.style.height = `${newHeight}px`;
-      };
-
-      adjustHeight();
-
-      window.addEventListener('resize', adjustHeight);
-      return () => window.removeEventListener('resize', adjustHeight);
-    }, [value]);
-
-
-
-    useEffect(() => {
       if (autoFocus && textareaRef.current) {
         textareaRef.current.focus();
       }
@@ -292,10 +263,8 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
       e.preventDefault();
-      const currentValue = isControlled ? value : uncontrolledValue;
-      
       if (
-        (!currentValue.trim() && uploadedFiles.length === 0) ||
+        (!value.trim() && uploadedFiles.length === 0) ||
         loading ||
         (disabled && !isAgentRunning)
       )
@@ -306,7 +275,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
         return;
       }
 
-      let message = isControlled ? value : uncontrolledValue;
+      let message = value;
 
       if (uploadedFiles.length > 0) {
         const fileInfo = uploadedFiles
@@ -488,6 +457,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
               isAgentRunning={isAgentRunning}
               isUploading={isUploading}
               sandboxId={sandboxId}
+              projectId={projectId}
               setPendingFiles={setPendingFiles}
               setUploadedFiles={setUploadedFiles}
               setIsUploading={setIsUploading}

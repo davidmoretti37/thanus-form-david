@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+import secrets
 from typing import Optional
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, APIRouter, Form, Depends, Request
@@ -7,7 +8,8 @@ from fastapi.responses import Response
 from pydantic import BaseModel
 from daytona_sdk import AsyncSandbox
 
-from core.sandbox.sandbox import get_or_start_sandbox, delete_sandbox
+from core.sandbox.sandbox import get_or_start_sandbox, delete_sandbox, create_sandbox
+from core.utils.config import config
 from core.utils.logger import logger
 from core.utils.auth_utils import get_optional_user_id, verify_and_get_user_id_from_jwt, verify_sandbox_access, verify_sandbox_access_optional
 from core.services.supabase import DBConnection
@@ -363,22 +365,51 @@ async def ensure_project_sandbox_active(
     try:
         # Get sandbox ID from project data
         sandbox_info = project_data.get('sandbox', {})
+
         if not sandbox_info.get('id'):
-            raise HTTPException(status_code=404, detail="No sandbox found for this project")
-            
-        sandbox_id = sandbox_info['id']
-        
-        # Get or start the sandbox
-        logger.debug(f"Ensuring sandbox is active for project {project_id}")
-        sandbox = await get_or_start_sandbox(sandbox_id)
-        
-        logger.debug(f"Successfully ensured sandbox {sandbox_id} is active for project {project_id}")
-        
-        return {
-            "status": "success", 
-            "sandbox_id": sandbox_id,
-            "message": "Sandbox is active"
-        }
+            # No sandbox exists - create a new one
+            logger.info(f"No sandbox found for project {project_id}, creating new sandbox")
+
+            # Generate secure password for the new sandbox
+            password = secrets.token_urlsafe(16)
+
+            # Create new sandbox
+            sandbox = await create_sandbox(password, project_id)
+            sandbox_id = sandbox.id
+
+            logger.info(f"Created new sandbox {sandbox_id} for project {project_id}")
+
+            # Update project with new sandbox information
+            vnc_preview = f'{config.DAYTONA_SERVER_URL}/sandbox/{sandbox_id}/vnc'
+            await client.table('projects').update({
+                'sandbox': {
+                    'id': sandbox_id,
+                    'pass': password,
+                    'vnc_preview': vnc_preview
+                }
+            }).eq('project_id', project_id).execute()
+
+            logger.debug(f"Updated project {project_id} with sandbox information")
+
+            return {
+                "status": "success",
+                "sandbox_id": sandbox_id,
+                "message": "Sandbox created and active"
+            }
+        else:
+            # Sandbox exists - ensure it's started
+            sandbox_id = sandbox_info['id']
+
+            logger.debug(f"Ensuring existing sandbox {sandbox_id} is active for project {project_id}")
+            sandbox = await get_or_start_sandbox(sandbox_id)
+
+            logger.debug(f"Successfully ensured sandbox {sandbox_id} is active for project {project_id}")
+
+            return {
+                "status": "success",
+                "sandbox_id": sandbox_id,
+                "message": "Sandbox is active"
+            }
     except Exception as e:
         logger.error(f"Error ensuring sandbox is active for project {project_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

@@ -157,12 +157,51 @@ const handleFiles = async (
   setIsUploading: React.Dispatch<React.SetStateAction<boolean>>,
   messages: any[] = [], // Add messages parameter
   queryClient?: any, // Add queryClient parameter
+  projectId?: string, // Add projectId parameter for sandbox creation
 ) => {
   if (sandboxId) {
     // If we have a sandboxId, upload files directly
     await uploadFiles(files, sandboxId, setUploadedFiles, setIsUploading, messages, queryClient);
+  } else if (projectId) {
+    // No sandbox yet - need to create/activate it first
+    toast.info('Preparing workspace for file upload...');
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session?.access_token) {
+        throw new Error('No access token available');
+      }
+
+      // Call ensure-active endpoint to create/start sandbox
+      const response = await fetch(`${API_URL}/project/${projectId}/sandbox/ensure-active`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to prepare workspace');
+      }
+
+      const data = await response.json();
+      const newSandboxId = data.sandbox_id;
+
+      // Now upload files with the new sandbox ID
+      await uploadFiles(files, newSandboxId, setUploadedFiles, setIsUploading, messages, queryClient);
+
+      // Invalidate project query to refresh sandbox info in UI
+      if (queryClient) {
+        queryClient.invalidateQueries({ queryKey: ['project', projectId] });
+      }
+    } catch (error) {
+      console.error('Failed to prepare workspace for upload:', error);
+      toast.error('Failed to prepare workspace for upload');
+      setIsUploading(false);
+    }
   } else {
-    // Otherwise, store files locally
+    // No sandbox and no projectId - store files locally
     handleLocalFiles(files, setPendingFiles, setUploadedFiles);
   }
 };
@@ -173,6 +212,7 @@ interface FileUploadHandlerProps {
   isAgentRunning: boolean;
   isUploading: boolean;
   sandboxId?: string;
+  projectId?: string;
   setPendingFiles: React.Dispatch<React.SetStateAction<File[]>>;
   setUploadedFiles: React.Dispatch<React.SetStateAction<UploadedFile[]>>;
   setIsUploading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -191,6 +231,7 @@ export const FileUploadHandler = forwardRef<
       isAgentRunning,
       isUploading,
       sandboxId,
+      projectId,
       setPendingFiles,
       setUploadedFiles,
       setIsUploading,
@@ -236,6 +277,7 @@ export const FileUploadHandler = forwardRef<
         setIsUploading,
         messages,
         queryClient,
+        projectId,
       );
 
       event.target.value = '';
