@@ -1,7 +1,6 @@
-import json
 import traceback
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends, Form, Query
 
@@ -9,8 +8,7 @@ from core.utils.auth_utils import verify_and_get_user_id_from_jwt, verify_and_au
 from core.utils.logger import logger
 from core.sandbox.sandbox import create_sandbox, delete_sandbox
 
-from .api_models import CreateThreadResponse, MessageCreateRequest, ActiveThread
-from core.utils.auth_utils import verify_and_get_user_id_from_jwt
+from .api_models import CreateThreadResponse, MessageCreateRequest
 from . import core_utils as utils
 
 router = APIRouter(tags=["threads"])
@@ -39,21 +37,64 @@ async def get_user_active_threads(
     try:
         client = await utils.db.client
         
-        # Buscar threads do usuário que têm agent_runs ativos
-        # Usando uma única consulta com join implícito
-        threads_result = await client.from_('threads')\
-            .select('thread_id, project_id, updated_at, projects(name), agent_runs!inner(id)')\
-            .eq('account_id', user_id)\
-            .eq('agent_runs.status', 'running')\
+        # Calculate timestamp for 5 minutes ago
+        five_minutes_ago = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+        
+        # First, get all threads with running agent runs
+        threads_result = await (
+            client.from_('threads')
+            .select('''
+                thread_id, 
+                project_id, 
+                updated_at, 
+                projects(name), 
+                agent_runs!inner(id)
+            ''')
+            .eq('account_id', user_id)
+            .eq('agent_runs.status', 'running')
             .execute()
+        )
         
         if not threads_result.data:
             logger.info(f"No active threads found for user {user_id}")
             return {"threads": []}
+            
+        # Then get recent messages for these threads
+        thread_ids = [t['thread_id'] for t in threads_result.data]
+        messages_result = await (
+            client.from_('messages')
+            .select('thread_id, created_at')
+            .in_('thread_id', thread_ids)
+            .gt('created_at', five_minutes_ago)
+            .execute()
+        )
         
-        # Processar os resultados
+        # Create a set of thread IDs that have recent messages
+        recent_thread_ids = {msg['thread_id'] for msg in (messages_result.data or [])}
+        
+        # Filter threads to only those with recent messages
+        recent_threads = [
+            t for t in threads_result.data 
+            if t['thread_id'] in recent_thread_ids
+        ]
+        
+        if not recent_threads:
+            logger.info(f"No active threads with recent messages found for user {user_id}")
+            return {"threads": []}
+        
+        # Process the results
         active_threads = []
-        for thread in threads_result.data:
+        seen_threads = set()  # To avoid duplicates
+        
+        for thread in recent_threads:
+            thread_id = thread['thread_id']
+            
+            # Skip if we've already processed this thread
+            if thread_id in seen_threads:
+                continue
+                
+            seen_threads.add(thread_id)
+            
             # Obter informações do agent run
             agent_run = thread.get('agent_runs', [{}])[0] if thread.get('agent_runs') else {}
             
@@ -62,7 +103,7 @@ async def get_user_active_threads(
             project_name = project.get('name', 'Untitled Project') if project else 'Untitled Project'
             
             active_thread = {
-                "thread_id": thread['thread_id'],
+                "thread_id": thread_id,
                 "project_id": thread['project_id'],
                 "project_name": project_name,
                 "updated_at": thread.get('updated_at'),
@@ -70,7 +111,7 @@ async def get_user_active_threads(
             }
             active_threads.append(active_thread)
         
-        logger.info(f"Found {len(active_threads)} active threads for user {user_id}")
+        logger.info(f"Found {len(active_threads)} active threads with recent messages for user {user_id}")
         return {"threads": active_threads}
         
     except HTTPException:

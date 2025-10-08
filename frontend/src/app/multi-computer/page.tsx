@@ -143,8 +143,35 @@ export default function MultiComputerPage() {
     }
   };
 
+  // Set up polling for active threads
   useEffect(() => {
+    // Initial load
     loadThreads();
+
+    // Set up polling every minute (60000ms)
+    const intervalId = setInterval(() => {
+      // Only poll if the tab is visible
+      if (!document.hidden) {
+        loadThreads();
+      }
+    }, 60000);
+
+    // Handle tab visibility changes
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // If the tab becomes visible, immediately refresh the data
+        loadThreads();
+      }
+    };
+
+    // Add event listener for tab visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Clean up the interval and event listener when the component unmounts
+    return () => {
+      clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   useEffect(() => {
