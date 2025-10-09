@@ -178,7 +178,12 @@ class ThreadManager:
             llm_response_id = content.get("llm_response_id", "unknown")
             logger.info(f"💰 Processing billing for LLM response: {llm_response_id}")
             
-            usage = content.get("usage", {})
+            usage = content.get("usage")
+            
+            # Handle case where usage is None or not a dict
+            if not usage or not isinstance(usage, dict):
+                logger.warning(f"⚠️ No usage data available for billing (usage={usage})")
+                return
             
             prompt_tokens = int(usage.get("prompt_tokens", 0) or 0)
             completion_tokens = int(usage.get("completion_tokens", 0) or 0)
@@ -187,7 +192,9 @@ class ThreadManager:
             
             cache_read_tokens = int(usage.get("cache_read_input_tokens", 0) or 0)
             if cache_read_tokens == 0:
-                cache_read_tokens = int(usage.get("prompt_tokens_details", {}).get("cached_tokens", 0) or 0)
+                prompt_tokens_details = usage.get("prompt_tokens_details")
+                if prompt_tokens_details and isinstance(prompt_tokens_details, dict):
+                    cache_read_tokens = int(prompt_tokens_details.get("cached_tokens", 0) or 0)
             
             cache_creation_tokens = int(usage.get("cache_creation_input_tokens", 0) or 0)
             model = content.get("model")

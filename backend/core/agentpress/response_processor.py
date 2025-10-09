@@ -356,8 +356,14 @@ class ResponseProcessor:
                         # Append reasoning to main content to be saved in the final message
                         reasoning_content = delta.reasoning_content
                         # logger.debug(f"Processing reasoning_content: type={type(reasoning_content)}, value={reasoning_content}")
+                        # Convert to string BEFORE concatenation to avoid type errors
                         if isinstance(reasoning_content, list):
                             reasoning_content = ''.join(str(item) for item in reasoning_content)
+                        elif not isinstance(reasoning_content, str):
+                            reasoning_content = str(reasoning_content)
+                        # Ensure accumulated_content is a string before concatenation
+                        if not isinstance(accumulated_content, str):
+                            accumulated_content = str(accumulated_content)
                         # logger.debug(f"About to concatenate reasoning_content (type={type(reasoning_content)}) to accumulated_content (type={type(accumulated_content)})")
                         accumulated_content += reasoning_content
 
@@ -365,8 +371,16 @@ class ResponseProcessor:
                     if delta and hasattr(delta, 'content') and delta.content:
                         chunk_content = delta.content
                         # logger.debug(f"Processing chunk_content: type={type(chunk_content)}, value={chunk_content}")
+                        # Convert to string BEFORE concatenation to avoid type errors
                         if isinstance(chunk_content, list):
                             chunk_content = ''.join(str(item) for item in chunk_content)
+                        elif not isinstance(chunk_content, str):
+                            chunk_content = str(chunk_content)
+                        # Ensure accumulated_content and current_xml_content are strings before concatenation
+                        if not isinstance(accumulated_content, str):
+                            accumulated_content = str(accumulated_content)
+                        if not isinstance(current_xml_content, str):
+                            current_xml_content = str(current_xml_content)
                         # print(chunk_content, end='', flush=True)
                         # logger.debug(f"About to concatenate chunk_content (type={type(chunk_content)}) to accumulated_content (type={type(accumulated_content)})")
                         accumulated_content += chunk_content
@@ -580,6 +594,13 @@ class ResponseProcessor:
                 self.trace.event(name="stream_finished_with_reason_xml_tool_limit_reached_after_xml_tool_calls", level="DEFAULT", status_message=(f"Stream finished with reason: xml_tool_limit_reached after {xml_tool_call_count} XML tool calls"))
 
             should_auto_continue = (can_auto_continue and finish_reason == 'length')
+
+            # Ensure accumulated_content is always a string before using it
+            if not isinstance(accumulated_content, str):
+                if isinstance(accumulated_content, list):
+                    accumulated_content = ''.join(str(item) for item in accumulated_content)
+                else:
+                    accumulated_content = str(accumulated_content)
 
             if accumulated_content and not should_auto_continue:
                 # ... (Truncate accumulated_content logic) ...
@@ -807,6 +828,15 @@ class ResponseProcessor:
                                 
                             # For streaming responses, we need to construct the choices manually
                             # since the streaming chunk doesn't have the complete message structure
+                            # Ensure complete_native_tool_calls is properly serializable
+                            tool_calls_for_message = None
+                            if complete_native_tool_calls:
+                                # Ensure it's a list and properly formatted
+                                if isinstance(complete_native_tool_calls, list):
+                                    tool_calls_for_message = complete_native_tool_calls
+                                else:
+                                    tool_calls_for_message = [complete_native_tool_calls]
+                            
                             llm_end_content["choices"] = [
                                 {
                                     "finish_reason": finish_reason or "stop",
@@ -814,7 +844,7 @@ class ResponseProcessor:
                                     "message": {
                                         "role": "assistant",
                                         "content": accumulated_content,
-                                        "tool_calls": complete_native_tool_calls or None
+                                        "tool_calls": tool_calls_for_message
                                     }
                                 }
                             ]
@@ -869,6 +899,15 @@ class ResponseProcessor:
                                 
                             # For streaming responses, we need to construct the choices manually
                             # since the streaming chunk doesn't have the complete message structure
+                            # Ensure complete_native_tool_calls is properly serializable
+                            tool_calls_for_message = None
+                            if complete_native_tool_calls:
+                                # Ensure it's a list and properly formatted
+                                if isinstance(complete_native_tool_calls, list):
+                                    tool_calls_for_message = complete_native_tool_calls
+                                else:
+                                    tool_calls_for_message = [complete_native_tool_calls]
+                            
                             llm_end_content["choices"] = [
                                 {
                                     "finish_reason": finish_reason or "stop",
@@ -876,7 +915,7 @@ class ResponseProcessor:
                                     "message": {
                                         "role": "assistant",
                                         "content": accumulated_content,
-                                        "tool_calls": complete_native_tool_calls or None
+                                        "tool_calls": tool_calls_for_message
                                     }
                                 }
                             ]
@@ -901,7 +940,11 @@ class ResponseProcessor:
                             logger.warning("⚠️ No complete LiteLLM response available, skipping llm_response_end")
                         logger.info(f"✅ llm_response_end saved for call #{auto_continue_count + 1} (normal completion)")
                     except Exception as e:
+                        import traceback
                         logger.error(f"Error saving llm_response_end: {str(e)}")
+                        logger.error(f"Full traceback: {traceback.format_exc()}")
+                        logger.error(f"llm_end_content type: {type(llm_end_content)}")
+                        logger.error(f"llm_end_content value: {llm_end_content}")
                         self.trace.event(name="error_saving_llm_response_end", level="ERROR", status_message=(f"Error saving llm_response_end: {str(e)}"))
 
         except Exception as e:
@@ -942,6 +985,15 @@ class ResponseProcessor:
                         response_ms = int((last_chunk_time - first_chunk_time) * 1000)
                         llm_end_content["response_ms"] = response_ms
                     
+                    # Ensure complete_native_tool_calls is properly serializable
+                    tool_calls_for_message = None
+                    if complete_native_tool_calls:
+                        # Ensure it's a list and properly formatted
+                        if isinstance(complete_native_tool_calls, list):
+                            tool_calls_for_message = complete_native_tool_calls
+                        else:
+                            tool_calls_for_message = [complete_native_tool_calls]
+                    
                     llm_end_content["choices"] = [
                         {
                             "finish_reason": finish_reason or "interrupted",
@@ -949,7 +1001,7 @@ class ResponseProcessor:
                             "message": {
                                 "role": "assistant",
                                 "content": accumulated_content,
-                                "tool_calls": complete_native_tool_calls or None
+                                "tool_calls": tool_calls_for_message
                             }
                         }
                     ]
