@@ -42,7 +42,16 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    command: uv run dramatiq --skip-logging --processes 4 --threads 4 run_agent_background
+    command: >
+      sh -c "PROCESSES=$$(nproc --all) && \
+      THREADS=$${WORKER_THREADS:-4} && \
+      echo 'Iniciando Worker com '$$PROCESSES' processos e '$$THREADS' threads por processo' && \
+      echo 'Total de workers paralelos: '$$(($$PROCESSES * $$THREADS)) && \
+      uv run dramatiq
+      --skip-logging
+      --processes $$(nproc --all)
+      --threads $${WORKER_THREADS:-4}
+      run_agent_background"
     volumes:
       - ./backend/.env:/app/.env:ro
     env_file:
