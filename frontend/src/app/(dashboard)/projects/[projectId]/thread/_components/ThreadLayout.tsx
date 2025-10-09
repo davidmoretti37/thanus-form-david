@@ -157,7 +157,7 @@ export function ThreadLayout({
 
       <div
         className={`flex flex-col flex-1 overflow-hidden transition-all duration-200 ease-in-out ${(!initialLoadCompleted || (isSidePanelOpen && !isActuallyMobile))
-          ? 'mr-[90%] sm:mr-[450px] md:mr-[500px] lg:mr-[550px] xl:mr-[650px]'
+          ? 'ml-[72px] mr-[90%] sm:mr-[450px] md:mr-[500px] lg:mr-[550px] xl:mr-[650px]'
           : ''
           }`}
       >
