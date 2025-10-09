@@ -228,23 +228,19 @@ export function ThreadComponent({ projectId, threadId, compact = false, configur
   }, []);
 
   useEffect(() => {
-    if (agents.length > 0) {
-      // If configuredAgentId is provided, use it as the forced selection
-      // Otherwise, fall back to threadAgentId (existing behavior)
-      const threadAgentId = threadAgentData?.agent?.agent_id;
+    if (agents.length > 0 && threadAgentData?.agent?.agent_id) {
+      // Determine which agent to use: configuredAgentId takes precedence, then threadAgentId
+      const threadAgentId = threadAgentData.agent.agent_id;
       const agentIdToUse = configuredAgentId || threadAgentId;
       
-      console.log(`[ThreadComponent] Agent initialization - configuredAgentId: ${configuredAgentId}, threadAgentId: ${threadAgentId}, selectedAgentId: ${selectedAgentId}`);
-      
-      initializeFromAgents(agents, agentIdToUse);
-      
-      // If configuredAgentId is provided, force selection and override any existing selection
-      if (configuredAgentId && selectedAgentId !== configuredAgentId) {
-        console.log(`[ThreadComponent] Forcing selection to configured agent: ${configuredAgentId} (was: ${selectedAgentId})`);
-        setSelectedAgent(configuredAgentId);
+      // Always force the thread's agent to be selected when opening a thread
+      // This ensures the agent matches the thread, not the last used agent
+      if (selectedAgentId !== agentIdToUse) {
+        console.log(`[ThreadComponent] Setting agent to thread's agent: ${agentIdToUse} (was: ${selectedAgentId})`);
+        setSelectedAgent(agentIdToUse);
       }
     }
-  }, [threadAgentData, agents, initializeFromAgents, configuredAgentId, selectedAgentId, setSelectedAgent]);
+  }, [threadAgentData?.agent?.agent_id, agents.length, configuredAgentId, selectedAgentId, setSelectedAgent]);
 
   const { data: subscriptionData } = useSharedSubscription();
   const subscriptionStatus: SubscriptionStatus =
