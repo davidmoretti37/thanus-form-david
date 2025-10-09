@@ -25,6 +25,7 @@ import { cn } from '@/lib/utils';
 import { useModelSelection } from '@/hooks/use-model-selection';
 import { useFileDelete } from '@/hooks/react-query/files';
 import { useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { ToolCallInput } from './floating-tool-preview';
 import { ChatSnack } from './chat-snack';
 import { Brain, Zap, Database, ArrowDown, Wrench } from 'lucide-react';
@@ -155,6 +156,8 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     const [billingModalOpen, setBillingModalOpen] = useState(false);
     const [agentConfigDialog, setAgentConfigDialog] = useState<{ open: boolean; tab: 'instructions' | 'knowledge' | 'triggers' | 'tools' | 'integrations' }>({ open: false, tab: 'instructions' });
     const [mounted, setMounted] = useState(false);
+    const pastedContentCounterRef = useRef(1);
+    const lastPasteTimeRef = useRef<number>(0);
 
     const {
       selectedModel,
@@ -263,19 +266,62 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
 
     const handleSubmit = useCallback(async (e: React.FormEvent) => {
       e.preventDefault();
+      const currentValue = isControlled ? controlledValue || '' : uncontrolledValue;
+      
       if (
-        (!value.trim() && uploadedFiles.length === 0) ||
+        (!currentValue.trim() && uploadedFiles.length === 0) ||
         loading ||
         (disabled && !isAgentRunning)
-      )
+      ) {
         return;
+      }
 
       if (isAgentRunning && onStopAgent) {
         onStopAgent();
         return;
       }
 
-      let message = value;
+      // Check if message exceeds 1000 characters
+      const charCount = currentValue.trim().length;
+      let message = currentValue;
+    
+      if (charCount > 1000) {
+        try {
+          // Convert long message to file
+          const blob = new Blob([currentValue], { type: 'text/plain' });
+          const fileName = `pasted_content_${pastedContentCounterRef.current}.txt`;
+          const convertedFile = new File([blob], fileName, { type: 'text/plain' });
+          
+          // Increment counter for next file
+          pastedContentCounterRef.current += 1;
+          
+          // Process the file through the file upload handler
+          await handleFiles(
+            [convertedFile],
+            sandboxId,
+            setPendingFiles,
+            setUploadedFiles,
+            setIsUploading,
+            messages || [],
+            queryClient
+          );
+          
+          // Add a toast notification to confirm the file was attached
+          toast.success('Texto longo convertido para anexo com sucesso!');
+          
+          // Clear the input
+          if (!isControlled) {
+            setUncontrolledValue('');
+          }
+          
+          // Don't proceed with submission - file will be submitted separately
+          return;
+        } catch (error) {
+          console.error('Error processing file:', error);
+          toast.error('Falha ao converter texto longo em anexo');
+          return; // Don't proceed with submission if file processing fails
+        }
+      }
 
       if (uploadedFiles.length > 0) {
         const fileInfo = uploadedFiles
@@ -297,8 +343,10 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
         setUncontrolledValue('');
       }
 
+      // Clear both pending files and uploaded files after successful submission
+      setPendingFiles([]);
       setUploadedFiles([]);
-    }, [value, uploadedFiles, loading, disabled, isAgentRunning, onStopAgent, getActualModelId, selectedModel, onSubmit, selectedAgentId, isControlled]);
+    }, [value, uploadedFiles, loading, disabled, isAgentRunning, onStopAgent, getActualModelId, selectedModel, onSubmit, selectedAgentId, isControlled, controlledValue, uncontrolledValue, controlledOnChange, setUncontrolledValue, setUploadedFiles, sandboxId, setPendingFiles, setIsUploading, messages, queryClient]);
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
@@ -312,46 +360,124 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
         e.preventDefault();
+        const currentValue = isControlled ? controlledValue || '' : uncontrolledValue;
         if (
-          (value.trim() || uploadedFiles.length > 0) &&
+          (currentValue.trim() || uploadedFiles.length > 0) &&
           !loading &&
           (!disabled || isAgentRunning)
         ) {
           handleSubmit(e as unknown as React.FormEvent);
         }
       }
-    }, [value, uploadedFiles, loading, disabled, isAgentRunning, handleSubmit]);
+    }, [isControlled, controlledValue, uncontrolledValue, uploadedFiles, loading, disabled, isAgentRunning, handleSubmit]);
 
-    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
-      if (!e.clipboardData) return;
-      const items = Array.from(e.clipboardData.items);
-      const imageFiles: File[] = [];
-      for (const item of items) {
-        if (item.kind === 'file' && item.type.startsWith('image/')) {
-          const file = item.getAsFile();
-          if (file) imageFiles.push(file);
-        }
-      }
-      if (imageFiles.length > 0) {
-        e.preventDefault();
-        handleFiles(
-          imageFiles,
+    const convertToAttachment = useCallback(async (text: string) => {
+      try {
+        // Create file from text
+        const blob = new Blob([text], { type: 'text/plain' });
+        const fileName = `pasted_content_${pastedContentCounterRef.current}.txt`;
+        const file = new File([blob], fileName, { type: 'text/plain' });
+        
+        // Increment counter for next file
+        pastedContentCounterRef.current += 1;
+        
+        // Process the file through the file upload handler
+        await handleFiles(
+          [file],
           sandboxId,
           setPendingFiles,
           setUploadedFiles,
           setIsUploading,
-          messages,
-          queryClient,
+          messages || [],
+          queryClient
         );
+        
+        toast.success('Texto longo convertido para anexo com sucesso!');
+        
+        // Clear the input
+        if (isControlled) {
+          controlledOnChange?.('');
+        } else {
+          setUncontrolledValue('');
+        }
+      } catch (error) {
+        console.error('Error converting to file:', error);
+        toast.error('Falha ao converter texto longo em anexo');
       }
-    };
+    }, [sandboxId, messages, queryClient, isControlled, controlledOnChange, setUncontrolledValue, setPendingFiles, setUploadedFiles, setIsUploading]);
+
+    const handlePaste = useCallback(async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      if (!e.clipboardData) return;
+      
+      // Throttle paste events to once every 3 seconds
+      const now = Date.now();
+      const timeSinceLastPaste = now - lastPasteTimeRef.current;
+      
+      if (timeSinceLastPaste < 3000) {
+        e.preventDefault();
+        toast.error('Aguarde 3 segundos entre cada colagem');
+        return;
+      }
+      
+      lastPasteTimeRef.current = now;
+      
+      // Get pasted text
+      const pastedText = e.clipboardData.getData('text/plain');
+      
+      // If pasted text exceeds 500 characters, convert to file
+      if (pastedText.trim().length > 500) {
+        e.preventDefault();
+        await convertToAttachment(pastedText);
+        return;
+      }
+      
+      // For shorter text, allow normal paste behavior
+      // This will be handled by the browser's default paste behavior
+      
+      // Handle files (both images and other types)
+      const items = Array.from(e.clipboardData.items);
+      const files: File[] = [];
+      
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const file = item.getAsFile();
+          if (file) {
+            // If it's an image or another type we want to handle
+            if (item.type.startsWith('image/')) {
+              files.push(file);
+            }
+          }
+        }
+      }
+      
+      if (files.length > 0 && sandboxId) {
+        e.preventDefault();
+        try {
+          await handleFiles(
+            files,
+            sandboxId,
+            setPendingFiles,
+            setUploadedFiles,
+            setIsUploading,
+            messages || [],
+            queryClient,
+          );
+          toast.success('Arquivo anexado com sucesso!');
+        } catch (error) {
+          console.error('Error handling pasted file:', error);
+          toast.error('Falha ao anexar o arquivo');
+        }
+      }
+    }, [sandboxId, messages, queryClient, convertToAttachment, setPendingFiles, setUploadedFiles, setIsUploading]);
 
     const handleTranscription = useCallback((transcribedText: string) => {
-      const currentValue = isControlled ? controlledValue : uncontrolledValue;
+      const currentValue = isControlled ? controlledValue || '' : uncontrolledValue;
       const newValue = currentValue ? `${currentValue} ${transcribedText}` : transcribedText;
 
       if (isControlled) {
-        controlledOnChange(newValue);
+        if (controlledOnChange) {
+          controlledOnChange(newValue);
+        }
       } else {
         setUncontrolledValue(newValue);
       }
