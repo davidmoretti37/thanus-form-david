@@ -118,12 +118,86 @@ class MCPToolWrapper(Tool):
         self._custom_tools = {}
         self.use_cache = use_cache
         
+        # Separate configs by provider type for better organization
+        self.pipedream_configs = []
+        self.composio_configs = []
+        self.custom_configs = []
+        self._categorize_configs()
+        
         self.connection_manager = MCPConnectionManager()
         self.custom_handler = CustomMCPHandler(self.connection_manager)
         self.tool_builder = DynamicToolBuilder()
         self.tool_executor = None
         
         super().__init__()
+    
+    def _categorize_configs(self):
+        """Categorize MCP configs by provider type for better separation"""
+        for config in self.mcp_configs:
+            provider = config.get('type', config.get('provider', config.get('customType', 'custom')))
+            
+            if provider == 'pipedream':
+                self.pipedream_configs.append(config)
+                logger.debug(f"Categorized as Pipedream: {config.get('name', 'Unknown')}")
+            elif provider == 'composio':
+                self.composio_configs.append(config)
+                logger.debug(f"Categorized as Composio: {config.get('name', 'Unknown')}")
+            else:
+                self.custom_configs.append(config)
+                logger.debug(f"Categorized as Custom: {config.get('name', 'Unknown')}")
+        
+        logger.info(f"📊 MCP Config Summary: {len(self.pipedream_configs)} Pipedream, "
+                   f"{len(self.composio_configs)} Composio, {len(self.custom_configs)} Custom")
+    
+    def _add_tool_prefix(self, tool_name: str, provider: str) -> str:
+        """Add provider-specific prefix to tool name for clear identification
+        
+        Args:
+            tool_name: Original tool name
+            provider: Provider type (pipedream, composio, custom)
+            
+        Returns:
+            Prefixed tool name (e.g., pd_gmail_send_email, cp_github_create_issue)
+        """
+        if provider == 'pipedream':
+            return f"pd_{tool_name}"
+        elif provider == 'composio':
+            return f"cp_{tool_name}"
+        else:
+            return tool_name
+    
+    def _remove_tool_prefix(self, prefixed_name: str) -> tuple[str, str]:
+        """Remove provider prefix and return original name with provider type
+        
+        Args:
+            prefixed_name: Tool name with prefix (e.g., pd_gmail_send_email)
+            
+        Returns:
+            Tuple of (original_tool_name, provider_type)
+        """
+        if prefixed_name.startswith('pd_'):
+            return (prefixed_name[3:], 'pipedream')
+        elif prefixed_name.startswith('cp_'):
+            return (prefixed_name[3:], 'composio')
+        else:
+            return (prefixed_name, 'custom')
+    
+    def get_integration_summary(self) -> Dict[str, Any]:
+        """Get summary of available integrations by provider type"""
+        return {
+            'pipedream': {
+                'count': len(self.pipedream_configs),
+                'integrations': [cfg.get('name', 'Unknown') for cfg in self.pipedream_configs]
+            },
+            'composio': {
+                'count': len(self.composio_configs),
+                'integrations': [cfg.get('name', 'Unknown') for cfg in self.composio_configs]
+            },
+            'custom': {
+                'count': len(self.custom_configs),
+                'integrations': [cfg.get('name', 'Unknown') for cfg in self.custom_configs]
+            }
+        }
         
     async def _ensure_initialized(self):
         if not self._initialized:
@@ -334,4 +408,4 @@ class MCPToolWrapper(Tool):
             except Exception as e:
                 logger.error(f"Error during MCP cleanup: {str(e)}")
             finally:
-                self._initialized = False 
+                self._initialized = False

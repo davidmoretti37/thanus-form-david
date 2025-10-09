@@ -440,8 +440,15 @@ class PromptManager:
                 # Continue without knowledge base context rather than failing
         
         if agent_config and (agent_config.get('configured_mcps') or agent_config.get('custom_mcps')) and mcp_wrapper_instance and mcp_wrapper_instance._initialized:
-            mcp_info = "\n\n--- MCP Tools Available ---\n"
-            mcp_info += "You have access to external MCP (Model Context Protocol) server tools.\n"
+            # Import the new integration prompt section
+            from core.prompts.integration_prompt_section import get_integration_prompt_section, get_mcp_critical_instructions
+            
+            # Add the comprehensive integration section with provider separation
+            integration_section = get_integration_prompt_section(mcp_wrapper_instance)
+            system_content += integration_section
+            
+            # Add basic MCP tools list
+            mcp_info = "\n\n--- Available MCP Tools ---\n"
             mcp_info += "MCP tools can be called directly using their native function names in the standard function calling format:\n"
             mcp_info += '<function_calls>\n'
             mcp_info += '<invoke name="{tool_name}">\n'
@@ -450,7 +457,7 @@ class PromptManager:
             mcp_info += '</invoke>\n'
             mcp_info += '</function_calls>\n\n'
             
-            mcp_info += "Available MCP tools:\n"
+            mcp_info += "Configured tools:\n"
             try:
                 registered_schemas = mcp_wrapper_instance.get_schemas()
                 for method_name, schema_list in registered_schemas.items():
@@ -469,20 +476,10 @@ class PromptManager:
                 logger.error(f"Error listing MCP tools: {e}")
                 mcp_info += "- Error loading MCP tool list\n"
             
-            mcp_info += "\n🚨 CRITICAL MCP TOOL RESULT INSTRUCTIONS 🚨\n"
-            mcp_info += "When you use ANY MCP (Model Context Protocol) tools:\n"
-            mcp_info += "1. ALWAYS read and use the EXACT results returned by the MCP tool\n"
-            mcp_info += "2. For search tools: ONLY cite URLs, sources, and information from the actual search results\n"
-            mcp_info += "3. For any tool: Base your response entirely on the tool's output - do NOT add external information\n"
-            mcp_info += "4. DO NOT fabricate, invent, hallucinate, or make up any sources, URLs, or data\n"
-            mcp_info += "5. If you need more information, call the MCP tool again with different parameters\n"
-            mcp_info += "6. When writing reports/summaries: Reference ONLY the data from MCP tool results\n"
-            mcp_info += "7. If the MCP tool doesn't return enough information, explicitly state this limitation\n"
-            mcp_info += "8. Always double-check that every fact, URL, and reference comes from the MCP tool output\n"
-            mcp_info += "\nIMPORTANT: MCP tool results are your PRIMARY and ONLY source of truth for external data!\n"
-            mcp_info += "NEVER supplement MCP results with your training data or make assumptions beyond what the tools provide.\n"
-            
             system_content += mcp_info
+            
+            # Add critical instructions
+            system_content += get_mcp_critical_instructions()
         
         # Add XML tool calling instructions to system prompt if requested
         if xml_tool_calling and tool_registry:
