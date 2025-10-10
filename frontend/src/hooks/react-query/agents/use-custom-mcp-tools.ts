@@ -17,11 +17,16 @@ export const useCustomMCPToolsData = (agentId: string, mcpConfig: any) => {
   const queryClient = useQueryClient();
   
   const { data, isLoading, error, refetch } = useQuery<CustomMCPToolsResponse>({
-    queryKey: ['custom-mcp-tools', agentId, mcpConfig?.url],
+    queryKey: ['custom-mcp-tools', agentId, mcpConfig?.url, mcpConfig?.profile_id],
     queryFn: async () => {
+      // For Pipedream, use profile_id as the URL identifier
+      const mcpUrl = mcpConfig.type === 'pipedream' && mcpConfig.profile_id 
+        ? mcpConfig.profile_id 
+        : mcpConfig.url;
+      
       const response = await backendApi.get(`/agents/${agentId}/custom-mcp-tools`, {
         headers: {
-          'X-MCP-URL': mcpConfig.url,
+          'X-MCP-URL': mcpUrl,
           'X-MCP-Type': mcpConfig.type || 'sse',
           ...(mcpConfig.headers ? { 'X-MCP-Headers': JSON.stringify(mcpConfig.headers) } : {})
         }
@@ -31,14 +36,19 @@ export const useCustomMCPToolsData = (agentId: string, mcpConfig: any) => {
       }
       return response.data;
     },
-    enabled: !!agentId && !!mcpConfig?.url,
+    enabled: !!agentId && (!!mcpConfig?.url || (mcpConfig?.type === 'pipedream' && !!mcpConfig?.profile_id)),
     staleTime: 5 * 60 * 1000,
   });
 
   const updateToolsMutation = useMutation({
     mutationFn: async (enabledTools: string[]) => {
+      // For Pipedream, use profile_id as the URL identifier
+      const mcpUrl = mcpConfig.type === 'pipedream' && mcpConfig.profile_id 
+        ? mcpConfig.profile_id 
+        : mcpConfig.url;
+      
       const response = await backendApi.post(`/agents/${agentId}/custom-mcp-tools`, {
-        url: mcpConfig.url,
+        url: mcpUrl,
         type: mcpConfig.type || 'sse',
         enabled_tools: enabledTools,
       });
@@ -62,4 +72,4 @@ export const useCustomMCPToolsData = (agentId: string, mcpConfig: any) => {
     updateMutation: updateToolsMutation,
     isUpdating: updateToolsMutation.isPending,
   };
-}; 
+};

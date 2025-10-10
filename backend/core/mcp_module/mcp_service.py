@@ -357,13 +357,15 @@ class MCPService:
             CustomMCPConnectionResult containing the discovered tools and connection status
         """
         url = config.get("url", "https://remote.mcp.pipedream.net")
-        headers = config.get("headers", {})
         profile_id = config.get("profile_id")
         
         if not profile_id:
             raise CustomMCPError("profile_id is required for Pipedream MCP connections")
-            
+        
         try:
+            # Get properly authenticated headers for Pipedream
+            headers = await self._get_pipedream_headers("pipedream_discovery", config, None)
+            
             # Use the same connection logic as HTTP tools since Pipedream MCP uses HTTP
             async with streamablehttp_client(url, headers=headers) as (read_stream, write_stream, _):
                 async with ClientSession(read_stream, write_stream) as session:

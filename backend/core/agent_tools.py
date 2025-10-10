@@ -61,10 +61,18 @@ async def get_custom_mcp_tools_for_agent(
         if not mcp_url:
             raise HTTPException(status_code=400, detail="X-MCP-URL header is required")
         
-        mcp_config = {
-            'url': mcp_url,
-            'type': mcp_type
-        }
+        # For Pipedream, the X-MCP-URL contains the profile_id
+        if mcp_type == 'pipedream':
+            mcp_config = {
+                'profile_id': mcp_url,
+                'url': 'https://remote.mcp.pipedream.net',
+                'type': mcp_type
+            }
+        else:
+            mcp_config = {
+                'url': mcp_url,
+                'type': mcp_type
+            }
         
         if 'X-MCP-Headers' in request.headers:
             import json
@@ -163,6 +171,13 @@ async def update_custom_mcp_tools_for_agent(
                     custom_mcps[i]['enabledTools'] = enabled_tools
                     updated = True
                     break
+            elif mcp_type == 'pipedream':
+                # For Pipedream, match by profile_id (mcp_url contains profile_id)
+                if (mcp.get('type') == 'pipedream' and 
+                    mcp.get('config', {}).get('profile_id') == mcp_url):
+                    custom_mcps[i]['enabledTools'] = enabled_tools
+                    updated = True
+                    break
             else:
                 if (mcp.get('customType') == mcp_type and 
                     mcp.get('config', {}).get('url') == mcp_url):
@@ -184,6 +199,18 @@ async def update_custom_mcp_tools_for_agent(
                 except Exception as e:
                     logger.error(f"Failed to get Composio profile config: {e}")
                     raise HTTPException(status_code=400, detail=f"Failed to get Composio profile: {str(e)}")
+            elif mcp_type == 'pipedream':
+                # For Pipedream, mcp_url contains the profile_id
+                new_mcp_config = {
+                    "name": f"Pipedream MCP",
+                    "type": "pipedream",
+                    "config": {
+                        "url": "https://remote.mcp.pipedream.net",
+                        "profile_id": mcp_url
+                    },
+                    "enabledTools": enabled_tools
+                }
+                custom_mcps.append(new_mcp_config)
             else:
                 new_mcp_config = {
                     "name": f"Custom MCP ({mcp_type.upper()})",
@@ -226,6 +253,107 @@ async def update_custom_mcp_tools_for_agent(
         raise
     except Exception as e:
         logger.error(f"Error updating custom MCP tools for agent {agent_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+@router.get("/agents/{agent_id}/pipedream-tools/{profile_id}")
+async def get_agent_pipedream_tools(
+    agent_id: str,
+    profile_id: str,
+    user_id: str = Depends(verify_and_get_user_id_from_jwt),
+    version: Optional[str] = None
+):
+    """
+    Get Pipedream tools for a specific profile.
+    """
+    logger.debug(f"Getting Pipedream tools for agent {agent_id}, profile {profile_id}")
+    
+    try:
+        client = await utils.db.client
+        
+        # Get agent
+        agent_result = await client.table('agents')\
+            .select('current_version_id')\
+            .eq('agent_id', agent_id)\
+            .eq('account_id', user_id)\
+            .execute()
+            
+        if not agent_result.data:
+            raise HTTPException(status_code=404, detail="Agent not found")
+            
+        agent = agent_result.data[0]
+        
+        # Determine which version to use
+        version_id = version if version else agent.get('current_version_id')
+        
+        # Get agent config from version
+        agent_config = {}
+        if version_id:
+            version_result = await client.table('agent_versions')\
+                .select('config')\
+                .eq('version_id', version_id)\
+                .maybe_single()\
+                .execute()
+            if version_result.data and version_result.data.get('config'):
+                agent_config = version_result.data['config']
+        
+        # Get profile info from database
+        profile_result = await client.table('user_mcp_credential_profiles')\
+            .select('profile_name, app_name, app_slug')\
+            .eq('profile_id', profile_id)\
+            .single()\
+            .execute()
+            
+        if not profile_result.data:
+            raise HTTPException(status_code=404, detail="Pipedream profile not found")
+            
+        profile_data = profile_result.data
+        
+        # Discover tools using MCP service
+        from core.mcp_module import mcp_service
+        
+        mcp_config = {
+            'profile_id': profile_id,
+            'url': 'https://remote.mcp.pipedream.net',
+            'type': 'pipedream'
+        }
+        
+        discovery_result = await mcp_service.discover_custom_tools('pipedream', mcp_config)
+        
+        # Check if this profile is already configured in the agent
+        tools_config = agent_config.get('tools', {})
+        custom_mcps = tools_config.get('custom_mcp', [])
+        
+        existing_mcp = None
+        for mcp in custom_mcps:
+            if (mcp.get('type') == 'pipedream' and 
+                mcp.get('config', {}).get('profile_id') == profile_id):
+                existing_mcp = mcp
+                break
+        
+        # Build tools list with enabled status
+        tools = []
+        enabled_tools = existing_mcp.get('enabledTools', []) if existing_mcp else []
+        
+        for tool in discovery_result.tools:
+            tools.append({
+                'name': tool['name'],
+                'description': tool.get('description', ''),
+                'enabled': tool['name'] in enabled_tools
+            })
+        
+        return {
+            'profile_id': profile_id,
+            'app_name': profile_data.get('app_name', ''),
+            'app_slug': profile_data.get('app_slug', ''),
+            'profile_name': profile_data.get('profile_name', ''),
+            'tools': tools,
+            'has_mcp_config': existing_mcp is not None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting Pipedream tools for agent {agent_id}, profile {profile_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.put("/agents/{agent_id}/pipedream-tools/{profile_id}")
@@ -549,4 +677,3 @@ async def get_agent_tools(
         for tool_name in enabled_tools:
             mcp_tools.append({"name": tool_name, "server": server, "enabled": True})
     return {"agentpress_tools": agentpress_tools, "mcp_tools": mcp_tools}
-
