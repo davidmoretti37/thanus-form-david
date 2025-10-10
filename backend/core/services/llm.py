@@ -211,6 +211,15 @@ async def make_llm_api_call(
     _configure_openai_compatible(params, model_name, api_key, api_base)
     _add_tools_config(params, tools, tool_choice)
     
+    # Special handling for DeepSeek 3.1 model
+    is_deepseek_3_1 = "deepseek-chat-v3.1" in resolved_model_name.lower()
+    
+    if is_deepseek_3_1:
+        logger.info(f"Configurando prioridade de providers para modelo DeepSeek 3.1: {resolved_model_name}")
+        params["provider"] = {
+            "order": ["fireworks", "novita"]
+        }
+    
     try:
         # Log the complete parameters being sent to LiteLLM
         # logger.debug(f"Calling LiteLLM acompletion for {resolved_model_name}")
