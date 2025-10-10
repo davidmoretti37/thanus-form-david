@@ -94,8 +94,8 @@ export default function FloatingSidebar() {
     const supabase = createClient();
     await supabase.auth.signOut();
     clearUserLocalStorage();
-    // Redireciona para a página de autenticação
-    window.location.href = 'http://localhost:3000/auth';
+    // Redireciona para a página de autenticação usando caminho relativo
+    window.location.href = '/auth';
   };
   
   // Fetch user data
