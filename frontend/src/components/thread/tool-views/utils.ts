@@ -61,7 +61,6 @@ export function getToolTitle(toolName: string): string {
     'configure-profile-for-agent': 'Configure Profile For Agent',
     'get-credential-profiles': 'Get Credential Profiles',
     'get-current-agent-config': 'Get Current Agent Config',
-    'deploy': 'Deploy',
     'create-presentation': 'Create Presentation',
     'export-presentation': 'Export Presentation',
     'create-presentation-outline': 'Create Presentation Outline',
@@ -90,6 +89,15 @@ export function getToolTitle(toolName: string): string {
     'list-agent-scheduled-triggers': 'List Scheduled Triggers',
     'delete-agent-scheduled-trigger': 'Delete Scheduled Trigger',
     'toggle-agent-scheduled-trigger': 'Toggle Scheduled Trigger',
+
+    'make-call': 'Make Call',
+    'make_call': 'Make Call',
+    'end-call': 'End Call',
+    'end_call': 'End Call',
+    'get-call-details': 'Call Details',
+    'get_call_details': 'Call Details',
+    'list-calls': 'Call History',
+    'list_calls': 'Call History',
 
     'generic-tool': 'Tool',
     'default': 'Tool',
@@ -1313,9 +1321,6 @@ export function getToolComponent(toolName: string): string {
     case 'discover-user-mcp-servers':
       return 'DiscoverUserMcpServersToolView';
 
-    //Deploy
-    case 'deploy':
-      return 'DeployToolView';
 
     // Upload operations
     case 'upload-file':

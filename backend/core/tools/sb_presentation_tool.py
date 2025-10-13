@@ -1,4 +1,4 @@
-from core.agentpress.tool import ToolResult, openapi_schema
+from core.agentpress.tool import ToolResult, openapi_schema, tool_metadata
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager
 from typing import List, Dict, Optional, Union
@@ -6,7 +6,16 @@ import json
 import os
 from datetime import datetime
 import re
+import asyncio
 
+@tool_metadata(
+    display_name="Presentations",
+    description="Create and manage stunning presentation slides",
+    icon="Presentation",
+    color="bg-orange-100 dark:bg-orange-800/50",
+    weight=70,
+    visible=True
+)
 class SandboxPresentationTool(SandboxToolsBase):
     """
     Per-slide HTML presentation tool for creating presentation slides.
@@ -54,6 +63,14 @@ class SandboxPresentationTool(SandboxToolsBase):
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+        body {{
+            height: 1080px;
+            width: 1920px;
+            margin: 0;
+            padding: 0;
+        }}
+    </style>
 </head>
 <body>
     {slide_content}
@@ -109,7 +126,7 @@ class SandboxPresentationTool(SandboxToolsBase):
                     },
                     "content": {
                         "type": "string",
-                        "description": "Complete HTML content including inline CSS or <style> blocks. Design for 1920x1080 resolution. Include all necessary styling as no external CSS frameworks are automatically loaded."
+                        "description": "HTML body content only (DO NOT include <!DOCTYPE>, <html>, <head>, or <body> tags - these are added automatically). Include your content with inline CSS or <style> blocks. Design for 1920x1080 resolution. D3.js, Font Awesome, and Chart.js are pre-loaded and available to use."
                     },
                     "presentation_title": {
                                     "type": "string",
@@ -426,6 +443,162 @@ class SandboxPresentationTool(SandboxToolsBase):
         except Exception as e:
             return self.fail_response(f"Failed to delete presentation: {str(e)}")
 
+
+    @openapi_schema({
+        "type": "function",
+        "function": {
+            "name": "validate_slide",
+            "description": "Validate a slide by reading its HTML code and checking if the content height exceeds 1080px. Use this tool to ensure slides fit within the standard presentation dimensions before finalizing them. This helps maintain proper slide formatting and prevents content overflow issues.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "presentation_name": {
+                        "type": "string",
+                        "description": "Name of the presentation containing the slide to validate"
+                    },
+                    "slide_number": {
+                        "type": "integer",
+                        "description": "Slide number to validate (1-based)"
+                    }
+                },
+                "required": ["presentation_name", "slide_number"]
+            }
+        }
+    })
+    async def validate_slide(self, presentation_name: str, slide_number: int) -> ToolResult:
+        """Validate a slide by rendering it in a browser and measuring actual content height"""
+        try:
+            await self._ensure_sandbox()
+            
+            if not presentation_name:
+                return self.fail_response("Presentation name is required.")
+            
+            if slide_number < 1:
+                return self.fail_response("Slide number must be 1 or greater.")
+            
+            safe_name = self._sanitize_filename(presentation_name)
+            presentation_path = f"{self.workspace_path}/{self.presentations_dir}/{safe_name}"
+            
+            # Load metadata to verify slide exists
+            metadata = await self._load_presentation_metadata(presentation_path)
+            
+            if not metadata.get("slides") or str(slide_number) not in metadata["slides"]:
+                return self.fail_response(f"Slide {slide_number} not found in presentation '{presentation_name}'")
+            
+            # Get slide info
+            slide_info = metadata["slides"][str(slide_number)]
+            slide_filename = slide_info["filename"]
+            
+            # Create a Python script to measure the actual rendered height using Playwright
+            measurement_script = f'''
+import asyncio
+import json
+from playwright.async_api import async_playwright
+
+async def measure_slide_height():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=True,
+            args=['--no-sandbox', '--disable-setuid-sandbox']
+        )
+        page = await browser.new_page(viewport={{"width": 1920, "height": 1080}})
+        
+        # Load the HTML file
+        await page.goto('file:///workspace/{self.presentations_dir}/{safe_name}/{slide_filename}')
+        
+        # Wait for page to load
+        await page.wait_for_load_state('networkidle')
+        
+        # Measure the actual content height
+        dimensions = await page.evaluate("""
+            () => {{
+                const body = document.body;
+                const html = document.documentElement;
+                
+                // Get the actual scroll height (total content height)
+                const scrollHeight = Math.max(
+                    body.scrollHeight, body.offsetHeight,
+                    html.clientHeight, html.scrollHeight, html.offsetHeight
+                );
+                
+                // Get viewport height
+                const viewportHeight = window.innerHeight;
+                
+                // Check if content overflows
+                const overflows = scrollHeight > 1080;
+                
+                return {{
+                    scrollHeight: scrollHeight,
+                    viewportHeight: viewportHeight,
+                    overflows: overflows,
+                    excessHeight: scrollHeight - 1080
+                }};
+            }}
+        """)
+        
+        await browser.close()
+        return dimensions
+
+result = asyncio.run(measure_slide_height())
+print(json.dumps(result))
+'''
+            
+            # Write the script to a temporary file in the sandbox
+            script_path = f"{self.workspace_path}/.validate_slide_temp.py"
+            await self.sandbox.fs.upload_file(measurement_script.encode(), script_path)
+            
+            # Execute the script
+            try:
+                result = await self.sandbox.process.exec(
+                    f"/bin/sh -c 'cd /workspace && python3 .validate_slide_temp.py'",
+                    timeout=30
+                )
+                
+                # Parse the result
+                output = (getattr(result, "result", None) or getattr(result, "output", "") or "").strip()
+                if not output:
+                    raise Exception("No output from validation script")
+                
+                dimensions = json.loads(output)
+                
+                # Clean up the temporary script
+                try:
+                    await self.sandbox.fs.delete_file(script_path)
+                except:
+                    pass
+                
+            except Exception as e:
+                # Clean up on error
+                try:
+                    await self.sandbox.fs.delete_file(script_path)
+                except:
+                    pass
+                return self.fail_response(f"Failed to measure slide dimensions: {str(e)}")
+            
+            # Analyze results - simple pass/fail
+            validation_passed = not dimensions["overflows"]
+            
+            validation_results = {
+                "presentation_name": presentation_name,
+                "presentation_path": presentation_path,
+                "slide_number": slide_number,
+                "slide_title": slide_info["title"],
+                "actual_content_height": dimensions["scrollHeight"],
+                "target_height": 1080,
+                "validation_passed": validation_passed
+            }
+            
+            # Add pass/fail message
+            if validation_passed:
+                validation_results["message"] = f"✓ Slide {slide_number} '{slide_info['title']}' validation passed. Content height: {dimensions['scrollHeight']}px"
+            else:
+                validation_results["message"] = f"✗ Slide {slide_number} '{slide_info['title']}' validation failed. Content height: {dimensions['scrollHeight']}px exceeds 1080px limit by {dimensions['excessHeight']}px"
+                validation_results["excess_height"] = dimensions["excessHeight"]
+            
+            return self.success_response(validation_results)
+            
+        except Exception as e:
+            return self.fail_response(f"Failed to validate slide: {str(e)}")
 
     @openapi_schema({
         "type": "function",

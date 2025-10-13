@@ -39,7 +39,7 @@ const handleLocalFiles = (
 
     return {
       name: normalizedName,
-      path: `/workspace/${normalizedName}`,
+      path: `/workspace/uploads/${normalizedName}`,
       size: file.size,
       type: file.type || 'application/octet-stream',
       localUrl: URL.createObjectURL(file)
@@ -60,6 +60,7 @@ const uploadFiles = async (
   setIsUploading: React.Dispatch<React.SetStateAction<boolean>>,
   messages: any[] = [], // Add messages parameter to check for existing files
   queryClient?: any, // Add queryClient parameter for cache invalidation
+  setPendingFiles?: React.Dispatch<React.SetStateAction<File[]>>, // Add setPendingFiles to clear pending files after upload
 ) => {
   try {
     setIsUploading(true);
@@ -74,13 +75,8 @@ const uploadFiles = async (
 
       // Normalize filename to NFC
       const normalizedName = normalizeFilenameToNFC(file.name);
-      const uploadPath = `/workspace/${normalizedName}`;
-
-      // Check if this filename already exists in chat messages
-      const isFileInChat = messages.some(message => {
-        const content = typeof message.content === 'string' ? message.content : '';
-        return content.includes(`[Uploaded File: ${uploadPath}]`);
-      });
+      // Backend will now handle the path to /workspace/uploads/ and unique naming
+      const uploadPath = `/workspace/uploads/${normalizedName}`;
 
       const formData = new FormData();
       // If the filename was normalized, append with the normalized name in the field name
@@ -109,32 +105,52 @@ const uploadFiles = async (
         throw new Error(`Upload failed: ${response.statusText}`);
       }
 
+      // Parse response to get the actual path used by the server
+      const responseData = await response.json();
+      const actualPath = responseData.path || uploadPath;
+      const finalFilename = responseData.final_filename || normalizedName;
+      const wasRenamed = responseData.renamed || false;
+
+      // Check if this filename already exists in chat messages
+      const isFileInChat = messages.some(message => {
+        const content = typeof message.content === 'string' ? message.content : '';
+        return content.includes(`[Uploaded File: ${actualPath}]`);
+      });
+
       // If file was already in chat and we have queryClient, invalidate its cache
       if (isFileInChat && queryClient) {
         // Invalidate all content types for this file
         ['text', 'blob', 'json'].forEach(contentType => {
-          const queryKey = fileQueryKeys.content(sandboxId, uploadPath, contentType);
+          const queryKey = fileQueryKeys.content(sandboxId, actualPath, contentType);
           queryClient.removeQueries({ queryKey });
         });
 
         // Also invalidate directory listing
-        const directoryPath = uploadPath.substring(0, uploadPath.lastIndexOf('/'));
         queryClient.invalidateQueries({
-          queryKey: fileQueryKeys.directory(sandboxId, directoryPath),
+          queryKey: fileQueryKeys.directory(sandboxId, '/workspace/uploads'),
         });
       }
 
       newUploadedFiles.push({
-        name: normalizedName,
-        path: uploadPath,
+        name: finalFilename,
+        path: actualPath,
         size: file.size,
         type: file.type || 'application/octet-stream',
       });
 
-      toast.success(`File uploaded: ${normalizedName}`);
+      if (wasRenamed) {
+        toast.success(`File uploaded as: ${finalFilename} (renamed to avoid conflict)`);
+      } else {
+        toast.success(`File uploaded: ${finalFilename}`);
+      }
     }
 
     setUploadedFiles((prev) => [...prev, ...newUploadedFiles]);
+    
+    // Clear pending files after successful upload
+    if (setPendingFiles) {
+      setPendingFiles([]);
+    }
   } catch (error) {
     console.error('File upload failed:', error);
     toast.error(
@@ -161,7 +177,7 @@ const handleFiles = async (
 ) => {
   if (sandboxId) {
     // If we have a sandboxId, upload files directly
-    await uploadFiles(files, sandboxId, setUploadedFiles, setIsUploading, messages, queryClient);
+    await uploadFiles(files, sandboxId, setUploadedFiles, setIsUploading, messages, queryClient, setPendingFiles);
   } else if (projectId) {
     // No sandbox yet - need to create/activate it first
     toast.info('Preparing workspace for file upload...');
@@ -294,8 +310,7 @@ export const FileUploadHandler = forwardRef<
                   onClick={handleFileUpload}
                   variant="outline"
                   size="sm"
-                  aria-label={isLoggedIn ? 'Attach files' : 'Please login to attach files'}
-                  className="h-8 w-8 p-0 bg-transparent border border-border rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center justify-center"
+                  className="h-8 w-8 p-0 bg-transparent border border-border rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center justify-center cursor-pointer"
                   disabled={
                     !isLoggedIn || loading || (disabled && !isAgentRunning) || isUploading
                   }

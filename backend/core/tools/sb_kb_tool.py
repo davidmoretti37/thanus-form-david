@@ -1,11 +1,20 @@
 import asyncio
 from typing import Optional, List
-from core.agentpress.tool import ToolResult, openapi_schema
+from core.agentpress.tool import ToolResult, openapi_schema, tool_metadata
 from core.sandbox.tool_base import SandboxToolsBase
 from core.agentpress.thread_manager import ThreadManager
 from core.utils.config import config
 from core.knowledge_base.validation import FileNameValidator, ValidationError
+from core.utils.logger import logger
 
+@tool_metadata(
+    display_name="Knowledge Base",
+    description="Store and retrieve information from your personal knowledge library",
+    icon="Brain",
+    color="bg-yellow-100 dark:bg-yellow-800/50",
+    weight=200,
+    visible=True
+)
 class SandboxKbTool(SandboxToolsBase):
     """Tool for knowledge base operations using kb-fusion binary in a Daytona sandbox.
     Provides search capabilities and maintenance operations for knowledge bases."""
@@ -16,11 +25,9 @@ class SandboxKbTool(SandboxToolsBase):
         self.kb_download_url = f"https://github.com/kortix-ai/kb-fusion/releases/download/v{self.kb_version}/kb"
 
     async def _execute_kb_command(self, command: str) -> dict:
-        """Execute a kb command with OPENAI_API_KEY environment variable set."""
         await self._ensure_sandbox()
-        
+
         env = {"OPENAI_API_KEY": config.OPENAI_API_KEY} if config.OPENAI_API_KEY else {}
-        
         response = await self.sandbox.process.exec(command, env=env)
         
         return {
@@ -244,7 +251,6 @@ class SandboxKbTool(SandboxToolsBase):
     async def ls_kb(self) -> ToolResult:
         try:
             result = await self._execute_kb_command("kb ls")
-            
             if result["exit_code"] != 0:
                 return self.fail_response(f"List operation failed: {result['output']}")
             

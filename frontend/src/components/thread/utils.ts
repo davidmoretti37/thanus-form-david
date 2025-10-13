@@ -24,7 +24,10 @@ import {
   ListTodo,
   List,
   Computer,
+  Phone,
+  PhoneOff,
 } from 'lucide-react';
+import { StopwatchIcon } from '@radix-ui/react-icons';
 
 // Flag to control whether tool result messages are rendered
 export const SHOULD_RENDER_TOOL_RESULTS = false;
@@ -148,13 +151,26 @@ export const getToolIcon = (toolName: string): ElementType => {
     case 'delete-file':
       return FileX;
 
-    // Deployment
-    case 'deploy-site':
-      return CloudUpload;
 
     // Tools and utilities
     case 'execute-code':
       return Code;
+
+    // VAPI Call
+    case 'make-phone-call':
+      return Phone;
+    case 'end-call':
+      return PhoneOff;
+    case 'get-call-details':
+      return Phone;
+    case 'list-calls':
+      return Phone;
+    case 'monitor-call':
+      return Phone;
+    case 'wait-for-call-completion':
+      return StopwatchIcon;
+    case 'wait_for_call_completion':
+      return StopwatchIcon;
 
     // User interaction
     case 'ask':
@@ -283,10 +299,6 @@ export const extractPrimaryParam = (
             ? match[1]
             : null;
 
-      // Deployment
-      case 'deploy-site':
-        match = content.match(/site_name=(?:"|')([^"|']+)(?:"|')/);
-        return match ? match[1] : null;
     }
 
     return null;
@@ -329,7 +341,6 @@ const TOOL_DISPLAY_NAMES = new Map([
   ['execute_data-provider_call', 'Calling data provider'],
   ['get-data-provider-endpoints', 'Getting endpoints'],
   
-  ['deploy', 'Deploying'],
   ['ask', 'Ask'],
   ['wait', 'Wait'],
   ['create-tasks', 'Creating Tasks'],
@@ -387,7 +398,14 @@ const TOOL_DISPLAY_NAMES = new Map([
   ['execute_data_provider_call', 'Calling data provider'],
   ['get_data_provider_endpoints', 'Getting endpoints'],
   
-  ['deploy', 'Deploying'],
+  ['get-paper-details', 'Getting Paper Details'],
+  ['search-authors', 'Searching Authors'],
+  ['get-author-details', 'Getting Author Details'],
+  ['get-author-papers', 'Getting Author Papers'],
+  ['get-paper-citations', 'Getting Paper Citations'],
+  ['get-paper-references', 'Getting Paper References'],
+  ['paper-search', 'Searching for Papers'],
+  
   ['ask', 'Ask'],
   ['complete', 'Completing Task'],
   ['crawl_webpage', 'Crawling Website'],
@@ -414,6 +432,19 @@ const TOOL_DISPLAY_NAMES = new Map([
   ['configure-agent-integration', 'Configuring Agent Integration'],
   ['create-agent-scheduled-trigger', 'Creating Scheduled Trigger'],
   ['list-agent-scheduled-triggers', 'Listing Agent Scheduled Triggers'],
+
+  ['make-phone-call', 'Making Phone Call'],
+  ['make_phone_call', 'Making Phone Call'],
+  ['end-call', 'Ending Call'],
+  ['end_call', 'Ending Call'],
+  ['get-call-details', 'Getting Call Details'],
+  ['get_call_details', 'Getting Call Details'],
+  ['list-calls', 'Listing Calls'],
+  ['list_calls', 'Listing Calls'],
+  ['monitor-call', 'Monitoring Call'],
+  ['monitor_call', 'Monitoring Call'],
+  ['wait-for-call-completion', 'Waiting for Completion'],
+  ['wait_for_call_completion', 'Waiting for Completion'],
 ]);
 
 
@@ -514,7 +545,6 @@ export const HIDE_STREAMING_XML_TAGS = new Set([
   'browser-send-keys',
   'browser-switch-tab',
   'browser-wait',
-  'deploy',
   'ask',
   'complete',
   'crawl-webpage',

@@ -1,27 +1,23 @@
 from typing import Optional
-from core.agentpress.tool import ToolResult, openapi_schema
+from core.agentpress.tool import ToolResult, openapi_schema, tool_metadata
 from core.tools.fal_image_base import FalImageToolBase
 from core.agentpress.thread_manager import ThreadManager
 import httpx
+from io import BytesIO
+import uuid
+from litellm import aimage_generation, aimage_edit
+import base64
 
-
+@tool_metadata(
+    display_name="Image Editor",
+    description="Generate and edit images with AI assistance",
+    icon="Wand",
+    color="bg-purple-100 dark:bg-purple-800/50",
+    weight=50,
+    visible=True
+)
 class SandboxImageEditTool(FalImageToolBase):
-    """
-    Tool for generating or editing images using Fal AI models.
-    
-    Inherits all Fal AI functionality from FalImageToolBase.
-    Provides simple image generation and editing without design enhancements.
-    
-    Use this for:
-    - General image generation
-    - Simple image editing
-    - Artistic images without professional design requirements
-    
-    Notes:
-    - Inherits from FalImageToolBase for all Fal AI operations
-    - Saves images to /workspace/designs/ (shared with designer tool)
-    - Returns structured data compatible with DesignerToolView
-    """
+    """Tool for generating or editing images using OpenAI GPT Image 1 via OpenAI SDK (no mask support)."""
 
     def __init__(self, project_id: str, thread_id: str, thread_manager: ThreadManager):
         super().__init__(project_id, thread_id, thread_manager)

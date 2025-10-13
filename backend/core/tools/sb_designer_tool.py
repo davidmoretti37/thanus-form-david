@@ -1,27 +1,22 @@
 from typing import Optional
-from core.agentpress.tool import ToolResult, openapi_schema
+from core.agentpress.tool import ToolResult, openapi_schema, tool_metadata
 from core.tools.fal_image_base import FalImageToolBase
 from core.agentpress.thread_manager import ThreadManager
+import httpx
+from io import BytesIO
+import uuid
+from litellm import aimage_generation, aimage_edit
+import base64
 
-
+@tool_metadata(
+    display_name="Design & Graphics",
+    description="Generate images and graphics for social media, websites, and more",
+    icon="Palette",
+    color="bg-rose-100 dark:bg-rose-800/50",
+    weight=210,
+    visible=True
+)
 class SandboxDesignerTool(FalImageToolBase):
-    """
-    Professional design tool for creating high-quality graphics.
-    
-    Inherits all Fal AI functionality from FalImageToolBase.
-    Adds professional design enhancements and platform-specific optimizations.
-    
-    Use this for:
-    - Social media graphics (Instagram, Facebook, LinkedIn, etc.)
-    - Marketing materials and advertisements
-    - Professional graphics with design principles applied
-    
-    Notes:
-    - Inherits from FalImageToolBase for all Fal AI operations
-    - Adds prompt enhancement with professional design principles
-    - Provides platform-specific presets and optimizations
-    """
-
     def __init__(self, project_id: str, thread_id: str, thread_manager: ThreadManager):
         super().__init__(project_id, thread_id, thread_manager)
         

@@ -26,8 +26,8 @@ import { cn } from '@/lib/utils';
 import type { Agent } from '@/hooks/react-query/agents/utils';
 import { BillingModal } from '@/components/billing/billing-modal';
 import { useAgentSelection } from '@/lib/stores/agent-selection-store';
-import { Examples } from './examples';
-import { AgentExamples } from './examples/agent-examples';
+import { SunaModesPanel } from './suna-modes-panel';
+import { AIWorkerTemplates } from './ai-worker-templates';
 import { useThreadQuery } from '@/hooks/react-query/threads/use-threads';
 import { normalizeFilenameToNFC } from '@/lib/utils/unicode';
 import { KortixLogo } from '../sidebar/kortix-logo';
@@ -41,6 +41,7 @@ import { Calendar, MessageSquare, Plus, Sparkles, Zap } from 'lucide-react';
 import { AgentConfigurationDialog } from '@/components/agents/agent-configuration-dialog';
 import { t, detectClientLanguage, type LanguageCode } from '@/lib/i18n';
 import { LanguageSelectorSimple } from '@/components/ui/language-selector-simple';
+import { Examples } from '@/components/dashboard/examples';
 
 
 const PENDING_PROMPT_KEY = 'pendingAgentPrompt';
@@ -88,9 +89,21 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
   const [configAgentId, setConfigAgentId] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [autoSubmit, setAutoSubmit] = useState(false);
-  const { 
-    selectedAgentId, 
-    setSelectedAgent, 
+  const [selectedMode, setSelectedMode] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'super-worker' | 'worker-templates'>('super-worker');
+  const [selectedCharts, setSelectedCharts] = useState<string[]>([]);
+  const [selectedOutputFormat, setSelectedOutputFormat] = useState<string | null>(null);
+  
+  // Reset data selections when mode changes
+  React.useEffect(() => {
+    if (selectedMode !== 'data') {
+      setSelectedCharts([]);
+      setSelectedOutputFormat(null);
+    }
+  }, [selectedMode]);
+  const {
+    selectedAgentId,
+    setSelectedAgent,
     initializeFromAgents,
     getCurrentAgent
   } = useAgentSelection();
@@ -165,13 +178,20 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
 
   const threadQuery = useThreadQuery(initiatedThreadId || '');
 
-  const enabledEnvironment = isStagingMode() || isLocalMode();
-
   React.useEffect(() => {
     if (filteredAgents.length > 0) {
       initializeFromAgents(filteredAgents, undefined, setSelectedAgent);
     }
   }, [filteredAgents, initializeFromAgents, setSelectedAgent]);
+
+  React.useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'worker-templates') {
+      setViewMode('worker-templates');
+    } else {
+      setViewMode('super-worker');
+    }
+  }, [searchParams]);
 
   React.useEffect(() => {
     const agentIdFromUrl = searchParams.get('agent_id');
@@ -198,7 +218,7 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
 
   const handleTourCallback = useCallback((data: CallBackProps) => {
     const { status, type, index } = data;
-    
+
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       stopTour();
     } else if (type === 'step:after') {
@@ -307,8 +327,11 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
         onOpenChange={setShowPaymentModal}
         showUsageLimitAlert={true}
       />
-      
+
       <div className="flex flex-col h-screen w-full overflow-hidden">
+
+
+
         <div className="flex-1 overflow-y-auto">
           <div className="min-h-full flex flex-col">
             {/* Language Selector - Wrapped in a client component */}
@@ -372,7 +395,7 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
             
           </div>
         </div>
-        
+
         <BillingErrorAlert
           message={billingError?.message}
           currentUsage={billingError?.currentUsage}
@@ -392,7 +415,7 @@ export function DashboardContent({ evaMode }: DashboardContentProps) {
           projectId={undefined}
         />
       )}
-      
+
       {configAgentId && (
         <AgentConfigurationDialog
           open={showConfigDialog}

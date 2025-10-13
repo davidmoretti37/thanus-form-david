@@ -17,7 +17,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { handleFiles, FileUploadHandler } from './file-upload-handler';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowUp } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Loader2, ArrowUp, X, Image as ImageIcon, Presentation, BarChart3, FileText, Search, Users, Code2, Sparkles, Brain as BrainIcon, MessageSquare } from 'lucide-react';
 import { VoiceRecorder } from './voice-recorder';
 import { UnifiedConfigMenu } from './unified-config-menu';
 import { AttachmentGroup } from '../attachment-group';
@@ -36,10 +37,34 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { IntegrationsRegistry } from '@/components/agents/integrations-registry';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSubscriptionData } from '@/contexts/SubscriptionContext';
-import { isLocalMode } from '@/lib/config';
+import { isStagingMode, isLocalMode } from '@/lib/config';
 import { BillingModal } from '@/components/billing/billing-modal';
 import { AgentConfigurationDialog } from '@/components/agents/agent-configuration-dialog';
+
 import posthog from 'posthog-js';
+
+// Helper function to get the icon for each mode
+const getModeIcon = (mode: string) => {
+  const iconClass = "w-4 h-4";
+  switch (mode) {
+    case 'research':
+      return <Search className={iconClass} />;
+    case 'people':
+      return <Users className={iconClass} />;
+    case 'code':
+      return <Code2 className={iconClass} />;
+    case 'docs':
+      return <FileText className={iconClass} />;
+    case 'data':
+      return <BarChart3 className={iconClass} />;
+    case 'slides':
+      return <Presentation className={iconClass} />;
+    case 'image':
+      return <ImageIcon className={iconClass} />;
+    default:
+      return null;
+  }
+};
 
 export type SubscriptionStatus = 'no_subscription' | 'active';
 
@@ -84,11 +109,13 @@ export interface ChatInputProps {
   evaMode?: 'only' | 'exclude';
   defaultShowSnackbar?: 'tokens' | 'upgrade' | false;
   showToLowCreditUsers?: boolean;
-  agentMetadata?: {
-    is_suna_default?: boolean;
-  };
   showScrollToBottomIndicator?: boolean;
   onScrollToBottom?: () => void;
+  selectedMode?: string | null;
+  onModeDeselect?: () => void;
+  animatePlaceholder?: boolean;
+  selectedCharts?: string[];
+  selectedOutputFormat?: string | null;
 }
 
 export interface UploadedFile {
@@ -101,40 +128,45 @@ export interface UploadedFile {
 
 
 
-export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
-  {
-    onSubmit,
-    placeholder = 'Describe what you need help with...',
-    loading = false,
-    disabled = false,
-    isAgentRunning = false,
-    onStopAgent,
-    autoFocus = true,
-    value: controlledValue,
-    onChange: controlledOnChange,
-    onFileBrowse,
-    sandboxId,
-    projectId,
-    hideAttachments = false,
-    selectedAgentId,
-    onAgentSelect,
-    agentName,
-    messages = [],
-    bgColor = 'bg-card',
-    toolCalls = [],
-    toolCallIndex = 0,
-    showToolPreview = false,
-    onExpandToolPreview,
-    isLoggedIn = true,
-    enableAdvancedConfig = false,
-    onConfigureAgent,
-    hideAgentSelection = false,
-    evaMode,
-    defaultShowSnackbar = false,
-    showToLowCreditUsers = true,
-    agentMetadata,
-    showScrollToBottomIndicator = false,
-    onScrollToBottom,
+export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>(
+  (
+    {
+      onSubmit,
+      placeholder = 'Describe what you need help with...',
+      loading = false,
+      disabled = false,
+      isAgentRunning = false,
+      onStopAgent,
+      autoFocus = true,
+      value: controlledValue,
+      onChange: controlledOnChange,
+      onFileBrowse,
+      sandboxId,
+      projectId,
+      hideAttachments = false,
+      selectedAgentId,
+      onAgentSelect,
+      agentName,
+      messages = [],
+      bgColor = 'bg-card',
+      toolCalls = [],
+      toolCallIndex = 0,
+      showToolPreview = false,
+      onExpandToolPreview,
+      isLoggedIn = true,
+      enableAdvancedConfig = false,
+      onConfigureAgent,
+      hideAgentSelection = false,
+      evaMode,
+      defaultShowSnackbar = false,
+      showToLowCreditUsers = true,
+      showScrollToBottomIndicator = false,
+      onScrollToBottom,
+      selectedMode,
+      onModeDeselect,
+      animatePlaceholder = false,
+      selectedCharts = [],
+      selectedOutputFormat = null,
     },
     ref,
   ) => {
@@ -156,6 +188,13 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     const [billingModalOpen, setBillingModalOpen] = useState(false);
     const [agentConfigDialog, setAgentConfigDialog] = useState<{ open: boolean; tab: 'instructions' | 'knowledge' | 'triggers' | 'tools' | 'integrations' }>({ open: false, tab: 'instructions' });
     const [mounted, setMounted] = useState(false);
+    const [animatedPlaceholder, setAnimatedPlaceholder] = useState('');
+    const [isModeDismissing, setIsModeDismissing] = useState(false);
+    
+    // Suna Agent Modes feature flag
+    const ENABLE_SUNA_AGENT_MODES = false;
+    const [sunaAgentModes, setSunaAgentModes] = useState<'adaptive' | 'autonomous' | 'chat'>('adaptive');
+    
     const pastedContentCounterRef = useRef(1);
     const lastPasteTimeRef = useRef<number>(0);
 
@@ -221,6 +260,10 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
       });
     }, [agentsResponse?.agents, evaMode]);
 
+    // Check if selected agent is a Suna default agent (must be after filteredAgents is defined)
+    const selectedAgent = filteredAgents.find(agent => agent.agent_id === selectedAgentId);
+    const isSunaAgent = selectedAgent?.metadata?.is_suna_default === true;
+
     const { initializeFromAgents } = useAgentSelection();
     useImperativeHandle(ref, () => ({
       getPendingFiles: () => pendingFiles,
@@ -236,6 +279,64 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
     useEffect(() => {
       setMounted(true);
     }, []);
+
+    // Typewriter effect for placeholder
+    useEffect(() => {
+      if (!mounted || value || !animatePlaceholder) {
+        setAnimatedPlaceholder(placeholder);
+        return;
+      }
+
+      let currentIndex = 0;
+      setAnimatedPlaceholder('');
+
+      const typingInterval = setInterval(() => {
+        if (currentIndex < placeholder.length) {
+          setAnimatedPlaceholder(placeholder.slice(0, currentIndex + 1));
+          currentIndex++;
+        } else {
+          clearInterval(typingInterval);
+        }
+      }, 50); // 50ms per character
+
+      return () => clearInterval(typingInterval);
+    }, [mounted, placeholder, value, animatePlaceholder]);
+
+    // Reset mode dismissing state when selectedMode changes
+    useEffect(() => {
+      setIsModeDismissing(false);
+    }, [selectedMode]);
+
+    // Generate Markdown for selected data options
+    const generateDataOptionsMarkdown = useCallback(() => {
+      if (selectedMode !== 'data' || (selectedCharts.length === 0 && !selectedOutputFormat)) {
+        return '';
+      }
+      
+      let markdown = '\n\n----\n\n**Data Visualization Requirements:**\n';
+      
+      if (selectedOutputFormat) {
+        markdown += `\n- **Output Format:** ${selectedOutputFormat}`;
+      }
+      
+      if (selectedCharts.length > 0) {
+        markdown += '\n- **Preferred Charts:**';
+        selectedCharts.forEach(chartId => {
+          markdown += `\n  - ${chartId}`;
+        });
+      }
+      
+      return markdown;
+    }, [selectedMode, selectedCharts, selectedOutputFormat]);
+
+    // Handle mode deselection with animation
+    const handleModeDeselect = useCallback(() => {
+      setIsModeDismissing(true);
+      setTimeout(() => {
+        onModeDeselect?.();
+        setIsModeDismissing(false);
+      }, 200); // Match animation duration
+    }, [onModeDeselect]);
 
     // Auto-resize textarea
     useEffect(() => {
@@ -271,7 +372,8 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
       if (
         (!currentValue.trim() && uploadedFiles.length === 0) ||
         loading ||
-        (disabled && !isAgentRunning)
+        (disabled && !isAgentRunning) ||
+        isUploading // Prevent submission while files are uploading
       ) {
         return;
       }
@@ -329,6 +431,12 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
           .join('\n');
         message = message ? `${message}\n\n${fileInfo}` : fileInfo;
       }
+      
+      // Append Markdown for data visualization options
+      const dataOptionsMarkdown = generateDataOptionsMarkdown();
+      if (dataOptionsMarkdown) {
+        message = message + dataOptionsMarkdown;
+      }
 
       const baseModelName = getActualModelId(selectedModel);
 
@@ -346,7 +454,7 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
       // Clear both pending files and uploaded files after successful submission
       setPendingFiles([]);
       setUploadedFiles([]);
-    }, [value, uploadedFiles, loading, disabled, isAgentRunning, onStopAgent, getActualModelId, selectedModel, onSubmit, selectedAgentId, isControlled, controlledValue, uncontrolledValue, controlledOnChange, setUncontrolledValue, setUploadedFiles, sandboxId, setPendingFiles, setIsUploading, messages, queryClient]);
+    }, [value, uploadedFiles, loading, disabled, isAgentRunning, isUploading, onStopAgent, generateDataOptionsMarkdown, getActualModelId, selectedModel, onSubmit, selectedAgentId, isControlled, controlledValue, uncontrolledValue, controlledOnChange, setUncontrolledValue, setUploadedFiles, sandboxId, setPendingFiles, setIsUploading, messages, queryClient]);
 
     const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newValue = e.target.value;
@@ -364,12 +472,13 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
         if (
           (currentValue.trim() || uploadedFiles.length > 0) &&
           !loading &&
-          (!disabled || isAgentRunning)
+          (!disabled || isAgentRunning) &&
+          !isUploading // Prevent submission while files are uploading
         ) {
           handleSubmit(e as unknown as React.FormEvent);
         }
       }
-    }, [isControlled, controlledValue, uncontrolledValue, uploadedFiles, loading, disabled, isAgentRunning, handleSubmit]);
+    }, [isControlled, controlledValue, uncontrolledValue, uploadedFiles, loading, disabled, isAgentRunning, isUploading, handleSubmit]);
 
     const convertToAttachment = useCallback(async (text: string) => {
       try {
@@ -561,16 +670,16 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
           onChange={handleChange}
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
-          placeholder={placeholder}
+          placeholder={animatedPlaceholder}
           className={cn(
-            'w-full bg-transparent dark:bg-transparent border-none shadow-none focus-visible:ring-0 px-0.5 pb-6 pt-4 !text-[15px] min-h-[36px] max-h-[200px] overflow-y-auto resize-none',
+            'w-full bg-transparent dark:bg-transparent border-none shadow-none focus-visible:ring-0 px-0.5 pb-6 pt-4 !text-[15px] min-h-[72px] max-h-[200px] overflow-y-auto resize-none',
             isDraggingOver ? 'opacity-40' : '',
           )}
           disabled={loading || (disabled && !isAgentRunning)}
           rows={1}
         />
       </div>
-    ), [value, handleChange, handleKeyDown, handlePaste, placeholder, isDraggingOver, loading, disabled, isAgentRunning]);
+    ), [value, handleChange, handleKeyDown, handlePaste, animatedPlaceholder, isDraggingOver, loading, disabled, isAgentRunning]);
 
     const renderControls = useMemo(() => (
       <div className="flex items-center justify-between mt-0 mb-1 px-2">
@@ -591,6 +700,102 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
               isLoggedIn={isLoggedIn}
             />
           )}
+          
+          {/* Agent Mode Switcher - Only for Suna */}
+          {ENABLE_SUNA_AGENT_MODES && (isStagingMode() || isLocalMode()) && isSunaAgent && (
+            <TooltipProvider>
+              <div className="flex items-center gap-1 p-0.5 bg-muted/50 rounded-lg">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setSunaAgentModes('adaptive')}
+                      className={cn(
+                        "p-1.5 rounded-md transition-all duration-200 cursor-pointer",
+                        sunaAgentModes === 'adaptive'
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      )}
+                    >
+                      <Sparkles className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <div className="space-y-1">
+                      <p className="font-medium text-white">Adaptive</p>
+                      <p className="text-xs text-gray-200">Quick responses with smart context switching</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setSunaAgentModes('autonomous')}
+                      className={cn(
+                        "p-1.5 rounded-md transition-all duration-200 cursor-pointer",
+                        sunaAgentModes === 'autonomous'
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      )}
+                    >
+                      <BrainIcon className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <div className="space-y-1">
+                      <p className="font-medium text-white">Autonomous</p>
+                      <p className="text-xs text-gray-200">Deep work mode for multi-step problem solving</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => setSunaAgentModes('chat')}
+                      className={cn(
+                        "p-1.5 rounded-md transition-all duration-200 cursor-pointer",
+                        sunaAgentModes === 'chat'
+                          ? "bg-background text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground hover:bg-background/50"
+                      )}
+                    >
+                      <MessageSquare className="w-4 h-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <div className="space-y-1">
+                      <p className="font-medium text-white">Chat</p>
+                      <p className="text-xs text-gray-200">Simple back-and-forth conversation</p>
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </TooltipProvider>
+          )}
+          
+          {(selectedMode || isModeDismissing) && onModeDeselect && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isModeDismissing) {
+                  handleModeDeselect();
+                }
+              }}
+              className={cn(
+                "h-8 px-3 py-2 bg-transparent border border-border rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent/50 flex items-center gap-1.5 cursor-pointer transition-all duration-200",
+                !isModeDismissing && "animate-in fade-in-0 zoom-in-95",
+                isModeDismissing && "animate-out fade-out-0 zoom-out-95"
+              )}
+            >
+              {selectedMode && getModeIcon(selectedMode)}
+              <span className="text-sm">{selectedMode?.charAt(0).toUpperCase()}{selectedMode?.slice(1)}</span>
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
 
         <div className='flex items-center gap-2'>
@@ -606,35 +811,48 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
             disabled={loading || (disabled && !isAgentRunning)}
           />}
 
-          <Button
-            type="submit"
-            onClick={isAgentRunning && onStopAgent ? onStopAgent : handleSubmit}
-            size="sm"
-            className={cn(
-              'w-8 h-8 flex-shrink-0 self-end rounded-xl',
-              (!value.trim() && uploadedFiles.length === 0 && !isAgentRunning) ||
-                loading ||
-                (disabled && !isAgentRunning)
-                ? 'opacity-50'
-                : '',
-            )}
-            disabled={
-              (!value.trim() && uploadedFiles.length === 0 && !isAgentRunning) ||
-              loading ||
-              (disabled && !isAgentRunning)
-            }
-          >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : isAgentRunning ? (
-              <div className="min-h-[14px] min-w-[14px] w-[14px] h-[14px] rounded-sm bg-current" />
-            ) : (
-              <ArrowUp className="h-5 w-5" />
-            )}
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="submit"
+                  onClick={isAgentRunning && onStopAgent ? onStopAgent : handleSubmit}
+                  size="sm"
+                  className={cn(
+                    'w-8 h-8 flex-shrink-0 self-end rounded-xl',
+                    (!value.trim() && uploadedFiles.length === 0 && !isAgentRunning) ||
+                      loading ||
+                      (disabled && !isAgentRunning) ||
+                      isUploading
+                      ? 'opacity-50'
+                      : '',
+                  )}
+                  disabled={
+                    (!value.trim() && uploadedFiles.length === 0 && !isAgentRunning) ||
+                    loading ||
+                    (disabled && !isAgentRunning) ||
+                    isUploading
+                  }
+                >
+                  {loading || isUploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : isAgentRunning ? (
+                    <div className="min-h-[14px] min-w-[14px] w-[14px] h-[14px] rounded-sm bg-current" />
+                  ) : (
+                    <ArrowUp className="h-5 w-5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              {isUploading && (
+                <TooltipContent side="top">
+                  <p>Uploading {pendingFiles.length} file{pendingFiles.length !== 1 ? 's' : ''}...</p>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
-    ), [hideAttachments, loading, disabled, isAgentRunning, isUploading, sandboxId, messages, isLoggedIn, renderConfigDropdown, billingModalOpen, setBillingModalOpen, handleTranscription, onStopAgent, handleSubmit, value, uploadedFiles]);
+    ), [hideAttachments, loading, disabled, isAgentRunning, isUploading, sandboxId, messages, isLoggedIn, renderConfigDropdown, billingModalOpen, setBillingModalOpen, handleTranscription, onStopAgent, handleSubmit, value, uploadedFiles, selectedMode, onModeDeselect, handleModeDeselect, isModeDismissing, isSunaAgent, sunaAgentModes, pendingFiles]);
 
 
 
@@ -689,14 +907,26 @@ export const ChatInput = memo(forwardRef<ChatInputHandles, ChatInputProps>((
           >
             <div className="w-full text-sm flex flex-col justify-between items-start rounded-lg">
               <CardContent className={`w-full p-1.5 pb-2 ${bgColor} border rounded-3xl`}>
-                <AttachmentGroup
-                  files={uploadedFiles || []}
-                  sandboxId={sandboxId}
-                  onRemove={removeUploadedFile}
-                  layout="inline"
-                  maxHeight="216px"
-                  showPreviews={true}
-                />
+                {(uploadedFiles.length > 0 || isUploading) && (
+                  <div className="relative">
+                    <AttachmentGroup
+                      files={uploadedFiles || []}
+                      sandboxId={sandboxId}
+                      onRemove={removeUploadedFile}
+                      layout="inline"
+                      maxHeight="216px"
+                      showPreviews={true}
+                    />
+                    {isUploading && pendingFiles.length > 0 && (
+                      <div className="absolute inset-0 bg-background/50 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                        <div className="flex items-center gap-2 bg-background/90 px-3 py-2 rounded-lg border border-border">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Uploading {pendingFiles.length} file{pendingFiles.length !== 1 ? 's' : ''}...</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="relative flex flex-col w-full h-full gap-2 justify-between">
                   {renderTextArea}
                   {renderControls}

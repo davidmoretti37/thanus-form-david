@@ -40,7 +40,6 @@ import { createQueryHook } from '@/hooks/use-query';
 import { agentKeys } from '@/hooks/react-query/agents/keys';
 import { getAgents } from '@/hooks/react-query/agents/utils';
 import { AgentRunLimitDialog } from '@/components/thread/agent-run-limit-dialog';
-import { Examples } from '@/components/dashboard/examples';
 import { useAgentSelection } from '@/lib/stores/agent-selection-store';
 import { t } from '@/lib/i18n';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -412,16 +411,13 @@ export function HeroSection({ hero, cta }: HeroSectionProps) {
                   onAgentSelect={setSelectedAgent}
                   autoFocus={false}
                   enableAdvancedConfig={false}
+                  animatePlaceholder={true}
                 />
               </div>
               {/* Subtle glow effect */}
               <div className="absolute -bottom-4 inset-x-0 h-6 bg-secondary/20 blur-xl rounded-full -z-10 opacity-70"></div>
             </div>
             
-            {/* Examples section - right after chat input */}
-            <div className="w-full pt-2">
-              <Examples onSelectPrompt={setInputValue} count={tablet ? 2 : 4} />
-            </div>
           </div>
         </div>
 
