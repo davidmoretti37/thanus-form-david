@@ -1,85 +1,48 @@
 import { AttachmentGroup } from '@/components/AttachmentGroup';
 import { useTheme } from '@/hooks/useThemeColor';
-import { useSelectedProject } from '@/stores/ui-store';
+import { useSelectedProject, useSelectedAgent, useSelectedModel, useSetSelectedAgent, useSetSelectedModel } from '@/stores/ui-store';
 import { handleLocalFiles, pickFiles, UploadedFile, uploadFilesToSandbox } from '@/utils/file-upload';
-import { ArrowUp, Mic, Paperclip, Square } from 'lucide-react-native';
-import React, { useEffect, useState } from 'react';
-import { Keyboard, KeyboardEvent, Platform, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
-import Animated, {
-    Easing,
-    Extrapolate,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withTiming,
-} from 'react-native-reanimated';
+import { ArrowUp, Paperclip, Globe, Wrench, FileText, BookOpen, Zap } from 'lucide-react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { AgentModelSelector } from './AgentModelSelector';
+import { Body, Caption } from './Typography';
+import { Agent, Model } from '@/api/chat-api';
 
 interface ChatInputProps {
     onSendMessage: (message: string, files?: UploadedFile[]) => void;
-    onAttachPress?: () => void;
-    onMicPress?: () => void;
-    onCancelStream?: () => void;
     placeholder?: string;
-    isAtBottomOfChat?: boolean;
     isGenerating?: boolean;
     isSending?: boolean;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({
     onSendMessage,
-    onAttachPress,
-    onMicPress,
-    onCancelStream,
-    placeholder = 'Ask Tars anything...',
-    isAtBottomOfChat = true,
+    placeholder = 'What would you like to do today?',
     isGenerating = false,
     isSending = false,
 }) => {
     const [message, setMessage] = useState('');
     const [attachedFiles, setAttachedFiles] = useState<UploadedFile[]>([]);
+    const [selectorVisible, setSelectorVisible] = useState(false);
+    const [isFocused, setIsFocused] = useState(false);
+    
     const selectedProject = useSelectedProject();
     const theme = useTheme();
     const insets = useSafeAreaInsets();
 
-    // Get sandboxId from selected project
+    const selectedAgent = useSelectedAgent();
+    const selectedModel = useSelectedModel();
+    const setSelectedAgent = useSetSelectedAgent();
+    const setSelectedModel = useSetSelectedModel();
+
     const sandboxId = selectedProject?.sandbox?.id;
-
-    const keyboardHeight = useSharedValue(0);
-
-    useEffect(() => {
-        const handleKeyboardShow = (event: KeyboardEvent) => {
-            keyboardHeight.value = withTiming(event.endCoordinates.height, {
-                duration: 250,
-                easing: Easing.out(Easing.quad),
-            });
-        };
-
-        const handleKeyboardHide = () => {
-            keyboardHeight.value = withTiming(0, {
-                duration: 250,
-                easing: Easing.out(Easing.quad),
-            });
-        };
-
-        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-        const showSubscription = Keyboard.addListener(showEvent, handleKeyboardShow);
-        const hideSubscription = Keyboard.addListener(hideEvent, handleKeyboardHide);
-
-        return () => {
-            showSubscription.remove();
-            hideSubscription.remove();
-        };
-    }, []);
 
     const handleSend = () => {
         if (message.trim() || attachedFiles.length > 0) {
             let finalMessage = message.trim();
 
-            // For existing projects with sandboxId, add file references to message
-            // For new chat mode, let server handle file references to avoid duplicates
             if (attachedFiles.length > 0 && sandboxId) {
                 const fileInfo = attachedFiles
                     .map(file => `[Uploaded File: ${file.path}]`)
@@ -87,232 +50,319 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 finalMessage = finalMessage ? `${finalMessage}\n\n${fileInfo}` : fileInfo;
             }
 
-            // Pass the message and files separately to the handler
             onSendMessage(finalMessage, attachedFiles);
             setMessage('');
             setAttachedFiles([]);
         }
     };
 
-    const handleAttachPress = async () => {
+    const handleAttach = async () => {
         try {
-            const result = await pickFiles();
-
-            if (result.cancelled || !result.files?.length) {
-                return;
+            const files = await pickFiles();
+            if (files.length > 0) {
+                const uploaded = await handleLocalFiles(files, sandboxId || '');
+                setAttachedFiles(prev => [...prev, ...uploaded]);
             }
-
-            if (sandboxId) {
-                // Upload to sandbox - files shown immediately with loading state
-                await uploadFilesToSandbox(
-                    result.files,
-                    sandboxId,
-                    (files: UploadedFile[]) => setAttachedFiles(prev => [...prev, ...files]),
-                    (filePath: string, status: { isUploading?: boolean; uploadError?: string }) => {
-                        setAttachedFiles(prev => prev.map(file =>
-                            file.path === filePath
-                                ? { ...file, ...status }
-                                : file
-                        ));
-                    }
-                );
-            } else {
-                // Store locally - files shown immediately
-                await handleLocalFiles(
-                    result.files,
-                    () => { }, // We don't need pending files state here
-                    (files: UploadedFile[]) => setAttachedFiles(prev => [...prev, ...files])
-                );
-            }
-
-            onAttachPress?.();
         } catch (error) {
-            console.error('File attach error:', error);
+            console.error('Error handling file attachment:', error);
         }
     };
 
-    const removeFile = (index: number) => {
-        setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+    const handleAgentSelect = (agent: Agent) => {
+        setSelectedAgent(agent);
+        setSelectorVisible(false);
     };
 
-    const containerStyle = useAnimatedStyle(() => {
-        const paddingBottom = interpolate(
-            keyboardHeight.value,
-            [0, 300],
-            [Math.max(insets.bottom, 20), 10],
-            Extrapolate.CLAMP
-        );
+    const handleModelSelect = (model: Model) => {
+        setSelectedModel(model);
+        setSelectorVisible(false);
+    };
 
-        return {
-            paddingBottom,
-        };
+    const styles = StyleSheet.create({
+        container: {
+            paddingHorizontal: 12,
+            paddingVertical: 4,
+            paddingBottom: Math.max(2, insets.bottom),
+            backgroundColor: theme.background,
+            height: 80,
+        },
+        mainContainer: {
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: theme.border,
+            overflow: 'hidden',
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.15,
+            shadowRadius: 12,
+            elevation: 5,
+            backgroundColor: theme.mutedWithOpacity(0.04),
+        },
+        inputSection: {
+            flexDirection: 'column',
+            paddingHorizontal: 12,
+            paddingTop: 6,
+            paddingBottom: 0,
+            gap: 0,
+            height: 60,
+        },
+        inputRow: {
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            gap: 10,
+            marginBottom: 8,
+        },
+        attachButton: {
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginTop: 0,
+            backgroundColor: theme.mutedWithOpacity(0.1),
+            borderWidth: 1,
+            borderColor: theme.border,
+        },
+        attachButtonActive: {
+            backgroundColor: theme.primary,
+            borderColor: theme.primary,
+        },
+        inputField: {
+            flex: 1,
+            fontSize: 15,
+            color: theme.foreground,
+            paddingVertical: 6,
+            paddingHorizontal: 4,
+            maxHeight: 40,
+        },
+        rightButtons: {
+            gap: 8,
+            alignItems: 'center',
+            marginTop: 0,
+        },
+        sendButton: {
+            width: 44,
+            height: 44,
+            borderRadius: 10,
+            backgroundColor: theme.primary,
+            justifyContent: 'center',
+            alignItems: 'center',
+            shadowColor: theme.primary,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.4,
+            shadowRadius: 8,
+            elevation: 5,
+        },
+        sendButtonDisabled: {
+            backgroundColor: theme.mutedWithOpacity(0.15),
+            shadowOpacity: 0,
+        },
+        agentButton: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 6,
+            paddingHorizontal: 10,
+            paddingVertical: 8,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: theme.border,
+            backgroundColor: theme.mutedWithOpacity(0.1),
+        },
+        agentButtonText: {
+            color: theme.foreground,
+            fontSize: 11,
+            fontWeight: '500',
+        },
+        bottomTabs: {
+            paddingVertical: 4,
+        },
+        bottomTabsContent: {
+            paddingHorizontal: 12,
+            gap: 8,
+            alignItems: 'center',
+        },
+        tabContainer: {
+            width: 40,
+            height: 40,
+            borderRadius: 10,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: theme.mutedWithOpacity(0.08),
+            borderWidth: 1,
+            borderColor: theme.border,
+        },
+        agentButtonInline: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 4,
+            height: 40,
+            paddingHorizontal: 8,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: theme.border,
+            backgroundColor: theme.mutedWithOpacity(0.08),
+        },
+        agentButtonInlineText: {
+            color: theme.foreground,
+            fontSize: 10,
+            fontWeight: '500',
+        },
+
+        attachmentGroup: {
+            paddingHorizontal: 12,
+            paddingVertical: 8,
+            borderTopWidth: 1,
+            borderTopColor: theme.border,
+        },
     });
 
-    const fakeViewStyle = useAnimatedStyle(() => {
-        return {
-            height: keyboardHeight.value,
-        };
-    });
-
-    const shouldShowCancel = isSending || isGenerating;
+    const isStreaming = isGenerating || isSending;
+    const canSend = (message.trim() || attachedFiles.length > 0) && !isStreaming;
 
     return (
         <>
-            <Animated.View style={[
-                styles.container,
-                {
-                    backgroundColor: theme.sidebar,
-                    borderTopLeftRadius: 30,
-                    borderTopRightRadius: 30,
-                    shadowColor: theme.border,
-                    shadowOffset: { width: 0, height: -1 },
-                    shadowOpacity: 1,
-                    shadowRadius: 0,
-                    paddingVertical: attachedFiles.length > 0 ? 0 : 12,
-                },
-                containerStyle
-            ]}>
-                <View style={[styles.inputContainer, { backgroundColor: theme.sidebar }]}>
-                    {/* File attachments preview */}
-                    {attachedFiles.length > 0 && (
-                        <AttachmentGroup
-                            attachments={attachedFiles}
-                            layout="inline"
-                            showPreviews={true}
-                            maxHeight={100}
-                            sandboxId={sandboxId}
-                            onFilePress={(filepath) => {
-                                // Don't remove on file press in inline mode, let X button handle it
-                                console.log('File pressed:', filepath);
-                            }}
-                            onRemove={removeFile}
-                        />
-                    )}
-
-                    <TextInput
-                        style={[styles.textInput, { color: theme.foreground }]}
-                        value={message}
-                        onChangeText={setMessage}
-                        placeholder={placeholder}
-                        placeholderTextColor={theme.placeholderText}
-                        multiline
-                        maxLength={2000}
-                        returnKeyType="send"
-                        onSubmitEditing={handleSend}
-                        blurOnSubmit={false}
-                    />
-
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={handleAttachPress}
+            <View style={styles.container}>
+                <View style={styles.mainContainer}>
+                    {/* Main Input Section */}
+                    <View style={styles.inputSection}>
+                        {/* Input Row */}
+                        <View style={styles.inputRow}>
+                            {/* Attach Button - Left */}
+                            <TouchableOpacity
+                            style={[styles.attachButton, attachedFiles.length > 0 && styles.attachButtonActive]}
+                            onPress={handleAttach}
+                            disabled={isStreaming}
+                            activeOpacity={0.7}
                         >
-                            <Paperclip size={20} strokeWidth={2} color={theme.placeholderText} />
+                            <Paperclip 
+                                size={18} 
+                                color={attachedFiles.length > 0 ? '#fff' : theme.mutedForeground} 
+                                strokeWidth={2} 
+                            />
                         </TouchableOpacity>
 
-                        <View style={styles.rightButtons}>
-                            <TouchableOpacity style={styles.actionButton} onPress={onMicPress}>
-                                <Mic size={20} strokeWidth={2} color={theme.placeholderText} style={{ marginRight: 10 }} />
-                            </TouchableOpacity>
+                        {/* Text Input - Center */}
+                        <TextInput
+                            style={styles.inputField}
+                            placeholder={placeholder}
+                            placeholderTextColor={theme.mutedWithOpacity(0.4)}
+                            value={message}
+                            onChangeText={setMessage}
+                            onFocus={() => setIsFocused(true)}
+                            onBlur={() => setIsFocused(false)}
+                            multiline
+                            maxLength={4000}
+                            editable={!isStreaming}
+                        />
 
+                        {/* Right Side - Send Button Only */}
+                        <View style={styles.rightButtons}>
+                            {/* Send Button */}
                             <TouchableOpacity
-                                style={[styles.sendButton, {
-                                    backgroundColor: shouldShowCancel || message.trim() || attachedFiles.length > 0
-                                        ? theme.activeButton
-                                        : theme.inactiveButton
-                                }]}
-                                onPress={shouldShowCancel ? onCancelStream : handleSend}
-                                disabled={!shouldShowCancel && !message.trim() && attachedFiles.length === 0}
+                                style={[styles.sendButton, !canSend && styles.sendButtonDisabled]}
+                                onPress={handleSend}
+                                disabled={!canSend}
+                                activeOpacity={0.85}
                             >
-                                {shouldShowCancel ? (
-                                    <Square
-                                        size={16}
-                                        strokeWidth={2}
-                                        color={theme.background}
-                                        fill={theme.background}
-                                    />
-                                ) : (
-                                    <ArrowUp
-                                        size={19}
-                                        strokeWidth={3}
-                                        color={message.trim() || attachedFiles.length > 0 ? theme.background : theme.disabledText}
-                                    />
-                                )}
+                                <ArrowUp 
+                                    size={20} 
+                                    color={canSend ? '#fff' : theme.mutedForeground} 
+                                    strokeWidth={2.5} 
+                                />
                             </TouchableOpacity>
                         </View>
+                        </View>
+                        {/* Bottom Tabs - Scrollable Clickable Icons */}
+                        <ScrollView 
+                            horizontal 
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={styles.bottomTabsContent}
+                            style={styles.bottomTabs}
+                        >
+                        {/* Integrações */}
+                        <TouchableOpacity 
+                            style={styles.tabContainer}
+                            onPress={() => console.log('Integrações pressed')}
+                            activeOpacity={0.7}
+                        >
+                            <Globe size={18} color={theme.foreground} strokeWidth={1.5} />
+                        </TouchableOpacity>
+
+                        {/* Tools */}
+                        <TouchableOpacity 
+                            style={styles.tabContainer}
+                            onPress={() => console.log('Tools pressed')}
+                            activeOpacity={0.7}
+                        >
+                            <Wrench size={18} color={theme.foreground} strokeWidth={1.5} />
+                        </TouchableOpacity>
+
+                        {/* Instruções */}
+                        <TouchableOpacity 
+                            style={styles.tabContainer}
+                            onPress={() => console.log('Instruções pressed')}
+                            activeOpacity={0.7}
+                        >
+                            <FileText size={18} color={theme.foreground} strokeWidth={1.5} />
+                        </TouchableOpacity>
+
+                        {/* Conhecimento */}
+                        <TouchableOpacity 
+                            style={styles.tabContainer}
+                            onPress={() => console.log('Conhecimento pressed')}
+                            activeOpacity={0.7}
+                        >
+                            <BookOpen size={18} color={theme.foreground} strokeWidth={1.5} />
+                        </TouchableOpacity>
+
+                        {/* Gatilhos */}
+                        <TouchableOpacity 
+                            style={styles.tabContainer}
+                            onPress={() => console.log('Gatilhos pressed')}
+                            activeOpacity={0.7}
+                        >
+                            <Zap size={18} color={theme.foreground} strokeWidth={1.5} />
+                        </TouchableOpacity>
+                        
+                        {/* Agent Button */}
+                        <TouchableOpacity
+                            style={styles.agentButtonInline}
+                            onPress={() => setSelectorVisible(true)}
+                            activeOpacity={0.8}
+                        >
+                            <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: theme.primary, opacity: 0.8 }} />
+                            <Body style={styles.agentButtonInlineText}>
+                                {selectedAgent?.name || 'Tars'}
+                            </Body>
+                        </TouchableOpacity>
+                        </ScrollView>
                     </View>
+
+                    {/* Attached Files - If any */}
+                    {attachedFiles.length > 0 && (
+                        <View style={styles.attachmentGroup}>
+                            <AttachmentGroup
+                                files={attachedFiles}
+                                onRemove={(index) => {
+                                    setAttachedFiles(prev => prev.filter((_, i) => i !== index));
+                                }}
+                            />
+                        </View>
+                    )}
                 </View>
-            </Animated.View>
-            {/* Fake view that ALWAYS pushes content up */}
-            <Animated.View style={fakeViewStyle} />
+            </View>
+
+            {/* Agent/Model Selector Modal */}
+            <AgentModelSelector
+                visible={selectorVisible}
+                onClose={() => setSelectorVisible(false)}
+                selectedAgentId={selectedAgent?.agent_id}
+                selectedModelName={selectedModel?.name}
+                onAgentSelect={handleAgentSelect}
+                onModelSelect={handleModelSelect}
+            />
         </>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        paddingHorizontal: 10,
-        paddingVertical: 0,
-    },
-    inputContainer: {
-        borderRadius: 20,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    textInput: {
-        fontSize: 16,
-        maxHeight: 100,
-        backgroundColor: 'transparent',
-        marginBottom: 8,
-        ...Platform.select({
-            ios: {
-                paddingTop: 12,
-            },
-        }),
-    },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    rightButtons: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    actionButton: {
-        width: 22,
-        height: 44,
-        borderRadius: 22,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    sendButton: {
-        width: 36,
-        height: 36,
-        borderRadius: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    attachIcon: {
-        width: 16,
-        height: 16,
-        borderRadius: 2,
-    },
-    micIcon: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-    },
-    sendIcon: {
-        width: 0,
-        height: 0,
-        borderStyle: 'solid',
-        borderLeftWidth: 14,
-        borderRightWidth: 0,
-        borderBottomWidth: 7,
-        borderTopWidth: 7,
-        borderTopColor: 'transparent',
-        borderBottomColor: 'transparent',
-    },
-}); 

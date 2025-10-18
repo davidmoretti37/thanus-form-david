@@ -11,13 +11,6 @@ import { parseMessage, processStreamContent } from '@/utils/message-parser';
 import { ChevronDown } from 'lucide-react-native';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withRepeat,
-    withSequence,
-    withTiming
-} from 'react-native-reanimated';
 import { AttachmentGroup } from './AttachmentGroup';
 import { MessageActionModal } from './MessageActionModal';
 import { SkeletonChatMessages } from './Skeleton';
@@ -98,7 +91,7 @@ const MessageItem = memo<MessageItemProps>(({ message, sandboxId, onLongPress, o
                     delayLongPress={500}
                     activeOpacity={0.8}
                 >
-                    <Animated.View style={[styles.messageBubble, {
+                    <View style={[styles.messageBubble, {
                         backgroundColor: theme.card,
                         borderColor: theme.border,
                     }]}>
@@ -116,7 +109,7 @@ const MessageItem = memo<MessageItemProps>(({ message, sandboxId, onLongPress, o
                                 sandboxId={sandboxId}
                             />
                         )}
-                    </Animated.View>
+                    </View>
                 </TouchableOpacity>
             </View>
         );
@@ -189,29 +182,12 @@ interface MessageThreadProps {
 
 // EXACT FRONTEND PATTERN - Simple thinking animation
 const ThinkingText = memo<{ children: string; color: string }>(({ children, color }) => {
-    const opacity = useSharedValue(0.3);
-
-    useEffect(() => {
-        opacity.value = withRepeat(
-            withSequence(
-                withTiming(1, { duration: 800 }),
-                withTiming(0.3, { duration: 800 })
-            ),
-            -1,
-            false
-        );
-    }, [opacity]);
-
-    const animatedStyle = useAnimatedStyle(() => ({
-        opacity: opacity.value,
-    }));
-
     return (
-        <Animated.View style={animatedStyle}>
+        <View style={{ opacity: 0.7 }}>
             <Body style={[styles.generatingText, { color }]}>
                 {children}
             </Body>
-        </Animated.View>
+        </View>
     );
 });
 
@@ -219,31 +195,12 @@ ThinkingText.displayName = 'ThinkingText';
 
 // Shimmer effect for tool name
 const ShimmerText = memo<{ children: string; color: string }>(({ children, color }) => {
-    const shimmerPosition = useSharedValue(-1);
-
-    useEffect(() => {
-        shimmerPosition.value = withRepeat(
-            withTiming(1, { duration: 1500 }),
-            -1,
-            false
-        );
-    }, [shimmerPosition]);
-
-    const animatedStyle = useAnimatedStyle(() => {
-        const inputRange = [-1, 0, 1];
-        const outputRange = [0.4, 1, 0.4];
-
-        return {
-            opacity: shimmerPosition.value >= -0.5 && shimmerPosition.value <= 0.5 ? 1 : 0.7,
-        };
-    });
-
     return (
-        <Animated.View style={animatedStyle}>
+        <View style={{ opacity: 0.8 }}>
             <Body style={[styles.toolIndicatorText, { color }]}>
                 {children}
             </Body>
-        </Animated.View>
+        </View>
     );
 });
 
@@ -445,11 +402,14 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
             <TouchableWithoutFeedback onPress={() => Keyboard.dismiss()}>
                 <View style={[styles.container, { backgroundColor: theme.background }]}>
                     <View style={styles.emptyContainer}>
-                        <Body style={[styles.emptyText, { color: theme.mutedForeground }]}>
-                            This is the beginning of your conversation.
-                        </Body>
-                        <Body style={[styles.emptyText, { color: theme.mutedForeground, fontSize: 14, marginTop: 8, opacity: 0.7 }]}>
-                            Send a message to get started!
+                        <Body style={[styles.emptyText, { 
+                            color: theme.foreground, 
+                            fontSize: 28, 
+                            fontWeight: '700',
+                            textAlign: 'center',
+                            opacity: 0.9
+                        }]}>
+                            What would you like to do today?
                         </Body>
                     </View>
                 </View>
@@ -500,25 +460,31 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingBottom: 20,
+        paddingBottom: 16,
+        backgroundColor: 'transparent',
     },
     content: {
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
         paddingBottom: 0,
         flexGrow: 1,
     },
     messageContainer: {
-        marginVertical: 4,
+        marginVertical: 8,
         maxWidth: '85%',
     },
     messageBubble: {
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        borderRadius: 24,
-        borderBottomRightRadius: 8,
-        borderWidth: 1,
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        borderRadius: 14,
+        borderBottomRightRadius: 4,
+        borderWidth: 0,
         overflow: 'hidden',
-        ...commonStyles.shadow,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.08,
+        shadowRadius: 4,
+        elevation: 2,
     },
     messageText: {
         lineHeight: 20,

@@ -58,7 +58,14 @@ def setup_api_keys() -> None:
     # Set up OpenRouter API base if not already set
     if config.OPENROUTER_API_KEY and config.OPENROUTER_API_BASE:
         os.environ["OPENROUTER_API_BASE"] = config.OPENROUTER_API_BASE
-        # logger.debug(f"Set OPENROUTER_API_BASE to {config.OPENROUTER_API_BASE}")
+        os.environ["OPENROUTER_API_KEY"] = config.OPENROUTER_API_KEY
+        logger.debug(f"Set OPENROUTER_API_BASE to {config.OPENROUTER_API_BASE}")
+        logger.debug(f"OpenRouter API key configured for fallback")
+    else:
+        if not config.OPENROUTER_API_KEY:
+            logger.warning("OPENROUTER_API_KEY not found - OpenRouter fallbacks will not work")
+        if not config.OPENROUTER_API_BASE:
+            logger.warning("OPENROUTER_API_BASE not found - OpenRouter fallbacks will not work")
 
 
     # Set up AWS Bedrock bearer token authentication
@@ -80,6 +87,43 @@ def setup_provider_router(openai_compatible_api_key: str = None, openai_compatib
                 "api_base": openai_compatible_api_base or config.OPENAI_COMPATIBLE_API_BASE,
             },
         },
+        # Add specific model configurations for better fallback handling
+        {
+            "model_name": "anthropic/claude-sonnet-4-20250514",
+            "litellm_params": {
+                "model": "anthropic/claude-sonnet-4-20250514",
+            },
+            "model_info": {
+                "mode": "chat"
+            }
+        },
+        {
+            "model_name": "openrouter/anthropic/claude-3.5-sonnet", 
+            "litellm_params": {
+                "model": "openrouter/anthropic/claude-3.5-sonnet",
+            },
+            "model_info": {
+                "mode": "chat"
+            }
+        },
+        {
+            "model_name": "anthropic/claude-sonnet-4-5-20250929",
+            "litellm_params": {
+                "model": "anthropic/claude-sonnet-4-5-20250929",
+            },
+            "model_info": {
+                "mode": "chat"
+            }
+        },
+        {
+            "model_name": "openrouter/anthropic/claude-3.5-sonnet-20241022",
+            "litellm_params": {
+                "model": "openrouter/anthropic/claude-3.5-sonnet-20241022", 
+            },
+            "model_info": {
+                "mode": "chat"
+            }
+        },
         {
             "model_name": "*", # supported LLM provider by LiteLLM
             "litellm_params": {
@@ -88,34 +132,37 @@ def setup_provider_router(openai_compatible_api_key: str = None, openai_compatib
         },
     ]
     
-    # Configure fallbacks: Bedrock models -> Direct Anthropic API
+    # Configure fallbacks: Use correct OpenRouter model names
     fallbacks = [
-        # Bedrock Sonnet 4.5 -> Anthropic Sonnet 4.5
-        # {
-        #     "bedrock/converse/arn:aws:bedrock:eu-north-1:737973863695:inference-profile/eu.anthropic.claude-sonnet-4-5-20250929-v1:0": [
-        #         "anthropic/claude-sonnet-4-5-20250929"  # Fallback to direct Anthropic API
-        #     ]
-        # },
+        # Direct Anthropic Sonnet 4 -> OpenRouter Sonnet 3.5 (closest available)
         {
-            "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0": [
-                "anthropic/claude-sonnet-4-5-20250929"
-            ]
+            "anthropic/claude-sonnet-4-20250514": ["openrouter/anthropic/claude-3.5-sonnet"]
         },
-        # Bedrock Sonnet 4 -> Anthropic Sonnet 4
-        # {
-        #     "bedrock/converse/arn:aws:bedrock:eu-north-1:737973863695:inference-profile/eu.anthropic.claude-sonnet-4-20250929-v1:0": [
-        #         "anthropic/claude-sonnet-4-20250514"
-        #     ]
-        # },
+        # Direct Anthropic Sonnet 4.5 -> OpenRouter Sonnet 3.5 (closest available)  
+        {
+            "anthropic/claude-sonnet-4-5-20250929": ["openrouter/anthropic/claude-3.5-sonnet-20241022"]
+        },
+        # Direct Anthropic Sonnet 3.7 -> OpenRouter Sonnet 3.5
+        {
+            "anthropic/claude-3-7-sonnet-latest": ["openrouter/anthropic/claude-3.5-sonnet"]
+        },
+        # Bedrock models -> Direct Anthropic -> OpenRouter
         {
             "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-sonnet-4-20250514-v1:0": [
-                "anthropic/claude-sonnet-4-20250514"
+                "anthropic/claude-sonnet-4-20250514", 
+                "openrouter/anthropic/claude-3.5-sonnet"
             ]
         },
-        # Bedrock Sonnet 3.7 -> Anthropic Sonnet 3.7
+        {
+            "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0": [
+                "anthropic/claude-sonnet-4-5-20250929",
+                "openrouter/anthropic/claude-3.5-sonnet-20241022"
+            ]
+        },
         {
             "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0": [
-                "anthropic/claude-3-7-sonnet-latest"
+                "anthropic/claude-3-7-sonnet-latest",
+                "openrouter/anthropic/claude-3.5-sonnet"
             ]
         }
     ]
@@ -124,9 +171,11 @@ def setup_provider_router(openai_compatible_api_key: str = None, openai_compatib
         model_list=model_list,
         retry_after=15,
         fallbacks=fallbacks,
+        debug_level="DEBUG"  # Add debug logging
     )
     
     logger.info(f"Configured LiteLLM Router with {len(fallbacks)} fallback rules")
+    logger.info(f"Fallback configuration: {fallbacks}")
 
 def _configure_openai_compatible(params: Dict[str, Any], model_name: str, api_key: Optional[str], api_base: Optional[str]) -> None:
     """Configure OpenAI-compatible provider setup."""

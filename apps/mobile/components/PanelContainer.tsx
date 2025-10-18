@@ -3,7 +3,8 @@ import { useThemedStyles } from '@/hooks/useThemeColor';
 import { useSelectedProject } from '@/stores/ui-store';
 import React, { useRef } from 'react';
 import { Dimensions, View } from 'react-native';
-import { DrawerLayout } from 'react-native-gesture-handler';
+// Removed DrawerLayout from react-native-gesture-handler due to version conflicts
+// import { DrawerLayout } from 'react-native-gesture-handler';
 import { LeftPanel } from './LeftPanel';
 import { RightPanel } from './RightPanel';
 
@@ -28,97 +29,53 @@ export const PanelContainer: React.FC<PanelContainerProps> = ({
     children,
     messages = [],
 }) => {
-    const leftDrawerRef = useRef<DrawerLayout>(null);
-    const rightDrawerRef = useRef<DrawerLayout>(null);
-    const selectedProject = useSelectedProject();
-
-    const styles = useThemedStyles((theme) => ({
+    const theme = useThemedStyles(t => ({
         container: {
             flex: 1,
-            backgroundColor: theme.background,
+            backgroundColor: t.background,
+            flexDirection: 'row',
         },
-        mainContent: {
+        center: {
             flex: 1,
         },
     }));
 
-    // Handle drawer state changes
-    React.useEffect(() => {
-        if (leftPanelVisible) {
-            leftDrawerRef.current?.openDrawer();
-        } else {
-            leftDrawerRef.current?.closeDrawer();
-        }
-    }, [leftPanelVisible]);
-
-    React.useEffect(() => {
-        if (rightPanelVisible) {
-            rightDrawerRef.current?.openDrawer();
-        } else {
-            rightDrawerRef.current?.closeDrawer();
-        }
-    }, [rightPanelVisible]);
-
-    const leftDrawerContent = (
-        <LeftPanel isVisible={true} onClose={() => {
-            leftDrawerRef.current?.closeDrawer();
-            onCloseLeft();
-        }} />
-    );
-
-    const rightDrawerContent = (
-        <RightPanel
-            isVisible={true}
-            onClose={onCloseRight}
-            messages={messages}
-            sandboxId={selectedProject?.sandbox?.id}
-        />
-    );
-
-    const mainContent = (
-        <View style={styles.mainContent}>
-            {children}
-        </View>
-    );
-
     return (
-        <View style={styles.container}>
-            <DrawerLayout
-                ref={leftDrawerRef}
-                drawerWidth={300}
-                drawerPosition="left"
-                drawerType="slide"
-                drawerBackgroundColor="transparent"
-                edgeWidth={75}
-                renderNavigationView={() => leftDrawerContent}
-                onDrawerSlide={(position) => {
-                    // Tiny overlay effect on main content
-                    if (position > 0 && !leftPanelVisible) {
-                        onOpenLeft();
-                    }
-                }}
-                onDrawerClose={() => {
-                    if (leftPanelVisible) {
-                        onCloseLeft();
-                    }
-                }}
-            >
-                <DrawerLayout
-                    ref={rightDrawerRef}
-                    drawerWidth={SCREEN_WIDTH}
-                    drawerPosition="right"
-                    drawerType="slide"
-                    drawerBackgroundColor="transparent"
-                    renderNavigationView={() => rightDrawerContent}
-                    onDrawerClose={() => {
-                        if (rightPanelVisible) {
-                            onCloseRight();
-                        }
-                    }}
-                >
-                    {mainContent}
-                </DrawerLayout>
-            </DrawerLayout>
+        <View style={theme.container}>
+            <View style={theme.center}>
+                {children}
+            </View>
+            {leftPanelVisible && (
+                <View style={{ 
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    width: SCREEN_WIDTH * 0.8, 
+                    maxWidth: 300,
+                    height: '100%',
+                    zIndex: 1000,
+                    borderRightWidth: 0, 
+                    borderRightColor: 'transparent',
+                    backgroundColor: theme.background,
+                }}>
+                    <LeftPanel isVisible={leftPanelVisible} onClose={onCloseLeft} />
+                </View>
+            )}
+            {rightPanelVisible && (
+                <View style={{ 
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: SCREEN_WIDTH,
+                    height: '100%',
+                    zIndex: 1000,
+                    backgroundColor: theme.background,
+                    borderLeftWidth: 0,
+                    borderLeftColor: 'transparent',
+                }}>
+                    <RightPanel isVisible={rightPanelVisible} onClose={onCloseRight} messages={messages} />
+                </View>
+            )}
         </View>
     );
-}; 
+};

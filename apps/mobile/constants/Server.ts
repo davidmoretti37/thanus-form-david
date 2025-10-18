@@ -11,9 +11,9 @@ const getServerUrl = (): string => {
     return serverUrl;
   }
   
-  // For React Native, replace localhost with the appropriate hostname
+  // For React Native, replace localhost with the machine's IP address
   if (serverUrl.includes('localhost') || serverUrl.includes('127.0.0.1')) {
-    serverUrl = serverUrl.replace('localhost', 'vukasin.local').replace('127.0.0.1', 'vukasin.local');
+    serverUrl = serverUrl.replace('localhost', '192.168.1.23').replace('127.0.0.1', '192.168.1.23');
   }
   
   return serverUrl;

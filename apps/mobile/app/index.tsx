@@ -54,6 +54,7 @@ export default function HomeScreen() {
     console.log('fallback newchatmessages length:', newchatmessages?.length || 0);
     console.log('=============================');
 
+    // Add the missing toggle functions
     const toggleLeftPanel = () => setLeftPanelVisible(!leftPanelVisible);
     const toggleRightPanel = () => setRightPanelVisible(!rightPanelVisible);
 
@@ -61,15 +62,20 @@ export default function HomeScreen() {
         container: {
             flex: 1,
             backgroundColor: theme.background,
+            display: 'flex' as any,
+            flexDirection: 'column' as any,
         },
         header: {
             backgroundColor: theme.background,
             borderBottomWidth: 1,
             borderBottomColor: theme.border,
             justifyContent: 'center' as const,
+            flexShrink: 0,
         },
         chatContainer: {
-            flex: 1,
+            flex: 0.5,
+            display: 'flex' as any,
+            flexDirection: 'column' as any,
         },
     }));
 
@@ -119,3 +125,5 @@ export default function HomeScreen() {
         </View>
     );
 } 
+// TEMPORARY DEBUG: Add this to see what's happening
+// Check the Expo logs for "🔐 AUTH DEBUG" message

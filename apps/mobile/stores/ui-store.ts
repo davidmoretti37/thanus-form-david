@@ -1,3 +1,4 @@
+import { Agent, Model } from '@/api/chat-api';
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 
@@ -85,6 +86,10 @@ interface UIState {
   // Loading states
   isGenerating: boolean;
   
+  // Agent & Model selection
+  selectedAgent: Agent | null;
+  selectedModel: Model | null;
+  
   // Actions
   setCurrentTool: (tool: CurrentTool | null) => void;
   setInputDraft: (draft: string) => void;
@@ -165,10 +170,18 @@ export const useUIStore = create<UIState>()(
     },
     isGenerating: false,
     
+    // Agent & Model selection
+    selectedAgent: null,
+    selectedModel: null,
+    
     // Optimized actions with batched updates
     setCurrentTool: (tool) => set({ currentTool: tool }),
     setInputDraft: (draft) => set({ inputDraft: draft }),
     setIsTyping: (typing) => set({ isTyping: typing }),
+    
+    // Agent & Model actions
+    setSelectedAgent: (agent) => set({ selectedAgent: agent }),
+    setSelectedModel: (model) => set({ selectedModel: model }),
     
     // Chat/Project actions
     setSelectedProject: (project) => set({ selectedProject: project }),
@@ -526,5 +539,11 @@ export const useUpdateNewChatProject = () => useUIStore((state) => state.updateN
 export const useClearSelection = () => useUIStore((state) => state.clearSelection);
 export const useResetNewChatSession = () => useUIStore((state) => state.resetNewChatSession);
 export const useNewChatSessionKey = () => useUIStore((state) => state.newChatSessionKey);
+
+// Agent & Model selectors
+export const useSelectedAgent = () => useUIStore((state) => state.selectedAgent);
+export const useSelectedModel = () => useUIStore((state) => state.selectedModel);
+export const useSetSelectedAgent = () => useUIStore((state) => state.setSelectedAgent);
+export const useSetSelectedModel = () => useUIStore((state) => state.setSelectedModel);
 
 // All selectors above are atomic and safe from infinite loops 

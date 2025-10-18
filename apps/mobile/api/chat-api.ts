@@ -1065,3 +1065,99 @@ export const initiateAgent = async (
     throw error;
   }
 }; 
+// ============= AGENTS & MODELS =============
+
+export interface Agent {
+  agent_id: string;
+  name: string;
+  description?: string;
+  avatar?: string;
+  avatar_color?: string;
+  is_default?: boolean;
+  is_public?: boolean;
+}
+
+export interface AgentsResponse {
+  agents: Agent[];
+  pagination?: {
+    current_page: number;
+    page_size: number;
+    total_items: number;
+    total_pages: number;
+    has_next: boolean;
+    has_previous: boolean;
+  };
+}
+
+export const getAgents = async (): Promise<Agent[]> => {
+  try {
+    const supabase = createSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new NoAccessTokenAvailableError();
+    }
+
+    const response = await fetch(`${SERVER_URL}/agents`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error fetching agents: ${response.statusText}`);
+    }
+
+    const data: AgentsResponse = await response.json();
+    console.log('[API] Fetched agents:', data.agents.length);
+    return data.agents || [];
+  } catch (error) {
+    console.error('[API] Failed to fetch agents:', error);
+    handleApiError(error, { operation: 'fetch agents', resource: 'available agents' });
+    throw error;
+  }
+};
+
+export interface Model {
+  name: string;
+  display_name: string;
+  provider: string;
+  description?: string;
+  max_tokens?: number;
+  supports_thinking?: boolean;
+  supports_vision?: boolean;
+}
+
+export interface ModelsResponse {
+  models: Model[];
+  total: number;
+}
+
+export const getModels = async (): Promise<Model[]> => {
+  try {
+    const supabase = createSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      throw new NoAccessTokenAvailableError();
+    }
+
+    const response = await fetch(`${SERVER_URL}/billing/available-models`, {
+      headers: {
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error fetching models: ${response.statusText}`);
+    }
+
+    const data: ModelsResponse = await response.json();
+    console.log('[API] Fetched models:', data.models.length);
+    return data.models || [];
+  } catch (error) {
+    console.error('[API] Failed to fetch models:', error);
+    handleApiError(error, { operation: 'fetch models', resource: 'available models' });
+    throw error;
+  }
+};

@@ -1,0 +1,197 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                      TARS'S COMPUTER ARCHITECTURE                             ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          MOBILE APP LAYOUT                                      │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                 │
+│  ┌──────────────────┐  ┌───────────────────┐  ┌──────────────────────────────┐ │
+│  │  LEFT PANEL      │  │  CENTER CHAT      │  │  RIGHT PANEL: TARS'S        │ │
+│  │  (LeftPanel)     │  │  (ChatContainer)  │  │  COMPUTER (RightPanel)      │ │
+│  │                  │  │                   │  │                              │ │
+│  │ • Projects list  │  │ ┌───────────────┐ │  │ ┌──────────────────────────┐ │ │
+│  │ • Chat history   │  │ │ ChatHeader    │ │  │ │ 🖥️  Tars's Computer     │ │ │
+│  │ • New chat       │  │ ├───────────────┤ │  │ │     [Running]            │ │ │
+│  │                  │  │ │               │ │  │ ├──────────────────────────┤ │ │
+│  │ [Menu button]    │  │ │ MessageThread │ │  │ │                          │ │ │
+│  │                  │  │ │               │ │  │ │   [Tool View]            │ │ │
+│  │                  │  │ │ - User msgs   │ │  │ │                          │ │ │
+│  │                  │  │ │ - AI msgs     │ │  │ │   Browser:               │ │ │
+│  │                  │  │ │ - Tool results│ │  │ │   [screenshot]           │ │ │
+│  │                  │  │ │               │ │  │ │   OR                     │ │ │
+│  │                  │  │ ├───────────────┤ │  │ │   Terminal:              │ │ │
+│  │                  │  │ │ ChatInput     │ │  │ │   $ output...            │ │ │
+│  │                  │  │ │ [text box]    │ │  │ │   OR                     │ │ │
+│  │                  │  │ └───────────────┘ │  │ │   Files/Results/etc      │ │ │
+│  │                  │  │                   │  │ ├──────────────────────────┤ │ │
+│  │ [Settings button]│  │                   │  │ │ [◀ 2/5 ▶]  [Jump ▶]    │ │ │
+│  └──────────────────┘  └───────────────────┘  │ └──────────────────────────┘ │ │
+│                                               │                              │ │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════════
+
+TOOL EXECUTION PIPELINE:
+
+    User Message
+         ↓
+    AI Agent Processing
+         ↓
+    ┌────────────────────────┐
+    │ Tool Execution Needed  │
+    └────────────┬───────────┘
+                 ↓
+    ┌────────────────────────────────────────┐
+    │ Tool Call Created                      │
+    │ (e.g., 'web-search', 'execute-command')│
+    └────────────┬─────────────────────────────┘
+                 ↓
+    ┌────────────────────────────────────────┐
+    │ Snapshot created & added to timeline   │
+    │ (toolCallSnapshots array)              │
+    └────────────┬─────────────────────────────┘
+                 ↓
+    ┌────────────────────────────────────────┐
+    │ RightPanel receives update             │
+    │ (toolCallSnapshots, isGenerating, etc.)│
+    └────────────┬─────────────────────────────┘
+                 ↓
+    ┌────────────────────────────────────────┐
+    │ ToolView selector matches tool name:   │
+    │                                        │
+    │ 'browser-navigate-to' → BrowserToolView │
+    │ 'execute-command' → CommandToolView    │
+    │ 'read-file' → FileOperationToolView    │
+    │ 'web-search' → WebSearchToolView       │
+    │ etc. (see ToolViewRegistry)            │
+    └────────────┬─────────────────────────────┘
+                 ↓
+    ┌────────────────────────────────────────┐
+    │ ToolView Rendered with Result          │
+    │ • Screenshot                           │
+    │ • Terminal output                      │
+    │ • File content                         │
+    │ • Search results                       │
+    └────────────┬─────────────────────────────┘
+                 ↓
+    AI continues with tool results in context
+         ↓
+    Response sent to chat
+
+════════════════════════════════════════════════════════════════════════════════════
+
+TOOL VIEW REGISTRY MAPPING:
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                                                                              │
+│  Tool Name                    →  Component                                  │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│                                                                              │
+│  Browser Tools:                                                             │
+│  • browser-navigate-to        →  BrowserToolView                           │
+│  • browser-click-element      →  BrowserToolView                           │
+│  • browser-input-text         →  BrowserToolView                           │
+│  • browser-scroll-*           →  BrowserToolView                           │
+│  • browser-wait               →  BrowserToolView                           │
+│                                                                              │
+│  File Operations:                                                           │
+│  • create-file                →  FileOperationToolView                     │
+│  • read-file                  →  FileOperationToolView                     │
+│  • delete-file                →  FileOperationToolView                     │
+│  • full-file-rewrite          →  FileOperationToolView                     │
+│  • str-replace                →  StrReplaceToolView                        │
+│                                                                              │
+│  Terminal:                                                                  │
+│  • execute-command            →  CommandToolView                           │
+│  • terminate-command          →  TerminateCommandToolView                  │
+│                                                                              │
+│  Web Tools:                                                                 │
+│  • web-search                 →  WebSearchToolView                         │
+│  • crawl-webpage              →  WebCrawlToolView                          │
+│  • scrape-webpage             →  WebScrapeToolView                         │
+│                                                                              │
+│  Other:                                                                     │
+│  • load-image                 →  SeeImageToolView                          │
+│  • ask                        →  AskToolView                               │
+│  • complete                   →  CompleteToolView                          │
+│  • expose-port                →  ExposePortToolView                        │
+│  • get-data-provider-*        →  DataProviderToolView                      │
+│  • [unknown]                  →  GenericToolView (fallback)                │
+│                                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════════
+
+STATE MANAGEMENT (Zustand UI Store):
+
+┌─────────────────────────────────────────────────────────────┐
+│ UI Store State                                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│ toolViewState: {                                            │
+│   toolCallSnapshots: [                                      │
+│     {                                                       │
+│       toolCall: { functionName, parameters, ... },         │
+│       toolResult: string (formatted output),               │
+│       browserState?: { screenshot_base64, ... },           │
+│       timestamp: ISO string                                │
+│     },                                                      │
+│     { ... next tool call ... },                            │
+│     { ... }                                                 │
+│   ],                                                        │
+│   currentSnapshotIndex: number (which one viewing),         │
+│   navigationMode: 'live' | 'manual',                       │
+│   selectedToolCall: current tool object                    │
+│ }                                                           │
+│                                                             │
+│ rightPanelVisible: boolean                                 │
+│ isGenerating: boolean                                      │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════════
+
+TIMELINE BEHAVIOR:
+
+Initial State:
+┌───────────────────────────────────┐
+│ No snapshots → Empty state        │
+│ 🖥️  Tars's Computer               │
+│ (No tool activity)                │
+└───────────────────────────────────┘
+
+During Execution:
+┌───────────────────────────────────┐
+│ 🖥️  Tars's Computer    [Running]  │
+│ (isGenerating = true)             │
+│                                   │
+│ [Tool View 1 - Live updating]     │
+│                                   │
+│ [◀ 1/3 ▶]  [Jump to Live]         │
+│ navigationMode: 'live'            │
+└───────────────────────────────────┘
+
+After Execution:
+┌───────────────────────────────────┐
+│ 🖥️  Tars's Computer               │
+│ (isGenerating = false)            │
+│                                   │
+│ [Tool View - Latest result]       │
+│                                   │
+│ [◀ 3/3 ▶]  [Latest Tool]          │
+│ navigationMode: 'live'            │
+└───────────────────────────────────┘
+
+Manual Navigation:
+┌───────────────────────────────────┐
+│ 🖥️  Tars's Computer               │
+│ (User scrolled to middle)         │
+│                                   │
+│ [Tool View 2 - showing history]   │
+│                                   │
+│ [◀ 2/3 ▶]  [Jump to Latest]       │
+│ navigationMode: 'manual'          │
+└───────────────────────────────────┘
+
+════════════════════════════════════════════════════════════════════════════════════

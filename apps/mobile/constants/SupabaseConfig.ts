@@ -7,15 +7,22 @@ import 'react-native-url-polyfill/auto';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-// Validate that required env vars are set
-if (!supabaseUrl || supabaseUrl === 'YOUR_SUPABASE_URL' || !supabaseUrl.startsWith('https://')) {
+// Debug logging
+console.log('🔍 SupabaseConfig: Loading environment variables...');
+console.log('EXPO_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Not set');
+console.log('EXPO_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Set' : '❌ Not set');
+
+// Validate that required env vars are set - but be more lenient during development
+if (!supabaseUrl) {
   console.error('❌ EXPO_PUBLIC_SUPABASE_URL is not properly configured');
   console.log('Please set EXPO_PUBLIC_SUPABASE_URL in your environment variables');
+  console.log('Current value:', supabaseUrl);
 }
 
-if (!supabaseAnonKey || supabaseAnonKey === 'YOUR_SUPABASE_ANON_KEY' || supabaseAnonKey.length < 10) {
+if (!supabaseAnonKey) {
   console.error('❌ EXPO_PUBLIC_SUPABASE_ANON_KEY is not properly configured');
   console.log('Please set EXPO_PUBLIC_SUPABASE_ANON_KEY in your environment variables');
+  console.log('Current value:', supabaseAnonKey);
 }
 
 // Create Supabase client with proper error handling

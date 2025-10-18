@@ -1,5 +1,5 @@
 import React from 'react';
-import Animated from 'react-native-reanimated';
+import { View } from 'react-native';
 
 interface KeyboardAvoidingContainerProps {
     children: React.ReactNode;
@@ -11,8 +11,8 @@ export const KeyboardAvoidingContainer: React.FC<KeyboardAvoidingContainerProps>
     style,
 }) => {
     return (
-        <Animated.View style={[{ flex: 1 }, style]}>
+        <View style={[{ flex: 1 }, style]}>
             {children}
-        </Animated.View>
+        </View>
     );
-}; 
+};

@@ -16,7 +16,7 @@ import {
 } from '@/api/chat-api';
 import { projectKeys } from '@/api/project-api';
 import { createSupabaseClient } from '@/constants/SupabaseConfig';
-import { useNewChatSessionKey, useSetIsGenerating, useUpdateNewChatProject } from '@/stores/ui-store';
+import { useNewChatSessionKey, useSetIsGenerating, useUpdateNewChatProject, useUpdateToolSnapshots, useSelectedAgent, useSelectedModel } from '@/stores/ui-store';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -442,6 +442,9 @@ export const useChatSession = (projectId: string) => {
     const stopAgentMutation = useStopAgent();
     const setIsGenerating = useSetIsGenerating();
     const updateNewChatProject = useUpdateNewChatProject();
+    const updateToolSnapshots = useUpdateToolSnapshots();
+    const selectedAgent = useSelectedAgent();
+    const selectedModel = useSelectedModel();
 
     // EXACT FRONTEND PATTERN - Stream message handler
     const handleNewMessageFromStream = useCallback((message: Message) => {
@@ -486,9 +489,18 @@ export const useChatSession = (projectId: string) => {
 
     // Sync API messages to local state
     useEffect(() => {
+        console.log('[useChatSession] Sync effect running:', {
+            rawApiMessagesLength: rawApiMessages.length,
+            currentMessagesLength: messages.length,
+            threadId,
+            isNewChat
+        });
         if (rawApiMessages.length > 0) {
-            console.log(`[useChatSession] Syncing ${rawApiMessages.length} API messages`);
+            console.log(`[useChatSession] ✅ Syncing ${rawApiMessages.length} API messages`);
             setMessages(rawApiMessages);
+            // 🔑 CRITICAL: Extract tool calls for RightPanel
+            updateToolSnapshots(rawApiMessages);
+            console.log('[useChatSession] ✅ Tool snapshots updated');
         }
     }, [rawApiMessages]);
 
@@ -575,10 +587,27 @@ export const useChatSession = (projectId: string) => {
                 const result = await initiateAgent(content.trim(), {
                     stream: true,
                     enable_context_manager: true,
-                    files: files
+                    files: files,
+                    agent_id: selectedAgent?.agent_id,
+                    model_name: selectedModel?.name,
                 });
 
                 setThreadId(result.thread_id);
+                
+                // 🔑 CRITICAL: Fetch messages for new thread
+                // Manually fetch since useMessages might not be enabled yet
+                try {
+                    console.log('[sendMessage] Fetching messages for new thread:', result.thread_id);
+                    const msgs = await getMessages(result.thread_id);
+                    console.log('[sendMessage] ✅ Fetched', msgs.length, 'messages');
+                    setMessages(msgs);
+                    // 🔑 CRITICAL: Extract tool calls for RightPanel
+                    updateToolSnapshots(msgs);
+                    console.log('[sendMessage] ✅ Tool snapshots updated');
+                } catch (e) {
+                    console.error('[sendMessage] Error fetching messages:', e);
+                }
+                
                 agentStream.startStreaming(result.agent_run_id);
             } else {
                 // Existing thread

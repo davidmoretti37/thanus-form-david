@@ -17,19 +17,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
-            setLoading(false);
-        });
+        // Get initial session and validate it
+        const initializeAuth = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                
+                // If there's a session, validate it by checking user
+                if (session?.access_token) {
+                    const { data: { user }, error } = await supabase.auth.getUser();
+                    
+                    // If getUser fails or returns null, the session is invalid
+                    if (error || !user) {
+                        console.log('🔐 Auth: Session invalid, clearing...');
+                        await supabase.auth.signOut();
+                        setSession(null);
+                        setUser(null);
+                    } else {
+                        console.log('🔐 Auth: Valid session found for:', user.email);
+                        setSession(session);
+                        setUser(user);
+                    }
+                } else {
+                    console.log('🔐 Auth: No session found');
+                    setSession(null);
+                    setUser(null);
+                }
+            } catch (error) {
+                console.error('🔐 Auth: Error initializing:', error);
+                setSession(null);
+                setUser(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeAuth();
 
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event: AuthChangeEvent, session: Session | null) => {
+                console.log('🔐 Auth: State changed:', event);
                 setSession(session);
                 setUser(session?.user ?? null);
-                setLoading(false);
             }
         );
 
@@ -37,7 +66,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const signOut = async () => {
+        console.log('🔐 Auth: Signing out...');
         await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
     };
 
     return (
@@ -53,4 +85,4 @@ export const useAuth = (): AuthContextType => {
         throw new Error('useAuth must be used within an AuthProvider');
     }
     return context;
-}; 
+};

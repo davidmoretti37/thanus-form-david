@@ -74,6 +74,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
         container: {
             flex: 1,
             backgroundColor: theme.background,
+            position: 'relative',
         },
         loadingContainer: {
             ...commonStyles.flexCenter,
