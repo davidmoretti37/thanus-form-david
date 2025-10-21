@@ -15,8 +15,11 @@ import {
     useSetRightPanelVisible
 } from '@/stores/ui-store';
 import { View } from 'react-native';
+// QuickActionBar now rendered inside ChatContainer
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
+    const insets = useSafeAreaInsets();
     // Use store state instead of local state for panel visibility
     const leftPanelVisible = useLeftPanelVisible();
     const rightPanelVisible = useRightPanelVisible();
@@ -65,6 +68,10 @@ export default function HomeScreen() {
             display: 'flex' as any,
             flexDirection: 'column' as any,
         },
+        contentWrapper: {
+            flex: 1,
+            position: 'relative' as const,
+        },
         header: {
             backgroundColor: theme.background,
             borderBottomWidth: 1,
@@ -73,10 +80,11 @@ export default function HomeScreen() {
             flexShrink: 0,
         },
         chatContainer: {
-            flex: 0.5,
+            flex: 1,
             display: 'flex' as any,
             flexDirection: 'column' as any,
         },
+        // removed overlay; toolbar lives inside ChatContainer
     }));
 
     if (loading) {
@@ -111,15 +119,17 @@ export default function HomeScreen() {
                 onOpenLeft={() => setLeftPanelVisible(true)}
                 messages={newchatmessages}
             >
-                <View style={styles.header}>
-                    <ChatHeader
-                        onMenuPress={toggleLeftPanel}
-                        onSettingsPress={toggleRightPanel}
-                        selectedProject={selectedProject}
-                    />
-                </View>
-                <View style={styles.chatContainer}>
-                    <ChatContainer />
+                <View style={styles.contentWrapper}>
+                    <View style={styles.header}>
+                        <ChatHeader
+                            onMenuPress={toggleLeftPanel}
+                            onSettingsPress={toggleRightPanel}
+                            selectedProject={selectedProject}
+                        />
+                    </View>
+                    <View style={styles.chatContainer}>
+                        <ChatContainer />
+                    </View>
                 </View>
             </PanelContainer>
         </View>

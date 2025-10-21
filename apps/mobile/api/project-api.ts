@@ -94,9 +94,10 @@ const getProjects = async (): Promise<Project[]> => {
 // Helper function to delete sandbox via API (matching web frontend pattern)
 const deleteSandbox = async (sandboxId: string): Promise<void> => {
   try {
-    const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000/api';
-    const response = await fetch(`${BACKEND_URL}/sandboxes/${sandboxId}`, {
+    const { API_URL, getAuthHeaders } = await import('@/api/config');
+    const response = await fetch(`${API_URL}/sandboxes/${sandboxId}`, {
       method: 'DELETE',
+      headers: await getAuthHeaders(),
     });
 
     if (!response.ok) {

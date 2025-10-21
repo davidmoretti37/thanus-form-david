@@ -4,7 +4,7 @@ import { usePanelTopOffset } from '@/constants/SafeArea';
 import { useAuth } from '@/hooks/useAuth';
 import { useThemedStyles } from '@/hooks/useThemeColor';
 import { useIsNewChatMode, useResetNewChatSession, useSelectedProject, useSetNewChatMode, useSetSelectedProject } from '@/stores/ui-store';
-import { ChevronsUpDown, SquarePen } from 'lucide-react-native';
+import { ChevronsUpDown, SquarePen, ChevronLeft } from 'lucide-react-native';
 import React, { useRef, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -127,6 +127,19 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ isVisible, onClose }) => {
             alignItems: 'center' as const,
             justifyContent: 'space-between' as const,
             marginBottom: 8,
+        },
+        headerLeftRow: {
+            flexDirection: 'row' as const,
+            alignItems: 'center' as const,
+        },
+        headerChevron: {
+            width: 28,
+            height: 28,
+            borderRadius: 6,
+            justifyContent: 'center' as const,
+            alignItems: 'center' as const,
+            marginRight: 8,
+            backgroundColor: theme.mutedWithOpacity(0.1),
         },
         tasksTitle: {
             color: theme.mutedForeground,
@@ -448,7 +461,17 @@ export const LeftPanel: React.FC<LeftPanelProps> = ({ isVisible, onClose }) => {
                 {/* Projects (previously Tasks) */}
                 <View style={styles.section}>
                     <View style={styles.tasksHeader}>
-                        <Caption style={styles.tasksTitle}>Chats</Caption>
+                        <View style={styles.headerLeftRow}>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                activeOpacity={0.7}
+                                style={styles.headerChevron}
+                                accessibilityLabel="Close chat history"
+                            >
+                                <ChevronLeft size={16} color={(styles.sectionText as any).color} strokeWidth={2} />
+                            </TouchableOpacity>
+                            <Caption style={styles.tasksTitle}>Chats</Caption>
+                        </View>
                     </View>
 
                     {renderTasksSection()}

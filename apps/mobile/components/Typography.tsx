@@ -6,6 +6,7 @@ interface TypographyProps extends TextProps {
     variant?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'body' | 'bodySmall' | 'bodyLarge' | 'button' | 'caption' | 'label';
     weight?: 100 | 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900;
     size?: number;
+    className?: string;
 }
 
 // Font styles defined directly in the component
@@ -50,6 +51,7 @@ export const Typography: React.FC<TypographyProps> = ({
     return (
         <Text
             style={[fontStyle, style]}
+            className={props.className}
             {...props}
         >
             {children}

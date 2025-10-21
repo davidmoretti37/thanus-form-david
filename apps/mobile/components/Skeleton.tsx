@@ -28,3 +28,15 @@ export const Skeleton: React.FC<SkeletonProps> = ({
         }} />
     );
 };
+
+export const SkeletonProjects: React.FC<{ count?: number }> = ({ count = 3 }) => {
+    return (
+        <View>
+            {Array.from({ length: count }).map((_, idx) => (
+                <View key={idx} style={{ marginBottom: 8 }}>
+                    <Skeleton height={20} borderRadius={8} />
+                </View>
+            ))}
+        </View>
+    );
+};

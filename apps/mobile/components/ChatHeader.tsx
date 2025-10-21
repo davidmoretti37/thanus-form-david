@@ -1,11 +1,13 @@
 import { useTheme } from '@/hooks/useThemeColor';
 import { useSelectedAgent, useSelectedModel, useSetSelectedAgent, useSetSelectedModel } from '@/stores/ui-store';
-import { Menu, Settings } from 'lucide-react-native';
+import { ChevronRight, Monitor, Menu } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AgentModelSelector } from './AgentModelSelector';
 import { H5, H6 } from './Typography';
+import { ThemeSwitcher } from './ThemeSwitcher';
+import { useSetLeftPanelVisible, useUIStore } from '@/stores/ui-store';
 
 interface ChatHeaderProps {
     onMenuPress?: () => void;
@@ -41,15 +43,26 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             backgroundColor: theme.background,
             borderBottomColor: theme.border,
             borderBottomWidth: 1,
-            paddingTop: insets.top + 14,
+            paddingTop: insets.top + 4,
             paddingHorizontal: 16,
-            paddingBottom: 14,
+            paddingBottom: 4,
         },
         content: {
             flexDirection: 'row',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: 12,
+        },
+        leftRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+        rightRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+        },
+        spacing: {
+            marginLeft: 8,
         },
         titleSection: {
             flex: 1,
@@ -66,9 +79,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             opacity: 0.7,
         },
         iconButton: {
-            width: 40,
-            height: 40,
-            borderRadius: 10,
+            width: 32,
+            height: 32,
+            borderRadius: 8,
             justifyContent: 'center',
             alignItems: 'center',
             backgroundColor: theme.mutedWithOpacity(0.08),
@@ -84,27 +97,51 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     return (
         <>
             <View style={styles.container}>
-                <View style={styles.content}>
-                    {/* Menu Button */}
-                    <TouchableOpacity
-                        style={styles.iconButton}
-                        onPress={onMenuPress}
-                        activeOpacity={0.6}
-                    >
-                        <Menu size={20} color={theme.foreground} strokeWidth={2} />
-                    </TouchableOpacity>
+            <View style={styles.content}>
+                    {/* Left controls: chevron (open) + chat history button */}
+                    <View style={styles.leftRow}>
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={() => {
+                                // Open MENU drawer
+                                useUIStore.getState().setLeftPanelContent('menu');
+                                useUIStore.getState().setLeftPanelVisible(true);
+                            }}
+                            activeOpacity={0.6}
+                            accessibilityLabel="Open chat history"
+                            accessibilityHint="Opens the left side chat history"
+                        >
+                            <ChevronRight size={20} color={theme.foreground} strokeWidth={2} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.iconButton, styles.spacing]}
+                            onPress={() => {
+                                // Open HISTORY drawer
+                                useUIStore.getState().setLeftPanelContent('history');
+                                useUIStore.getState().setLeftPanelVisible(true);
+                            }}
+                            activeOpacity={0.6}
+                            accessibilityLabel="Chat history"
+                            accessibilityHint="Opens the left side chat history"
+                        >
+                            <Menu size={20} color={theme.foreground} strokeWidth={2} />
+                        </TouchableOpacity>
+                    </View>
 
                     {/* Spacer */}
                     <View style={styles.titleSection} />
 
-                    {/* Settings Button */}
-                    <TouchableOpacity
-                        style={styles.iconButton}
-                        onPress={onSettingsPress}
-                        activeOpacity={0.6}
-                    >
-                        <Settings size={20} color={theme.foreground} strokeWidth={2} />
-                    </TouchableOpacity>
+                    {/* Right controls: theme toggle + settings */}
+                    <View style={styles.rightRow}>
+                        <ThemeSwitcher variant="icon" />
+                        <TouchableOpacity
+                            style={[styles.iconButton, styles.spacing]}
+                            onPress={onSettingsPress}
+                            activeOpacity={0.6}
+                        >
+                            <Monitor size={20} color={theme.foreground} strokeWidth={2} />
+                        </TouchableOpacity>
+                    </View>
                 </View>
             </View>
 

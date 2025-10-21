@@ -460,18 +460,18 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingBottom: 16,
+        paddingBottom: 4,
         backgroundColor: 'transparent',
     },
     content: {
-        paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingHorizontal: 4,
+        paddingVertical: 0,
         paddingBottom: 0,
         flexGrow: 1,
     },
     messageContainer: {
         marginVertical: 8,
-        maxWidth: '85%',
+        maxWidth: '92%',
     },
     messageBubble: {
         paddingHorizontal: 14,

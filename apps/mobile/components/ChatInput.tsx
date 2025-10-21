@@ -2,7 +2,7 @@ import { AttachmentGroup } from '@/components/AttachmentGroup';
 import { useTheme } from '@/hooks/useThemeColor';
 import { useSelectedProject, useSelectedAgent, useSelectedModel, useSetSelectedAgent, useSetSelectedModel } from '@/stores/ui-store';
 import { handleLocalFiles, pickFiles, UploadedFile, uploadFilesToSandbox } from '@/utils/file-upload';
-import { ArrowUp, Paperclip, Globe, Wrench, FileText, BookOpen, Zap } from 'lucide-react-native';
+import { ArrowUp, Paperclip } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -38,6 +38,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const setSelectedModel = useSetSelectedModel();
 
     const sandboxId = selectedProject?.sandbox?.id;
+
 
     const handleSend = () => {
         if (message.trim() || attachedFiles.length > 0) {
@@ -84,7 +85,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             paddingVertical: 4,
             paddingBottom: Math.max(2, insets.bottom),
             backgroundColor: theme.background,
-            height: 80,
+            height: 132,
         },
         mainContainer: {
             borderRadius: 20,
@@ -104,7 +105,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             paddingTop: 6,
             paddingBottom: 0,
             gap: 0,
-            height: 60,
+            height: 104,
         },
         inputRow: {
             flexDirection: 'row',
@@ -133,7 +134,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             color: theme.foreground,
             paddingVertical: 6,
             paddingHorizontal: 4,
-            maxHeight: 40,
+            maxHeight: 96,
         },
         rightButtons: {
             gap: 8,
@@ -174,24 +175,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             fontSize: 11,
             fontWeight: '500',
         },
-        bottomTabs: {
-            paddingVertical: 4,
-        },
-        bottomTabsContent: {
-            paddingHorizontal: 12,
-            gap: 8,
-            alignItems: 'center',
-        },
-        tabContainer: {
-            width: 40,
-            height: 40,
-            borderRadius: 10,
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: theme.mutedWithOpacity(0.08),
-            borderWidth: 1,
-            borderColor: theme.border,
-        },
         agentButtonInline: {
             flexDirection: 'row',
             alignItems: 'center',
@@ -217,6 +200,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
             borderTopColor: theme.border,
         },
     });
+
+  const SelectedQuickActionChips = () => (
+    <View style={styles.chipsRow}>
+      {selectedQuickActions.map((qa) => (
+        <View key={`${qa.actionId}:${qa.optionId}`} style={styles.chip}>
+          <Body style={styles.chipText}>{qa.actionLabel}: {qa.optionLabel}</Body>
+          <TouchableOpacity onPress={() => removeSelectedQuickAction(qa.optionId)}>
+            <ArrowLeft size={14} color={theme.mutedForeground} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  );
 
     const isStreaming = isGenerating || isSending;
     const canSend = (message.trim() || attachedFiles.length > 0) && !isStreaming;
@@ -274,70 +270,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                             </TouchableOpacity>
                         </View>
                         </View>
-                        {/* Bottom Tabs - Scrollable Clickable Icons */}
-                        <ScrollView 
-                            horizontal 
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={styles.bottomTabsContent}
-                            style={styles.bottomTabs}
-                        >
-                        {/* Integrações */}
-                        <TouchableOpacity 
-                            style={styles.tabContainer}
-                            onPress={() => console.log('Integrações pressed')}
-                            activeOpacity={0.7}
-                        >
-                            <Globe size={18} color={theme.foreground} strokeWidth={1.5} />
-                        </TouchableOpacity>
-
-                        {/* Tools */}
-                        <TouchableOpacity 
-                            style={styles.tabContainer}
-                            onPress={() => console.log('Tools pressed')}
-                            activeOpacity={0.7}
-                        >
-                            <Wrench size={18} color={theme.foreground} strokeWidth={1.5} />
-                        </TouchableOpacity>
-
-                        {/* Instruções */}
-                        <TouchableOpacity 
-                            style={styles.tabContainer}
-                            onPress={() => console.log('Instruções pressed')}
-                            activeOpacity={0.7}
-                        >
-                            <FileText size={18} color={theme.foreground} strokeWidth={1.5} />
-                        </TouchableOpacity>
-
-                        {/* Conhecimento */}
-                        <TouchableOpacity 
-                            style={styles.tabContainer}
-                            onPress={() => console.log('Conhecimento pressed')}
-                            activeOpacity={0.7}
-                        >
-                            <BookOpen size={18} color={theme.foreground} strokeWidth={1.5} />
-                        </TouchableOpacity>
-
-                        {/* Gatilhos */}
-                        <TouchableOpacity 
-                            style={styles.tabContainer}
-                            onPress={() => console.log('Gatilhos pressed')}
-                            activeOpacity={0.7}
-                        >
-                            <Zap size={18} color={theme.foreground} strokeWidth={1.5} />
-                        </TouchableOpacity>
-                        
-                        {/* Agent Button */}
-                        <TouchableOpacity
-                            style={styles.agentButtonInline}
-                            onPress={() => setSelectorVisible(true)}
-                            activeOpacity={0.8}
-                        >
-                            <View style={{ width: 8, height: 8, borderRadius: 2, backgroundColor: theme.primary, opacity: 0.8 }} />
-                            <Body style={styles.agentButtonInlineText}>
-                                {selectedAgent?.name || 'Tars'}
-                            </Body>
-                        </TouchableOpacity>
-                        </ScrollView>
                     </View>
 
                     {/* Attached Files - If any */}
@@ -352,6 +284,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                         </View>
                     )}
                 </View>
+
             </View>
 
             {/* Agent/Model Selector Modal */}

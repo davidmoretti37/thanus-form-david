@@ -4,11 +4,14 @@ import { useThemedStyles } from '@/hooks/useThemeColor';
 import { useIsNewChatMode, useSelectedProject } from '@/stores/ui-store';
 import { UploadedFile } from '@/utils/file-upload';
 import React, { useEffect, useState } from 'react';
-import { Keyboard, KeyboardEvent, Platform, View } from 'react-native';
+import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity } from 'react-native';
 import { ChatInput } from './ChatInput';
 import { MessageThread } from './MessageThread';
 import { SkeletonText } from './Skeleton';
 import { Body } from './Typography';
+import { useUIStore } from '@/stores/ui-store';
+import { X } from 'lucide-react-native';
+import { QuickActionBar } from '@/components/quick-actions/QuickActionBar';
 
 interface ChatContainerProps {
     className?: string;
@@ -102,7 +105,52 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
         chatContent: {
             flex: 1,
         },
+    actionsSpacer: {
+      height: 2,
+    },
+    chipsRow: {
+      flexDirection: 'row' as const,
+      flexWrap: 'wrap' as const,
+      paddingHorizontal: 16,
+      paddingTop: 0,
+      marginTop: 2,
+      paddingBottom: 6,
+      alignItems: 'center' as const,
+      backgroundColor: theme.background,
+    },
+    chip: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      marginRight: 8,
+      marginBottom: 8,
+      borderRadius: 14,
+      height: 28,
+      paddingHorizontal: 10,
+      borderWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.mutedWithOpacity(0.08),
+    },
+    chipText: {
+      color: theme.foreground,
+      fontSize: 12,
+    },
     }));
+
+  const selectedQuickActions = useUIStore((s) => s.selectedQuickActions);
+  const removeSelectedQuickAction = useUIStore((s) => s.removeSelectedQuickAction);
+
+  const SelectedQuickActionChips = () => (
+    <View style={styles.chipsRow}>
+      {selectedQuickActions.map((qa) => (
+        <View key={`${qa.actionId}:${qa.optionId}`} style={styles.chip}>
+          <Body style={styles.chipText}>{qa.actionLabel}: {qa.optionLabel}</Body>
+          <TouchableOpacity onPress={() => removeSelectedQuickAction(qa.optionId)}>
+            <X size={14} strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  );
 
     const handleScrollPositionChange = (isAtBottom: boolean) => {
         setIsAtBottomOfChat(isAtBottom);
@@ -144,7 +192,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
                     sandboxId={selectedProject?.sandbox?.id}
                 />
             </View>
-            <ChatInput
+      {/* Quick actions bar positioned inside chat container to avoid overlap */}
+      <QuickActionBar />
+      <View style={styles.actionsSpacer} />
+      <SelectedQuickActionChips />
+      <ChatInput
                 onSendMessage={(content: string, files?: UploadedFile[]) => {
                     console.log('[ChatContainer] Sending message with files:', files?.length || 0);
 
@@ -168,8 +220,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
                 }
                 isAtBottomOfChat={isAtBottomOfChat}
                 isGenerating={isGenerating}
-                isSending={isSending}
-            />
+        isSending={isSending}
+      />
         </View>
     );
 }; 

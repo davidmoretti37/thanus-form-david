@@ -79,6 +79,7 @@ interface UIState {
   // Panel state
   leftPanelVisible: boolean;
   rightPanelVisible: boolean;
+  leftPanelContent: 'history' | 'menu';
   
   // Tool viewing state
   toolViewState: ToolViewState;
@@ -89,6 +90,11 @@ interface UIState {
   // Agent & Model selection
   selectedAgent: Agent | null;
   selectedModel: Model | null;
+
+  // Quick actions selected for creation context
+  selectedQuickActions: { actionId: string; optionId: string; actionLabel: string; optionLabel: string }[];
+  addSelectedQuickAction: (qa: { actionId: string; optionId: string; actionLabel: string; optionLabel: string }) => void;
+  removeSelectedQuickAction: (optionId: string) => void;
   
   // Actions
   setCurrentTool: (tool: CurrentTool | null) => void;
@@ -113,6 +119,7 @@ interface UIState {
   // Panel actions
   setLeftPanelVisible: (visible: boolean) => void;
   setRightPanelVisible: (visible: boolean) => void;
+  setLeftPanelContent: (content: 'history' | 'menu') => void;
   toggleLeftPanel: () => void;
   toggleRightPanel: () => void;
   closePanels: () => void;
@@ -157,6 +164,7 @@ export const useUIStore = create<UIState>()(
     activePanel: null,
     leftPanelVisible: false,
     rightPanelVisible: false,
+    leftPanelContent: 'history',
     toolViewState: {
       selectedToolCall: null,
       selectedMessageId: null,
@@ -173,8 +181,20 @@ export const useUIStore = create<UIState>()(
     // Agent & Model selection
     selectedAgent: null,
     selectedModel: null,
+    selectedQuickActions: [],
     
     // Optimized actions with batched updates
+    addSelectedQuickAction: (qa) => set((state) => {
+      // Prevent duplicates by optionId
+      if (state.selectedQuickActions.some((x) => x.optionId === qa.optionId && x.actionId === qa.actionId)) {
+        return state;
+      }
+      return { selectedQuickActions: [...state.selectedQuickActions, qa] };
+    }),
+
+    removeSelectedQuickAction: (optionId) => set((state) => ({
+      selectedQuickActions: state.selectedQuickActions.filter((x) => x.optionId !== optionId),
+    })),
     setCurrentTool: (tool) => set({ currentTool: tool }),
     setInputDraft: (draft) => set({ inputDraft: draft }),
     setIsTyping: (typing) => set({ isTyping: typing }),
@@ -233,6 +253,7 @@ export const useUIStore = create<UIState>()(
     // Panel actions
     setLeftPanelVisible: (visible) => set({ leftPanelVisible: visible }),
     setRightPanelVisible: (visible) => set({ rightPanelVisible: visible }),
+    setLeftPanelContent: (content) => set({ leftPanelContent: content }),
     toggleLeftPanel: () => set((state) => ({ leftPanelVisible: !state.leftPanelVisible })),
     toggleRightPanel: () => set((state) => ({ rightPanelVisible: !state.rightPanelVisible })),
     closePanels: () => set({ leftPanelVisible: false, rightPanelVisible: false }),
