@@ -1,10 +1,10 @@
 import { commonStyles } from '@/constants/CommonStyles';
 import { useChatSession, useNewChatSession } from '@/hooks/useChatHooks';
-import { useThemedStyles } from '@/hooks/useThemeColor';
+import { useThemedStyles, useTheme } from '@/hooks/useThemeColor';
 import { useIsNewChatMode, useSelectedProject } from '@/stores/ui-store';
 import { UploadedFile } from '@/utils/file-upload';
 import React, { useEffect, useState } from 'react';
-import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity } from 'react-native';
+import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity, KeyboardAvoidingView, Text } from 'react-native';
 import { ChatInput } from './ChatInput';
 import { MessageThread } from './MessageThread';
 import { SkeletonText } from './Skeleton';
@@ -12,12 +12,15 @@ import { Body } from './Typography';
 import { useUIStore } from '@/stores/ui-store';
 import { X } from 'lucide-react-native';
 import { QuickActionBar } from '@/components/quick-actions/QuickActionBar';
+import { ChatHeader } from './ChatHeader';
 
 interface ChatContainerProps {
     className?: string;
+    onNavigateToDashboard?: () => void;
 }
 
-export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
+export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavigateToDashboard }) => {
+    const theme = useTheme();
     const selectedProject = useSelectedProject();
     const isNewChatMode = useIsNewChatMode();
     const [isAtBottomOfChat, setIsAtBottomOfChat] = useState(true);
@@ -51,7 +54,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
     // Get the correct isSending state based on mode
     const isSending = isNewChatMode ? (newChatSession.isSending || false) : projectIsSending;
 
-    // Track keyboard height for MessageThread padding
+    // Track keyboard height for dynamic adjustment
     useEffect(() => {
         const handleKeyboardShow = (event: KeyboardEvent) => {
             setKeyboardHeight(event.endCoordinates.height);
@@ -106,7 +109,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
             flex: 1,
         },
     actionsSpacer: {
-      height: 2,
+      height: 0,
     },
     chipsRow: {
       flexDirection: 'row' as const,
@@ -178,7 +181,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
     }
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 20 : 0 }]}>
+            {/* Chat Header with all original buttons */}
+            <ChatHeader 
+                onMenuPress={() => {
+                    // Open chat history
+                    useUIStore.getState().setLeftPanelContent('history');
+                    useUIStore.getState().setLeftPanelVisible(true);
+                }}
+                onSettingsPress={() => {
+                    // Open right panel to show agent creations
+                    useUIStore.getState().setRightPanelVisible(true);
+                }}
+                onBackPress={onNavigateToDashboard}
+            />
             <View style={styles.chatContent}>
                 <MessageThread
                     messages={messages}
@@ -192,9 +208,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className }) => {
                     sandboxId={selectedProject?.sandbox?.id}
                 />
             </View>
-      {/* Quick actions bar positioned inside chat container to avoid overlap */}
-      <QuickActionBar />
-      <View style={styles.actionsSpacer} />
+      {/* Hide quick actions while typing, but keep selected chips visible */}
+      {keyboardHeight === 0 && (
+        <>
+          <QuickActionBar />
+          <View style={styles.actionsSpacer} />
+        </>
+      )}
       <SelectedQuickActionChips />
       <ChatInput
                 onSendMessage={(content: string, files?: UploadedFile[]) => {

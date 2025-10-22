@@ -27,14 +27,14 @@ export function QuickActionBar() {
 
   const styles = StyleSheet.create({
     container: {
-      marginBottom: 8,
+      marginBottom: 2,
     },
     row: {
       paddingHorizontal: 16,
       flexDirection: 'row',
     },
     fixedArea: {
-      minHeight: 92,
+      minHeight: 72,
       justifyContent: 'flex-end',
     },
   });

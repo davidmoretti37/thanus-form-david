@@ -7,16 +7,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AgentModelSelector } from './AgentModelSelector';
 import { H5, H6 } from './Typography';
 import { ThemeSwitcher } from './ThemeSwitcher';
-import { useSetLeftPanelVisible, useUIStore } from '@/stores/ui-store';
+import { useSetLeftPanelVisible, useSetRightPanelVisible, useUIStore } from '@/stores/ui-store';
 
 interface ChatHeaderProps {
     onMenuPress?: () => void;
     onSettingsPress?: () => void;
+    onBackPress?: () => void;
 }
 
 export const ChatHeader: React.FC<ChatHeaderProps> = ({
     onMenuPress,
     onSettingsPress,
+    onBackPress,
 }) => {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
@@ -102,14 +104,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                     <View style={styles.leftRow}>
                         <TouchableOpacity
                             style={styles.iconButton}
-                            onPress={() => {
-                                // Open MENU drawer
-                                useUIStore.getState().setLeftPanelContent('menu');
-                                useUIStore.getState().setLeftPanelVisible(true);
-                            }}
+                            onPress={onBackPress}
                             activeOpacity={0.6}
-                            accessibilityLabel="Open chat history"
-                            accessibilityHint="Opens the left side chat history"
+                            accessibilityLabel="Back to Dashboard"
+                            accessibilityHint="Goes back to the main dashboard"
                         >
                             <ChevronRight size={20} color={theme.foreground} strokeWidth={2} />
                         </TouchableOpacity>
@@ -136,8 +134,13 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                         <ThemeSwitcher variant="icon" />
                         <TouchableOpacity
                             style={[styles.iconButton, styles.spacing]}
-                            onPress={onSettingsPress}
+                            onPress={() => {
+                                // Open RIGHT panel to show what agents are creating
+                                useUIStore.getState().setRightPanelVisible(true);
+                            }}
                             activeOpacity={0.6}
+                            accessibilityLabel="Show Agent Creations"
+                            accessibilityHint="Shows what the agents are creating"
                         >
                             <Monitor size={20} color={theme.foreground} strokeWidth={2} />
                         </TouchableOpacity>
