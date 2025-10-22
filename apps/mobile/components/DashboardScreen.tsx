@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
+import { useColorSchemeControls } from '@/hooks/useColorScheme';
 import { DashboardCard } from './DashboardCard';
 import { IntegrationsModal } from './IntegrationsModal';
 import { WorkersModal } from './WorkersModal';
@@ -11,7 +12,7 @@ import { BillingModal } from './BillingModal';
 import { EnvManagerModal } from './EnvManagerModal';
 import { CalendarModal } from './CalendarModal';
 import { AgentMentionInput } from './AgentMentionInput';
-import { Plus, Zap, CreditCard, Plug, KeyRound, Wrench, Palette, MessageSquare, Calendar, Bell, Settings } from 'lucide-react-native';
+import { Plus, Zap, CreditCard, Plug, KeyRound, Wrench, Palette, MessageSquare, Calendar, Bell, Settings, Sun, Moon } from 'lucide-react-native';
 
 interface DashboardScreenProps {
   onNavigateToChat: () => void;
@@ -20,6 +21,17 @@ interface DashboardScreenProps {
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToChat, onNavigateToArtifacts }) => {
   const theme = useTheme();
+  const { colorScheme, setColorScheme } = useColorSchemeControls();
+  
+  // Debug theme values
+  console.log('Theme object:', theme);
+  console.log('Theme mode:', theme.mode);
+  console.log('Theme isDark:', theme.isDark);
+  console.log('Color scheme:', colorScheme);
+  console.log('Should use fads.png?', colorScheme === 'dark');
+  console.log('Should use fadzz.png?', colorScheme !== 'dark');
+  console.log('Theme background:', theme.background);
+  console.log('Is dark background?', theme.background === '#000000' || theme.background === '#1a1a1a');
   const [integrationsVisible, setIntegrationsVisible] = useState(false);
   const [workersVisible, setWorkersVisible] = useState(false);
   const [tasksVisible, setTasksVisible] = useState(false);
@@ -81,6 +93,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     setChatInputValue('');
   };
 
+  const handleThemeToggle = () => {
+    // Toggle between light and dark mode
+    const newTheme = colorScheme === 'dark' ? 'light' : 'dark';
+    console.log('Current colorScheme:', colorScheme);
+    console.log('Switching to:', newTheme);
+    setColorScheme(newTheme);
+    console.log('Theme switched to:', newTheme);
+  };
+
   const dashboardCards = [
     {
       title: 'Create Worker',
@@ -88,7 +109,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       icon: <Plus size={28} color="#ffffff" />,
       onPress: onNavigateToChat,
       size: 'medium' as const,
-      image: require('../assets/images/worker-image.png'),
+      image: colorScheme === 'dark' ? require('../assets/images/fads.png') : require('../assets/images/fadzz.png'),
       webGradients: []
     },
     {
@@ -97,7 +118,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       icon: <Zap size={26} color="#ffffff" />,
       onPress: onNavigateToArtifacts,
       size: 'medium' as const,
-      image: require('../assets/images/artifacts-image.png'),
+      image: colorScheme === 'dark' ? require('../assets/images/artifacts-image.png') : require('../assets/images/fadzz2.png'),
       webGradients: []
     },
     {
@@ -106,7 +127,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       icon: <Plug size={24} color="#ffffff" />,
       onPress: () => setIntegrationsVisible(true),
       size: 'medium' as const,
-      image: require('../assets/images/integrations-image.png'),
+      image: colorScheme === 'dark' ? require('../assets/images/integrations-image.png') : require('../assets/images/fadzz3.png'),
       webGradients: []
     },
     {
@@ -115,7 +136,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       icon: <Wrench size={26} color="#ffffff" />,
       onPress: () => setWorkersVisible(true),
       size: 'medium' as const,
-      image: require('../assets/images/workers-image.png'),
+      image: colorScheme === 'dark' ? require('../assets/images/workers-image.png') : require('../assets/images/fadzz4.png'),
       webGradients: []
     },
     {
@@ -124,7 +145,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       icon: <MessageSquare size={24} color="#ffffff" />,
       onPress: () => setTasksVisible(true),
       size: 'medium' as const,
-      image: require('../assets/images/tasks-image.png'),
+      image: colorScheme === 'dark' ? require('../assets/images/tasks-image.png') : require('../assets/images/fadzz5.png'),
       webGradients: []
     },
   ];
@@ -147,17 +168,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     logoContainer: {
       flexDirection: 'row',
       alignItems: 'center',
+      gap: 8,
     },
-    logo: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: theme.foreground,
-      marginRight: 8,
+    echoLogo: {
+      height: 18,
+      width: 60,
     },
-    logoSubtext: {
-      fontSize: 16,
-      color: '#2563eb',
-      fontStyle: 'italic',
+    aiFirstLogo: {
+      height: 20,
+      width: 70,
     },
     headerIcons: {
       flexDirection: 'row',
@@ -200,8 +219,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <Text style={styles.logo}>ECHO</Text>
-          <Text style={styles.logoSubtext}>Ai First</Text>
+          <Image 
+            source={require('../assets/images/Logo Echo.png')} 
+            style={styles.echoLogo}
+            resizeMode="contain"
+            onError={() => console.log('Echo logo failed to load')}
+          />
+          <Image 
+            source={require('../assets/images/Ai First.png')} 
+            style={styles.aiFirstLogo}
+            resizeMode="contain"
+            onError={() => console.log('Ai First logo failed to load')}
+          />
         </View>
                  <View style={styles.headerIcons}>
                    <TouchableOpacity 
@@ -212,6 +241,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
                    </TouchableOpacity>
                    <TouchableOpacity style={styles.iconButton}>
                      <Bell size={20} color={theme.mutedForeground} />
+                   </TouchableOpacity>
+                   <TouchableOpacity 
+                     style={styles.iconButton}
+                     onPress={handleThemeToggle}
+                   >
+                     {colorScheme === 'dark' ? (
+                       <Sun size={20} color={theme.mutedForeground} />
+                     ) : (
+                       <Moon size={20} color={theme.mutedForeground} />
+                     )}
                    </TouchableOpacity>
                    <TouchableOpacity 
                      style={styles.iconButton}

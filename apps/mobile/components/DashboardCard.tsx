@@ -101,7 +101,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
       position: 'absolute',
       inset: 0 as any,
       borderRadius: 16,
-      backgroundColor: theme.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.1)',
+      backgroundColor: 'transparent',
       // Remove border for seamless blending
       borderWidth: 0,
       // Add subtle shadow for depth without borders
@@ -168,7 +168,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      backgroundColor: 'transparent',
       borderRadius: 16,
     },
   });

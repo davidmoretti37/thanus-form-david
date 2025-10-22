@@ -7,5 +7,6 @@ export const useColorScheme = (): 'light' | 'dark' => {
 export const useColorSchemeControls = () => {
   const colorScheme = useThemeStore((s) => s.colorScheme);
   const setColorScheme = useThemeStore((s) => s.setColorScheme);
+  console.log('useColorSchemeControls: Current colorScheme:', colorScheme);
   return { colorScheme, setColorScheme };
 };

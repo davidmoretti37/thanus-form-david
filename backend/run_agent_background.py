@@ -65,7 +65,7 @@ async def run_agent_background(
     thread_id: str,
     instance_id: str,
     project_id: str,
-    model_name: str = "openai/gpt-5-mini",
+    model_name: str = "openai/gpt-4o-mini",
     agent_config: Optional[dict] = None,
     request_id: Optional[str] = None
 ):
