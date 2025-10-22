@@ -4,7 +4,7 @@ from core.prompts.prompt import SYSTEM_PROMPT
 ECHO_CONFIG = {
     "name": "Echo",
     "description": "Echo is your advanced AI assistant with comprehensive capabilities across multiple domains including content creation, research, development, and automation.",
-    "model": "openai/gpt-5-mini",
+    "model": "openai/gpt-4o-mini",
     "system_prompt": SYSTEM_PROMPT,
     "configured_mcps": [],
     "custom_mcps": [],

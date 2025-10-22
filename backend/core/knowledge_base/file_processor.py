@@ -137,8 +137,8 @@ class FileProcessor:
         try:
             # Model priority: OpenAI GPT-5 → GPT-5 Mini → GPT-4o
             models = [
-                ("openai/gpt-5", 400_000),  # Primary OpenAI model
-                ("openai/gpt-5-mini", 400_000),  # Fallback OpenAI model
+                ("openai/gpt-4o", 400_000),  # Primary OpenAI model
+                ("openai/gpt-4o-mini", 400_000),  # Fallback OpenAI model
                 ("openai/gpt-4o", 128_000)  # Final fallback
             ]
             

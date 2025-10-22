@@ -145,7 +145,7 @@ Available tools:
             thread_id=thread_id,
             system_prompt=system_prompt,
             stream=True,
-            llm_model="gpt-5",
+            llm_model="gpt-4o",
             processor_config=ProcessorConfig(
                 xml_tool_calling=True,
                 execute_tools=True,
