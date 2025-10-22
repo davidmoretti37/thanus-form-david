@@ -135,11 +135,11 @@ class FileProcessor:
     async def _generate_summary(self, content: str, filename: str) -> str:
         """Generate LLM summary of file content with smart chunking and fallbacks."""
         try:
-            # Model priority: Google Gemini → OpenRouter → GPT-5 Mini
+            # Model priority: OpenAI GPT-5 → GPT-5 Mini → GPT-4o
             models = [
-                ("google/gemini-2.5-flash-lite", 1_000_000),  # 1M context
-                ("openrouter/google/gemini-2.5-flash-lite", 1_000_000),  # Fallback
-                ("gpt-5-mini", 400_000)  # Final fallback
+                ("openai/gpt-5", 400_000),  # Primary OpenAI model
+                ("openai/gpt-5-mini", 400_000),  # Fallback OpenAI model
+                ("openai/gpt-4o", 128_000)  # Final fallback
             ]
             
             # Estimate tokens (rough: 1 token ≈ 4 chars)

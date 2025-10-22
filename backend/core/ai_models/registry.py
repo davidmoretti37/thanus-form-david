@@ -2,13 +2,13 @@ from typing import Dict, List, Optional, Set
 from .ai_models import Model, ModelProvider, ModelCapability, ModelPricing, ModelConfig
 from core.utils.config import config, EnvMode
 
-FREE_MODEL_ID = "moonshotai/kimi-k2"
+FREE_MODEL_ID = "openai/gpt-5-mini"
 
 # Set premium model ID based on environment
 if config.ENV_MODE == EnvMode.LOCAL:
-    PREMIUM_MODEL_ID = "openrouter/deepseek/deepseek-chat-v3.1"
+    PREMIUM_MODEL_ID = "openai/gpt-5"
 else:  # STAGING or PRODUCTION
-    PREMIUM_MODEL_ID = "openrouter/deepseek/deepseek-chat-v3.1"
+    PREMIUM_MODEL_ID = "openai/gpt-5"
 
 is_local = config.ENV_MODE == EnvMode.LOCAL
 

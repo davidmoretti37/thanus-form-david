@@ -132,38 +132,56 @@ def setup_provider_router(openai_compatible_api_key: str = None, openai_compatib
         },
     ]
     
-    # Configure fallbacks: Use correct OpenRouter model names
+    # Configure fallbacks: Use OpenAI models as fallbacks
     fallbacks = [
-        # Direct Anthropic Sonnet 4 -> OpenRouter Sonnet 3.5 (closest available)
+        # Direct Anthropic Sonnet 4 -> OpenAI GPT-5
         {
-            "anthropic/claude-sonnet-4-20250514": ["openrouter/anthropic/claude-3.5-sonnet"]
+            "anthropic/claude-sonnet-4-20250514": ["openai/gpt-5"]
         },
-        # Direct Anthropic Sonnet 4.5 -> OpenRouter Sonnet 3.5 (closest available)  
+        # Direct Anthropic Sonnet 4.5 -> OpenAI GPT-5
         {
-            "anthropic/claude-sonnet-4-5-20250929": ["openrouter/anthropic/claude-3.5-sonnet-20241022"]
+            "anthropic/claude-sonnet-4-5-20250929": ["openai/gpt-5"]
         },
-        # Direct Anthropic Sonnet 3.7 -> OpenRouter Sonnet 3.5
+        # Direct Anthropic Sonnet 3.7 -> OpenAI GPT-5 Mini
         {
-            "anthropic/claude-3-7-sonnet-latest": ["openrouter/anthropic/claude-3.5-sonnet"]
+            "anthropic/claude-3-7-sonnet-latest": ["openai/gpt-5-mini"]
         },
-        # Bedrock models -> Direct Anthropic -> OpenRouter
+        # Bedrock models -> Direct Anthropic -> OpenAI
         {
             "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-sonnet-4-20250514-v1:0": [
                 "anthropic/claude-sonnet-4-20250514", 
-                "openrouter/anthropic/claude-3.5-sonnet"
+                "openai/gpt-5"
             ]
         },
         {
             "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0": [
                 "anthropic/claude-sonnet-4-5-20250929",
-                "openrouter/anthropic/claude-3.5-sonnet-20241022"
+                "openai/gpt-5"
             ]
         },
         {
             "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/us.anthropic.claude-3-7-sonnet-20250219-v1:0": [
                 "anthropic/claude-3-7-sonnet-latest",
-                "openrouter/anthropic/claude-3.5-sonnet"
+                "openai/gpt-5-mini"
             ]
+        },
+        # OpenRouter models -> OpenAI fallbacks
+        {
+            "openrouter/deepseek/deepseek-chat-v3.1": ["openai/gpt-5"]
+        },
+        {
+            "openrouter/anthropic/claude-3.5-sonnet": ["openai/gpt-5"]
+        },
+        {
+            "openrouter/anthropic/claude-3.5-sonnet-20241022": ["openai/gpt-5"]
+        },
+        # XAI models -> OpenAI fallbacks
+        {
+            "xai/grok-4-fast-non-reasoning": ["openai/gpt-5-mini"]
+        },
+        # Google models -> OpenAI fallbacks
+        {
+            "gemini/gemini-2.5-pro": ["openai/gpt-5"]
         }
     ]
     

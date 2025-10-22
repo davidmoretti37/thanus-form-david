@@ -126,7 +126,7 @@ export const MenuPanel: React.FC<MenuPanelProps> = ({ onClose }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
