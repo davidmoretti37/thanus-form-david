@@ -1,7 +1,8 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 // Get the backend URL from environment variables (already includes /api)
-const BACKEND_URL = process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000/api';
+const BACKEND_URL = Constants.expoConfig?.extra?.EXPO_PUBLIC_BACKEND_URL || process.env.EXPO_PUBLIC_BACKEND_URL || 'http://localhost:8000/api';
 
 // Handle React Native localhost issues
 const getServerUrl = (): string => {

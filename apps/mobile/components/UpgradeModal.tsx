@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { 
   Crown, 
   Sparkles, 
@@ -18,14 +19,15 @@ interface UpgradeModalProps {
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ visible, onClose, onUpgrade }) => {
   const theme = useTheme();
+  const colorScheme = useColorScheme();
   
   // Debug theme values
   console.log('UpgradeModal theme:', {
-    mode: theme.mode,
+    mode: colorScheme,
     primary: theme.primary,
     foreground: theme.foreground
   });
-
+  
   const features = [
     {
       icon: <Brain size={16} color={theme.primary} />,
@@ -69,7 +71,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ visible, onClose, on
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingLeft: 20,
+      paddingRight: 40, // Match IntegrationsModal close button spacing
       paddingTop: 20,
       paddingBottom: 16,
       borderBottomWidth: 1,

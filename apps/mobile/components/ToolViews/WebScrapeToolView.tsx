@@ -142,6 +142,24 @@ export const WebScrapeToolView: React.FC<WebScrapeToolViewProps> = ({
     const [copiedFile, setCopiedFile] = useState<string | null>(null);
     const [progress, setProgress] = useState(0);
 
+    // Simulate progress when streaming
+    useEffect(() => {
+        if (isStreaming) {
+            const timer = setInterval(() => {
+                setProgress((prevProgress) => {
+                    if (prevProgress >= 95) {
+                        clearInterval(timer);
+                        return prevProgress;
+                    }
+                    return prevProgress + 5;
+                });
+            }, 300);
+            return () => clearInterval(timer);
+        } else {
+            setProgress(100);
+        }
+    }, [isStreaming]);
+
     // Convert color-mix(in oklab, var(--muted) 20%, transparent) to hex
     const mutedBg = theme.muted === '#e8e8e8' ? '#e8e8e833' : '#30303033';
 
@@ -305,24 +323,6 @@ export const WebScrapeToolView: React.FC<WebScrapeToolViewProps> = ({
     } = extractWebScrapeData(toolCall, toolContent);
 
     const domain = url ? formatDomain(url) : 'Unknown';
-
-    // Simulate progress when streaming
-    useEffect(() => {
-        if (isStreaming) {
-            const timer = setInterval(() => {
-                setProgress((prevProgress) => {
-                    if (prevProgress >= 95) {
-                        clearInterval(timer);
-                        return prevProgress;
-                    }
-                    return prevProgress + 5;
-                });
-            }, 300);
-            return () => clearInterval(timer);
-        } else {
-            setProgress(100);
-        }
-    }, [isStreaming]);
 
     const copyFilePath = async (filePath: string) => {
         try {

@@ -1040,13 +1040,21 @@ export const initiateAgent = async (
 
   try {
     console.log('[API] Sending request to /agent/initiate...');
+    
+    // Create an AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
     const response = await fetch(`${SERVER_URL}/agent/initiate`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${session.access_token}`,
       },
       body: formData,
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     console.log('[API] Response status:', response.status);
     console.log('[API] Response headers:', JSON.stringify(Object.fromEntries(response.headers.entries())));
@@ -1062,6 +1070,11 @@ export const initiateAgent = async (
     return result;
   } catch (error) {
     console.error('[API] initiateAgent error:', error);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - please check your network connection');
+    }
+    
     throw error;
   }
 }; 

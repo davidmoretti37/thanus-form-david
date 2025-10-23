@@ -117,6 +117,25 @@ export const WebCrawlToolView: React.FC<WebCrawlToolViewProps> = ({
     const [copiedContent, setCopiedContent] = useState(false);
     const [progress, setProgress] = useState(0);
 
+    // Simulate progress when streaming
+    useEffect(() => {
+        if (isStreaming) {
+            const timer = setInterval(() => {
+                setProgress((prevProgress) => {
+                    if (prevProgress >= 95) {
+                        clearInterval(timer);
+                        return 95;
+                    }
+                    return prevProgress + Math.random() * 10;
+                });
+            }, 200);
+
+            return () => clearInterval(timer);
+        } else {
+            setProgress(100);
+        }
+    }, [isStreaming]);
+
     console.log('🕸️ WEB CRAWL TOOL RECEIVED:', !!toolContent, toolContent?.length || 0);
 
     if (!toolContent && !isStreaming) {
@@ -149,24 +168,6 @@ export const WebCrawlToolView: React.FC<WebCrawlToolViewProps> = ({
 
     const domain = url ? formatDomain(url) : 'Unknown';
     const contentStats = content ? getContentStats(content) : null;
-
-    // Simulate progress when streaming
-    useEffect(() => {
-        if (isStreaming) {
-            const timer = setInterval(() => {
-                setProgress((prevProgress) => {
-                    if (prevProgress >= 95) {
-                        clearInterval(timer);
-                        return prevProgress;
-                    }
-                    return prevProgress + 5;
-                });
-            }, 300);
-            return () => clearInterval(timer);
-        } else {
-            setProgress(100);
-        }
-    }, [isStreaming]);
 
     const copyContent = async () => {
         if (!content) return;

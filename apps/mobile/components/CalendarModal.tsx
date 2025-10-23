@@ -93,6 +93,7 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
       alignItems: 'center',
       justifyContent: 'space-between',
       marginBottom: 16,
+      paddingRight: 8, // Add padding to match IntegrationsModal close button spacing
     },
     title: {
       fontSize: 18,

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, SafeAreaView, Image, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
 import { useColorSchemeControls } from '@/hooks/useColorScheme';
+import { useAgentPreloader } from '@/hooks/useAgentPreloader';
 import { DashboardCard } from './DashboardCard';
 import { IntegrationsModal } from './IntegrationsModal';
 import { WorkersModal } from './WorkersModal';
@@ -22,6 +23,9 @@ interface DashboardScreenProps {
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToChat, onNavigateToArtifacts }) => {
   const theme = useTheme();
   const { colorScheme, setColorScheme } = useColorSchemeControls();
+  
+  // Preload agents when dashboard loads
+  useAgentPreloader();
   
   // Debug theme values
   console.log('Theme object:', theme);
@@ -346,6 +350,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
                value={selectedDate}
                onChange={handleDateSelect}
              />
+
            </>
          );
        };

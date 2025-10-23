@@ -2,7 +2,7 @@ import { AttachmentGroup } from '@/components/AttachmentGroup';
 import { useTheme } from '@/hooks/useThemeColor';
 import { useSelectedProject, useSelectedAgent, useSelectedModel, useSetSelectedAgent, useSetSelectedModel } from '@/stores/ui-store';
 import { handleLocalFiles, pickFiles, UploadedFile, uploadFilesToSandbox } from '@/utils/file-upload';
-import { ArrowUp, Paperclip } from 'lucide-react-native';
+import { ArrowUp, Paperclip, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -208,7 +208,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         <View key={`${qa.actionId}:${qa.optionId}`} style={styles.chip}>
           <Body style={styles.chipText}>{qa.actionLabel}: {qa.optionLabel}</Body>
           <TouchableOpacity onPress={() => removeSelectedQuickAction(qa.optionId)}>
-            <ArrowLeft size={14} color={theme.mutedForeground} strokeWidth={2} />
+            <X size={14} color={theme.mutedForeground} strokeWidth={2} />
           </TouchableOpacity>
         </View>
       ))}

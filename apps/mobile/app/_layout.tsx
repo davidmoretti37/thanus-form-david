@@ -14,6 +14,7 @@ import { PanelProvider } from '@/hooks/usePanelContext';
 import { AppProviders } from '@/providers/AppProviders';
 import { initializeI18n } from '@/lib/i18n';
 import { LanguageProvider } from '@/contexts/LanguageContext';
+import { agentService } from '@/services/agentService';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -76,6 +77,17 @@ export default function RootLayout() {
   useEffect(() => {
     initializeI18n().then(() => setI18nInitialized(true));
   }, []);
+
+  // Preload agents when app starts
+  useEffect(() => {
+    if (loaded && !error && i18nInitialized) {
+      // Preload agents in background
+      agentService.preloadAgents().catch((error) => {
+        console.log('Agent preload failed:', error);
+        // This is fine, agents will load on demand
+      });
+    }
+  }, [loaded, error, i18nInitialized]);
 
   if ((!loaded && !error) || !i18nInitialized) {
     return null;

@@ -5,7 +5,12 @@ import { useIsNewChatMode, useSelectedProject } from '@/stores/ui-store';
 import { UploadedFile } from '@/utils/file-upload';
 import React, { useEffect, useState } from 'react';
 import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity, KeyboardAvoidingView, Text } from 'react-native';
-import { ChatInput } from './ChatInput';
+import { CreateWorkerChatInput } from './CreateWorkerChatInput';
+import { ToolsModal } from './ToolsModal';
+import { InstructionsModal } from './InstructionsModal';
+import { KnowledgeModal } from './KnowledgeModal';
+import { TriggersModal } from './TriggersModal';
+import { IntegrationsModal } from './IntegrationsModal';
 import { MessageThread } from './MessageThread';
 import { SkeletonText } from './Skeleton';
 import { Body } from './Typography';
@@ -22,6 +27,13 @@ interface ChatContainerProps {
 export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavigateToDashboard }) => {
     const theme = useTheme();
     const selectedProject = useSelectedProject();
+    const [newMessage, setNewMessage] = useState('');
+  const [toolsModalVisible, setToolsModalVisible] = useState(false);
+  const [instructionsModalVisible, setInstructionsModalVisible] = useState(false);
+  const [knowledgeModalVisible, setKnowledgeModalVisible] = useState(false);
+  const [triggersModalVisible, setTriggersModalVisible] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<{id: string, name: string} | null>(null);
+    const [integrationsModalVisible, setIntegrationsModalVisible] = useState(false);
     const isNewChatMode = useIsNewChatMode();
     const [isAtBottomOfChat, setIsAtBottomOfChat] = useState(true);
     const [keyboardHeight, setKeyboardHeight] = useState(0);
@@ -216,31 +228,90 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
         </>
       )}
       <SelectedQuickActionChips />
-      <ChatInput
-                onSendMessage={(content: string, files?: UploadedFile[]) => {
-                    console.log('[ChatContainer] Sending message with files:', files?.length || 0);
+      <CreateWorkerChatInput
+        placeholder={
+          isGenerating
+            ? "AI is responding..."
+            : isSending
+                ? "Sending..."
+                : isNewChatMode
+                    ? "Start a new conversation..."
+                    : `Chat with ${selectedProject?.name || 'project'}...`
+        }
+        value={newMessage}
+        onChangeText={setNewMessage}
+        onSubmit={(message, selectedAgent, attachedFiles) => {
+          console.log('💬 CHAT CONTAINER onSubmit CALLED with:');
+          console.log('📝 Message:', message);
+          console.log('📎 Attached Files:', attachedFiles?.length || 0);
+          console.log('🤖 Selected Agent:', selectedAgent?.agent_id || 'null');
+          
+          // Store the selected agent for use in modals
+          if (selectedAgent) {
+            const agentForModals = {
+              id: selectedAgent.agent_id,
+              name: selectedAgent.name || 'Unknown Agent'
+            };
+            setSelectedAgent(agentForModals);
+            console.log('🔧 ChatContainer: Updated selectedAgent for modals:', agentForModals);
+          }
+          
+          if (message.trim() || (attachedFiles && attachedFiles.length > 0)) {
+            if (isNewChatMode) {
+              (newChatSession.sendMessage as any)(message, attachedFiles || []);
+            } else {
+              sendMessage(message);
+            }
+            setNewMessage('');
+          }
+        }}
+        onFileAttach={() => console.log('File attach pressed')}
+        onAgentSelect={(agent) => {
+          console.log('🔧 Agent selected in ChatContainer:', agent);
+          if (agent) {
+            setSelectedAgent({
+              id: agent.agent_id,
+              name: agent.name || 'Unknown Agent'
+            });
+            console.log('🔧 ChatContainer: Updated selectedAgent state:', agent.agent_id, agent.name);
+          }
+        }}
+        onIntegrations={() => setIntegrationsModalVisible(true)}
+        onTools={() => {
+          console.log('🔧 Tools button clicked, selectedAgent:', selectedAgent);
+          setToolsModalVisible(true);
+        }}
+        onInstructions={() => setInstructionsModalVisible(true)}
+        onKnowledge={() => setKnowledgeModalVisible(true)}
+        onTriggers={() => setTriggersModalVisible(true)}
+      />
 
-                    if (isNewChatMode) {
-                        // For new chat mode, pass files to the sendMessage function
-                        (newChatSession.sendMessage as any)(content, files);
-                    } else {
-                        // For existing chat mode, files are already uploaded to sandbox
-                        sendMessage(content);
-                    }
-                }}
-                onCancelStream={stopAgent}
-                placeholder={
-                    isGenerating
-                        ? "AI is responding..."
-                        : isSending
-                            ? "Sending..."
-                            : isNewChatMode
-                                ? "Start a new conversation..."
-                                : `Chat with ${selectedProject?.name || 'project'}...`
-                }
-                isAtBottomOfChat={isAtBottomOfChat}
-                isGenerating={isGenerating}
-        isSending={isSending}
+      {/* Dedicated Modals */}
+      <ToolsModal
+        visible={toolsModalVisible}
+        onClose={() => setToolsModalVisible(false)}
+        selectedAgent={selectedAgent}
+      />
+      
+      <InstructionsModal
+        visible={instructionsModalVisible}
+        onClose={() => setInstructionsModalVisible(false)}
+        selectedAgent={selectedAgent}
+      />
+      
+      <KnowledgeModal
+        visible={knowledgeModalVisible}
+        onClose={() => setKnowledgeModalVisible(false)}
+      />
+      
+      <TriggersModal
+        visible={triggersModalVisible}
+        onClose={() => setTriggersModalVisible(false)}
+      />
+      
+      <IntegrationsModal
+        visible={integrationsModalVisible}
+        onClose={() => setIntegrationsModalVisible(false)}
       />
         </View>
     );

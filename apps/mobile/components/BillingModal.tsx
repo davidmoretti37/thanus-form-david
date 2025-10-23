@@ -156,7 +156,8 @@ export const BillingModal: React.FC<BillingModalProps> = ({ visible, onClose }) 
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingLeft: 20,
+      paddingRight: 40, // Match IntegrationsModal close button spacing
       paddingVertical: 16,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,

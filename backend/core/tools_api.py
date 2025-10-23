@@ -7,7 +7,7 @@ Provides endpoints to get all available tools and their metadata.
 from typing import Dict, Any
 from fastapi import APIRouter, HTTPException, Depends
 
-from core.utils.auth_utils import verify_and_get_user_id_from_jwt
+from core.utils.auth_utils import verify_and_get_user_id_from_jwt, get_optional_current_user_id_from_jwt
 from core.utils.logger import logger
 from core.utils.tool_discovery import get_tools_metadata
 
@@ -16,7 +16,7 @@ router = APIRouter(tags=["tools"])
 
 @router.get("/tools", summary="Get All Tools", operation_id="get_all_tools")
 async def get_all_tools(
-    user_id: str = Depends(verify_and_get_user_id_from_jwt)
+    user_id: str = Depends(get_optional_current_user_id_from_jwt)
 ) -> Dict[str, Any]:
     """Get metadata for all available tools.
     

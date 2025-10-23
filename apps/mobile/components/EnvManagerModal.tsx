@@ -147,7 +147,8 @@ export const EnvManagerModal: React.FC<EnvManagerModalProps> = ({ visible, onClo
     header: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingLeft: 20,
+      paddingRight: 40, // Match IntegrationsModal close button spacing
       paddingVertical: 16,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,

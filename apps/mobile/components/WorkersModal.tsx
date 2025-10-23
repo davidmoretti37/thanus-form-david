@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
 import { X, Search, Wrench, MessageCircle, Settings, Star, Globe, Download, User, ArrowRight, Plus } from 'lucide-react-native';
+import { CreateWorkerChatInput } from './CreateWorkerChatInput';
+import { initiateAgent } from '@/api/chat-api';
+import { UploadedFile } from '@/utils/file-upload';
 
 interface WorkersModalProps {
   visible: boolean;
@@ -31,6 +34,8 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'active' | 'public' | 'my'>('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [chatInputValue, setChatInputValue] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   // Mock data for workers
   const [workers] = useState<Worker[]>([
@@ -262,6 +267,58 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
     );
   };
 
+  const handleSendMessage = async (message: string, selectedAgent?: any, attachedFiles?: UploadedFile[]) => {
+    if (isSending) {
+      console.log('Already sending, ignoring duplicate request');
+      return;
+    }
+
+    setIsSending(true);
+    
+    try {
+      console.log('🏭 WORKERS MODAL RECEIVED:');
+      console.log('📝 Message:', message);
+      console.log('📎 Attached Files:', attachedFiles?.length || 0);
+      console.log('📎 Attached Files Details:', attachedFiles);
+      console.log('🤖 Selected Agent:', selectedAgent?.agent_id || 'default');
+
+      // Prepare the message with file references
+      let finalMessage = message.trim();
+      if (attachedFiles && attachedFiles.length > 0) {
+        const fileInfo = attachedFiles
+          .map(file => `[Uploaded File: ${file.path}]`)
+          .join('\n');
+        finalMessage = finalMessage ? `${finalMessage}\n\n${fileInfo}` : fileInfo;
+      }
+
+      // Call the API to initiate agent with files
+      console.log('🚀 CALLING initiateAgent WITH:');
+      console.log('📝 Final Message:', finalMessage);
+      console.log('📎 Files Array:', attachedFiles || []);
+      console.log('🤖 Agent ID:', selectedAgent?.agent_id || '1');
+      
+      const result = await initiateAgent(finalMessage, {
+        agent_id: selectedAgent?.agent_id || '1', // Default to Tars agent
+        files: attachedFiles || [],
+        stream: true,
+      });
+
+      console.log('✅ Message sent successfully:', result);
+      
+      // Clear the input
+      setChatInputValue('');
+      
+      // Show success message
+      Alert.alert('Success', 'Message sent successfully!');
+      
+    } catch (error) {
+      console.error('❌ Error sending message:', error);
+      Alert.alert('Error', `Failed to send message: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return theme.primary;
@@ -379,7 +436,8 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingLeft: 20,
+      paddingRight: 40, // Match IntegrationsModal close button spacing
       paddingVertical: 16,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
@@ -417,6 +475,8 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
       backgroundColor: theme.mutedWithOpacity(0.1),
       alignItems: 'center',
       justifyContent: 'center',
+      alignSelf: 'flex-start',
+      marginTop: 8,
     },
     searchContainer: {
       paddingHorizontal: 20,
@@ -470,14 +530,14 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.primary,
+      backgroundColor: theme.foreground,
       paddingVertical: 12,
       paddingHorizontal: 20,
       borderRadius: 10,
       marginBottom: 16,
     },
     createButtonText: {
-      color: 'white',
+      color: theme.background,
       fontSize: 16,
       fontWeight: '600',
       marginLeft: 8,
@@ -715,9 +775,36 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Create New Worker Button */}
             <TouchableOpacity style={styles.createButton} onPress={handleCreateWorker}>
-              <Plus size={20} color="white" />
+              <Plus size={20} color={theme.background} />
               <Text style={styles.createButtonText}>Create New Worker</Text>
             </TouchableOpacity>
+
+            {/* Chat Input for Create Worker */}
+            <CreateWorkerChatInput
+              placeholder="Describe what you need help with..."
+              value={chatInputValue}
+              onChangeText={setChatInputValue}
+         onSubmit={(message, selectedAgent, attachedFiles) => {
+           console.log('🏭 WORKERS MODAL onSubmit CALLED with:');
+           console.log('📝 Message:', message);
+           console.log('📎 Attached Files:', attachedFiles?.length || 0);
+           console.log('🤖 Selected Agent:', selectedAgent?.agent_id || 'null');
+           handleSendMessage(message, selectedAgent, attachedFiles);
+         }}
+              onFileAttach={() => console.log('File attach pressed')}
+              onAgentSelect={() => console.log('Agent selected for worker creation')}
+              onIntegrations={() => {
+                // Close workers modal and open integrations modal
+                onClose();
+                // You would need to pass an onIntegrations prop to WorkersModal
+                // For now, we'll just close the modal
+                console.log('Opening integrations...');
+              }}
+              onTools={() => console.log('Tools pressed')}
+              onInstructions={() => console.log('Instructions pressed')}
+              onKnowledge={() => console.log('Knowledge pressed')}
+              onTriggers={() => console.log('Triggers pressed')}
+            />
 
             {/* Workers List */}
             {isLoading ? (

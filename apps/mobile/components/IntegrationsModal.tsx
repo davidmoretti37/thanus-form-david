@@ -1,12 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
-import { X, Search, Zap, Server, Settings, ChevronDown, ChevronUp, ExternalLink, CheckCircle } from 'lucide-react-native';
+import { X, Search, Zap, Server, Settings, ChevronDown, ChevronUp, ExternalLink, CheckCircle, List } from 'lucide-react-native';
+import { IntegrationSettingsModal } from './IntegrationSettingsModal';
+import { integrationsService, IntegrationToolkit, IntegrationProfile } from '@/services/integrationsService';
 
 interface IntegrationsModalProps {
   visible: boolean;
   onClose: () => void;
 }
+
+const CATEGORY_EMOJIS: Record<string, string> = {
+  'popular': '🔥',
+  'productivity': '📊',
+  'crm': '👥',
+  'marketing': '📢',
+  'analytics': '📈',
+  'communication': '💬',
+  'project-management': '📋',
+  'scheduling': '📅',
+};
 
 interface IntegrationApp {
   id: string;
@@ -25,144 +38,129 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
   const [searchQuery, setSearchQuery] = useState('');
   const [showConnectedApps, setShowConnectedApps] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [selectedIntegration, setSelectedIntegration] = useState<IntegrationApp | null>(null);
+  const [enabledToolsCounts, setEnabledToolsCounts] = useState<Record<string, number>>({});
+  
+  // Real data from API
+  const [toolkits, setToolkits] = useState<IntegrationToolkit[]>([]);
+  const [profiles, setProfiles] = useState<IntegrationProfile[]>([]);
+  const [categories, setCategories] = useState<Array<{name: string, display_name: string, count: number}>>([]);
+  const [error, setError] = useState<string | null>(null);
 
   console.log('IntegrationsModal rendered, visible:', visible);
 
-  // Mock data for integrations
-  const [integrations] = useState<IntegrationApp[]>([
-    // Composio Apps
-    {
-      id: 'gmail',
-      name: 'Gmail',
-      description: 'Send and manage emails',
-      category: 'communication',
-      isConnected: true,
-      toolsCount: 12,
-      type: 'composio'
-    },
-    {
-      id: 'google-drive',
-      name: 'Google Drive',
-      description: 'Access and manage files',
-      category: 'productivity',
-      isConnected: false,
-      toolsCount: 8,
-      type: 'composio'
-    },
-    {
-      id: 'slack',
-      name: 'Slack',
-      description: 'Team communication platform',
-      category: 'communication',
-      isConnected: true,
-      toolsCount: 15,
-      type: 'composio'
-    },
-    {
-      id: 'notion',
-      name: 'Notion',
-      description: 'All-in-one workspace',
-      category: 'productivity',
-      isConnected: false,
-      toolsCount: 20,
-      type: 'composio'
-    },
-    {
-      id: 'salesforce',
-      name: 'Salesforce',
-      description: 'Customer relationship management',
-      category: 'crm',
-      isConnected: false,
-      toolsCount: 25,
-      type: 'composio'
-    },
-    {
-      id: 'hubspot',
-      name: 'HubSpot',
-      description: 'Marketing and sales platform',
-      category: 'marketing',
-      isConnected: true,
-      toolsCount: 18,
-      type: 'composio'
-    },
-    // Pipedream Apps
-    {
-      id: 'airtable',
-      name: 'Airtable',
-      description: 'Low-code platform for building apps',
-      category: 'productivity',
-      isConnected: false,
-      toolsCount: 10,
-      type: 'pipedream'
-    },
-    {
-      id: 'zapier',
-      name: 'Zapier',
-      description: 'Automate workflows between apps',
-      category: 'productivity',
-      isConnected: false,
-      toolsCount: 5,
-      type: 'pipedream'
-    },
-    {
-      id: 'stripe',
-      name: 'Stripe',
-      description: 'Online payment processing',
-      category: 'analytics',
-      isConnected: true,
-      toolsCount: 7,
-      type: 'pipedream'
-    },
-    {
-      id: 'webhook',
-      name: 'Webhook',
-      description: 'Custom webhook integrations',
-      category: 'custom',
-      isConnected: false,
-      toolsCount: 3,
-      type: 'pipedream'
-    }
-  ]);
-
-  const [connectedApps, setConnectedApps] = useState<IntegrationApp[]>([]);
-
+  // Load data from API
   useEffect(() => {
     if (visible) {
-      setIsLoading(true);
-      // Simulate loading
-      setTimeout(() => {
-        setConnectedApps(integrations.filter(app => app.isConnected));
-        setIsLoading(false);
-      }, 1000);
+      loadData();
     }
   }, [visible]);
+
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Load toolkits, profiles, and categories in parallel
+      const [toolkitsData, profilesData, categoriesData] = await Promise.all([
+        integrationsService.getToolkits(searchQuery, selectedCategory),
+        integrationsService.getProfiles(),
+        integrationsService.getCategories(),
+      ]);
+
+      setToolkits(toolkitsData);
+      setProfiles(profilesData);
+      setCategories(categoriesData);
+
+      // Calculate enabled tools counts from profiles
+      const counts: Record<string, number> = {};
+      profilesData.forEach(profile => {
+        counts[profile.toolkit_slug] = profile.enabled_tools?.length || 0;
+      });
+      setEnabledToolsCounts(counts);
+
+    } catch (err) {
+      console.error('Error loading integrations data:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load integrations';
+      
+      // Show specific message for authentication errors
+      if (errorMessage.includes('log in') || errorMessage.includes('authentication')) {
+        setError('Please log in to view integrations');
+      } else {
+        setError(errorMessage);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Refresh data when search or category changes
+  useEffect(() => {
+    if (visible) {
+      loadData();
+    }
+  }, [searchQuery, selectedCategory]);
+
+  // Convert toolkits to the format expected by the UI
+  const integrations = toolkits.map(toolkit => ({
+    id: toolkit.slug,
+    name: toolkit.name,
+    description: toolkit.description,
+    category: toolkit.category,
+    isConnected: toolkit.is_connected,
+    toolsCount: toolkit.tools_count,
+    type: 'composio' as const, // All toolkits from Composio API are composio type
+  }));
+
+  const connectedApps = integrations.filter(app => app.isConnected);
 
   const filteredIntegrations = integrations.filter(app => {
     const matchesTab = app.type === activeTab;
     const matchesSearch = app.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          app.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesTab && matchesSearch;
+    const matchesCategory = !selectedCategory || app.category === selectedCategory;
+    return matchesTab && matchesSearch && matchesCategory;
   });
 
-  const handleConnectApp = (app: IntegrationApp) => {
-    Alert.alert(
-      'Connect App',
-      `Connect ${app.name} to your agent?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Connect', 
-          onPress: () => {
-            // Simulate connection
-            setConnectedApps(prev => [...prev, { ...app, isConnected: true }]);
-            Alert.alert('Success', `${app.name} connected successfully!`);
-          }
-        }
-      ]
-    );
+  const handleConnectApp = async (app: IntegrationApp) => {
+    try {
+      setIsLoading(true);
+      
+      // Create a profile for this toolkit
+      const result = await integrationsService.createProfile(app.id, `${app.name} Profile`);
+      
+      if (result.connection_url) {
+        Alert.alert(
+          'Connect Account',
+          `Please complete the connection process by visiting the link below:\n\n${result.connection_url}\n\nAfter connecting, return here and tap "I've Connected".`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: "I've Connected", 
+              onPress: () => {
+                // Refresh data to show the new connection
+                loadData();
+                Alert.alert('Success', `${app.name} connected successfully!`);
+              }
+            }
+          ]
+        );
+      } else {
+        // No connection URL needed, just refresh data
+        await loadData();
+        Alert.alert('Success', `${app.name} connected successfully!`);
+      }
+    } catch (error) {
+      console.error('Error connecting app:', error);
+      Alert.alert('Error', `Failed to connect ${app.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDisconnectApp = (app: IntegrationApp) => {
+  const handleDisconnectApp = async (app: IntegrationApp) => {
     Alert.alert(
       'Disconnect App',
       `Disconnect ${app.name} from your agent?`,
@@ -171,9 +169,25 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
         { 
           text: 'Disconnect', 
           style: 'destructive',
-          onPress: () => {
-            setConnectedApps(prev => prev.filter(connectedApp => connectedApp.id !== app.id));
-            Alert.alert('Success', `${app.name} disconnected successfully!`);
+          onPress: async () => {
+            try {
+              setIsLoading(true);
+              
+              // Find the profile for this app
+              const profile = profiles.find(p => p.toolkit_slug === app.id);
+              if (profile) {
+                await integrationsService.deleteProfile(profile.profile_id);
+                await loadData(); // Refresh data
+                Alert.alert('Success', `${app.name} disconnected successfully!`);
+              } else {
+                Alert.alert('Error', 'Profile not found');
+              }
+            } catch (error) {
+              console.error('Error disconnecting app:', error);
+              Alert.alert('Error', `Failed to disconnect ${app.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            } finally {
+              setIsLoading(false);
+            }
           }
         }
       ]
@@ -181,12 +195,22 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
   };
 
   const handleManageTools = (app: IntegrationApp) => {
-    Alert.alert(
-      'Manage Tools',
-      `${app.name} has ${app.toolsCount} available tools. Configure which tools to enable for your agent.`,
-      [{ text: 'OK' }]
-    );
+    setSelectedIntegration(app);
+    setSettingsModalVisible(true);
   };
+
+  // Function to get enabled tools count for an integration
+  const getEnabledToolsCount = (integrationId: string): number => {
+    return enabledToolsCounts[integrationId] || 0;
+  };
+
+  // Function to update enabled tools count (called from settings modal)
+  const updateEnabledToolsCount = useCallback((integrationId: string, count: number) => {
+    setEnabledToolsCounts(prev => ({
+      ...prev,
+      [integrationId]: count
+    }));
+  }, []);
 
   const renderAppCard = (app: IntegrationApp, isConnected: boolean = false) => (
     <TouchableOpacity
@@ -222,7 +246,10 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
       <View style={styles.appCardFooter}>
         <View style={styles.toolsInfo}>
           <Text style={styles.toolsText}>
-            {isConnected ? `${app.toolsCount} tools enabled` : `${app.toolsCount} tools available`}
+            {isConnected 
+              ? `${getEnabledToolsCount(app.id)} tools enabled` 
+              : `${app.toolsCount} tools available`
+            }
           </Text>
         </View>
         {isConnected && (
@@ -234,6 +261,19 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
           </TouchableOpacity>
         )}
       </View>
+      
+      {/* Category Button */}
+      <TouchableOpacity
+        style={styles.categoryButton}
+        onPress={() => setSelectedCategory(app.category)}
+      >
+        <Text style={styles.categoryButtonEmoji}>
+          {CATEGORY_EMOJIS[app.category] || '📁'}
+        </Text>
+        <Text style={styles.categoryButtonText}>
+          {app.category.charAt(0).toUpperCase() + app.category.slice(1)}
+        </Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -258,7 +298,8 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      paddingHorizontal: 20,
+      paddingLeft: 20,
+      paddingRight: 40, // Increase right padding to give close button more space
       paddingVertical: 16,
       borderBottomWidth: 1,
       borderBottomColor: theme.border,
@@ -346,6 +387,74 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
       position: 'absolute',
       left: 16,
       top: 16,
+    },
+    customMCPButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      backgroundColor: theme.mutedWithOpacity(0.1),
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: theme.border,
+      marginTop: 12,
+    },
+    customMCPButtonText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.foreground,
+    },
+    categoryFilter: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: 12,
+    },
+    categoryFilterLabel: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+    },
+    categoryBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: theme.mutedWithOpacity(0.2),
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    categoryBadgeEmoji: {
+      fontSize: 12,
+    },
+    categoryBadgeText: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+    },
+    categoryBadgeClose: {
+      padding: 2,
+    },
+    categoryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      alignSelf: 'flex-start',
+      backgroundColor: theme.mutedWithOpacity(0.1),
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 6,
+      marginTop: 8,
+    },
+    categoryButtonEmoji: {
+      fontSize: 12,
+    },
+    categoryButtonText: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      fontWeight: '500',
     },
     content: {
       flex: 1,
@@ -481,6 +590,55 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
       color: theme.mutedForeground,
       textAlign: 'center',
     },
+    errorContainer: {
+      backgroundColor: theme.destructive + '10',
+      borderWidth: 1,
+      borderColor: theme.destructive + '30',
+      borderRadius: 8,
+      padding: 12,
+      marginTop: 12,
+    },
+    errorText: {
+      fontSize: 14,
+      color: theme.destructive,
+      marginBottom: 8,
+    },
+    errorButtons: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+    },
+    retryButton: {
+      backgroundColor: theme.destructive,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 6,
+    },
+    retryButtonText: {
+      fontSize: 12,
+      color: theme.background,
+      fontWeight: '500',
+    },
+    loginButton: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 6,
+    },
+    loginButtonText: {
+      fontSize: 12,
+      color: theme.primaryForeground,
+      fontWeight: '500',
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 40,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      marginTop: 12,
+    },
   });
 
   if (!visible) return null;
@@ -498,10 +656,10 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
           <View style={styles.header}>
             <View style={styles.headerLeft}>
               <View style={styles.headerIcon}>
-                <Zap size={20} color={theme.primary} />
+                <List size={20} color={theme.primary} />
               </View>
               <View style={styles.headerText}>
-                <Text style={styles.headerTitle}>Integrations</Text>
+                <Text style={styles.headerTitle}>Apps & Integrations</Text>
                 <Text style={styles.headerSubtitle}>Connect and manage your apps</Text>
               </View>
             </View>
@@ -544,6 +702,54 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
                 onChangeText={setSearchQuery}
               />
             </View>
+            
+            {/* Add Custom MCP Button */}
+            <TouchableOpacity style={styles.customMCPButton}>
+              <Server size={16} color={theme.foreground} />
+              <Text style={styles.customMCPButtonText}>Add Custom MCP</Text>
+            </TouchableOpacity>
+            
+            {/* Category Filter */}
+            {selectedCategory && (
+              <View style={styles.categoryFilter}>
+                <Text style={styles.categoryFilterLabel}>Filtered by:</Text>
+                <View style={styles.categoryBadge}>
+                  <Text style={styles.categoryBadgeEmoji}>
+                    {CATEGORY_EMOJIS[selectedCategory] || '📁'}
+                  </Text>
+                  <Text style={styles.categoryBadgeText}>
+                    {categories.find(c => c.name === selectedCategory)?.display_name || selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)}
+                  </Text>
+                  <TouchableOpacity 
+                    style={styles.categoryBadgeClose}
+                    onPress={() => setSelectedCategory('')}
+                  >
+                    <X size={12} color={theme.mutedForeground} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* Error Display */}
+            {error && (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <View style={styles.errorButtons}>
+                  {error.includes('log in') ? (
+                    <TouchableOpacity onPress={() => {
+                      // TODO: Navigate to login screen
+                      Alert.alert('Login Required', 'Please log in to access integrations');
+                    }} style={styles.loginButton}>
+                      <Text style={styles.loginButtonText}>Log In</Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity onPress={loadData} style={styles.retryButton}>
+                      <Text style={styles.retryButtonText}>Retry</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
           </View>
 
           {/* Content */}
@@ -587,8 +793,9 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
               </View>
 
               {isLoading ? (
-                <View style={styles.emptyState}>
-                  <Text style={styles.emptyStateText}>Loading apps...</Text>
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.primary} />
+                  <Text style={styles.loadingText}>Loading integrations...</Text>
                 </View>
               ) : filteredIntegrations.length === 0 ? (
                 <View style={styles.emptyState}>
@@ -609,6 +816,17 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
           </ScrollView>
         </View>
       </View>
+
+      {/* Integration Settings Modal */}
+      <IntegrationSettingsModal
+        visible={settingsModalVisible}
+        onClose={() => {
+          setSettingsModalVisible(false);
+          setSelectedIntegration(null);
+        }}
+        integration={selectedIntegration}
+        onToolsCountUpdate={updateEnabledToolsCount}
+      />
     </Modal>
   );
 };
