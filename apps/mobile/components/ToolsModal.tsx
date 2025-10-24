@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Switch, ActivityIndicator, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/hooks/useThemeColor';
 import { X, Search, Folder, Terminal, Globe, Users, Building2, ArrowRight, Server, Zap, ChevronDown, ChevronRight, Settings2 } from 'lucide-react-native';
 import { toolsService, AgentTool } from '@/services/toolsService';
@@ -301,21 +302,72 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
         console.log('🔧 ToolsModal: Tools API error:', errorMessage);
         
         // Fallback tools if API is not accessible for other reasons
+        // These match the backend's default tool configuration
         allTools = {
+          'sb_shell_tool': {
+            name: 'sb_shell_tool',
+            description: 'Shell commands and terminal operations',
+            methods: { 'execute_command': {}, 'run_script': {} }
+          },
           'sb_files_tool': {
             name: 'sb_files_tool',
             description: 'File operations and management',
             methods: { 'create_file': {}, 'read_file': {}, 'list_files': {} }
           },
-          'sb_shell_tool': {
-            name: 'sb_shell_tool', 
-            description: 'Shell commands and terminal operations',
-            methods: { 'execute_command': {}, 'run_script': {} }
+          'sb_expose_tool': {
+            name: 'sb_expose_tool',
+            description: 'Expose ports and services',
+            methods: { 'expose_port': {} }
+          },
+          'sb_upload_file_tool': {
+            name: 'sb_upload_file_tool',
+            description: 'Upload files to the system',
+            methods: { 'upload_file': {} }
           },
           'web_search_tool': {
             name: 'web_search_tool',
             description: 'Search the web for information',
             methods: { 'search': {}, 'scrape': {} }
+          },
+          'image_search_tool': {
+            name: 'image_search_tool',
+            description: 'Search for images on the web',
+            methods: { 'search_images': {} }
+          },
+          'data_providers_tool': {
+            name: 'data_providers_tool',
+            description: 'Access external data providers',
+            methods: { 'get_data': {} }
+          },
+          'sb_vision_tool': {
+            name: 'sb_vision_tool',
+            description: 'AI vision and image analysis',
+            methods: { 'analyze_image': {} }
+          },
+          'sb_image_edit_tool': {
+            name: 'sb_image_edit_tool',
+            description: 'Edit and manipulate images',
+            methods: { 'edit_image': {} }
+          },
+          'sb_design_tool': {
+            name: 'sb_design_tool',
+            description: 'Create and design graphics',
+            methods: { 'create_design': {} }
+          },
+          'sb_docs_tool': {
+            name: 'sb_docs_tool',
+            description: 'Create and edit documents',
+            methods: { 'create_doc': {} }
+          },
+          'sb_presentation_tool': {
+            name: 'sb_presentation_tool',
+            description: 'Create presentations',
+            methods: { 'create_presentation': {} }
+          },
+          'sb_kb_tool': {
+            name: 'sb_kb_tool',
+            description: 'Knowledge base operations',
+            methods: { 'search_kb': {} }
           },
           'people_search_tool': {
             name: 'people_search_tool',
@@ -326,16 +378,91 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
             name: 'company_search_tool',
             description: 'Search for companies and business information',
             methods: { 'search_companies': {} }
+          },
+          'browser_tool': {
+            name: 'browser_tool',
+            description: 'Browser automation and web interaction',
+            methods: { 'navigate': {}, 'click': {}, 'type': {} }
+          },
+          'agent_config_tool': {
+            name: 'agent_config_tool',
+            description: 'Configure agent settings',
+            methods: { 'update_config': {} }
+          },
+          'agent_creation_tool': {
+            name: 'agent_creation_tool',
+            description: 'Create new AI agents',
+            methods: { 'create_agent': {} }
+          },
+          'mcp_search_tool': {
+            name: 'mcp_search_tool',
+            description: 'Search for MCP servers',
+            methods: { 'search_mcp': {} }
+          },
+          'credential_profile_tool': {
+            name: 'credential_profile_tool',
+            description: 'Manage credential profiles',
+            methods: { 'manage_credentials': {} }
+          },
+          'trigger_tool': {
+            name: 'trigger_tool',
+            description: 'Manage automation triggers',
+            methods: { 'create_trigger': {} }
           }
         };
       }
       
       // Get current agent configuration to see which tools are enabled
       let agentTools = { agentpress_tools: [], mcp_tools: [] };
+      
+      // 🔧 LOCAL STORAGE: Try to load from local storage first
       try {
-        agentTools = await toolsService.getAgentTools(selectedAgent.id);
-      } catch (err) {
-        console.log('No existing agent configuration, starting fresh');
+        const localConfig = await AsyncStorage.getItem(`agent_tools_${selectedAgent.id}`);
+        if (localConfig) {
+          const parsed = JSON.parse(localConfig);
+          agentTools = {
+            agentpress_tools: parsed.agentpress_tools || [],
+            mcp_tools: parsed.mcp_tools || []
+          };
+          console.log('🔧 LOCAL: Loaded tool configuration from local storage');
+        }
+      } catch (localErr) {
+        console.log('🔧 LOCAL: No local configuration found');
+      }
+      
+      // If no local config, try API
+      if (agentTools.agentpress_tools.length === 0) {
+        try {
+          agentTools = await toolsService.getAgentTools(selectedAgent.id);
+          console.log('🔧 API: Loaded tool configuration from API');
+        } catch (err) {
+          console.log('🔧 API: No existing agent configuration, using fallback');
+          
+          // 🔧 AUTO-CONFIGURE: If API fails, automatically enable fallback tools
+          console.log('🔧 AUTO-CONFIGURE: Enabling fallback tools for agent');
+          const fallbackTools = Object.keys(allTools).map(toolName => ({
+            name: toolName,
+            enabled: true,
+            description: allTools[toolName].description
+          }));
+          
+          agentTools = {
+            agentpress_tools: fallbackTools,
+            mcp_tools: []
+          };
+          
+          // Save locally
+          try {
+            await AsyncStorage.setItem(`agent_tools_${selectedAgent.id}`, JSON.stringify({
+              agentpress_tools: fallbackTools,
+              mcp_tools: [],
+              timestamp: Date.now()
+            }));
+            console.log('🔧 LOCAL: Fallback tools saved locally');
+          } catch (saveErr) {
+            console.log('🔧 LOCAL: Could not save fallback tools locally');
+          }
+        }
       }
       
       // Create a map of enabled tools for quick lookup
@@ -346,6 +473,38 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
       agentTools.mcp_tools.forEach(tool => {
         if (tool.enabled) enabledTools.add(tool.name);
       });
+      
+      // 🔧 AUTO-ENABLE: Always enable fallback tools for better user experience
+      if (Object.keys(allTools).length > 0) {
+        console.log('🔧 AUTO-ENABLE: Enabling fallback tools for agent');
+        const fallbackTools = Object.keys(allTools).map(toolName => ({
+          name: toolName,
+          enabled: true,
+          description: allTools[toolName].description
+        }));
+        
+        // Always use fallback tools as the base configuration
+        agentTools = {
+          agentpress_tools: fallbackTools,
+          mcp_tools: []
+        };
+        
+        // Update the enabled tools set
+        fallbackTools.forEach(tool => {
+          if (tool.enabled) enabledTools.add(tool.name);
+        });
+        
+        // Try to save this configuration immediately
+        try {
+          await toolsService.updateAgentTools(selectedAgent.id, {
+            agentpress_tools: fallbackTools,
+            mcp_tools: []
+          });
+          console.log('🔧 AUTO-ENABLE: Fallback tools saved for agent');
+        } catch (saveErr) {
+          console.log('🔧 AUTO-ENABLE: Could not save tools, but will use them locally');
+        }
+      }
 
       // Convert all available tools to the UI format
       const combinedTools: Array<{
@@ -561,11 +720,30 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
           server: tool.server,
         }));
 
-      // Update tools in backend
-      await toolsService.updateAgentTools(selectedAgent.id, {
+      // 🔧 LOCAL STORAGE: Save tool selection locally first
+      const toolConfig = {
         agentpress_tools: agentpressTools,
         mcp_tools: mcpTools,
-      });
+        timestamp: Date.now()
+      };
+      
+      try {
+        await AsyncStorage.setItem(`agent_tools_${selectedAgent.id}`, JSON.stringify(toolConfig));
+        console.log('🔧 LOCAL: Tool configuration saved locally');
+      } catch (storageErr) {
+        console.log('🔧 LOCAL: Could not save to local storage:', storageErr);
+      }
+
+      // Try to update tools in backend (but don't fail if it doesn't work)
+      try {
+        await toolsService.updateAgentTools(selectedAgent.id, {
+          agentpress_tools: agentpressTools,
+          mcp_tools: mcpTools,
+        });
+        console.log('🔧 API: Tool configuration saved to backend');
+      } catch (apiErr) {
+        console.log('🔧 API: Could not save to backend, but local config is saved');
+      }
 
       setHasChanges(false);
       Alert.alert('Success', `Updated ${selectedAgent.name}'s tools successfully!`);

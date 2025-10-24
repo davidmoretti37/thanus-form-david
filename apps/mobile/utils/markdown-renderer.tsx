@@ -59,6 +59,8 @@ export const MarkdownComponent: React.FC<MarkdownProps> = ({ children, style }) 
             fontSize: 16,
             lineHeight: 24,
             marginVertical: 4,
+            paddingRight: 0,
+            marginRight: 0,
         },
         code_inline: {
             backgroundColor: theme.muted,
@@ -98,6 +100,8 @@ export const MarkdownComponent: React.FC<MarkdownProps> = ({ children, style }) 
             fontSize: 16,
             lineHeight: 24,
             marginVertical: 2,
+            paddingRight: 0,
+            marginRight: 0,
         },
         blockquote: {
             backgroundColor: theme.muted + '40',

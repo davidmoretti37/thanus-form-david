@@ -1,4 +1,4 @@
-import { useTheme } from '@/hooks/useThemeColor';
+import { useTheme } from '../hooks/useThemeColor';
 import React from 'react';
 import { DimensionValue, View, ViewStyle } from 'react-native';
 // Removed react-native-reanimated due to version conflicts
@@ -35,6 +35,20 @@ export const SkeletonProjects: React.FC<{ count?: number }> = ({ count = 3 }) =>
             {Array.from({ length: count }).map((_, idx) => (
                 <View key={idx} style={{ marginBottom: 8 }}>
                     <Skeleton height={20} borderRadius={8} />
+                </View>
+            ))}
+        </View>
+    );
+};
+
+export const SkeletonChatMessages: React.FC = () => {
+    const theme = useTheme();
+    
+    return (
+        <View style={{ padding: 16 }}>
+            {Array.from({ length: 3 }).map((_, idx) => (
+                <View key={idx} style={{ marginBottom: 16 }}>
+                    <Skeleton height={60} borderRadius={12} />
                 </View>
             ))}
         </View>

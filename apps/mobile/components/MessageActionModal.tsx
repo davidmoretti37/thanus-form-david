@@ -1,5 +1,5 @@
-import { Message } from '@/api/chat-api';
-import { useTheme } from '@/hooks/useThemeColor';
+import { Message } from '../api/chat-api';
+import { useTheme } from '../hooks/useThemeColor';
 import { Copy, Trash2 } from 'lucide-react-native';
 import React, { useState } from 'react';
 import { Modal, Platform, StyleSheet, TouchableOpacity, View, ViewStyle } from 'react-native';

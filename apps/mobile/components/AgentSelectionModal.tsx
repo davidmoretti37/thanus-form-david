@@ -12,7 +12,7 @@ interface AgentSelectionModalProps {
   selectedAgentId?: string;
 }
 
-// Mock agent data - replace with actual API call
+// Fallback mock agent data - used only if API fails
 const mockAgents: Agent[] = [
   {
     agent_id: '1',
@@ -102,13 +102,26 @@ export const AgentSelectionModal: React.FC<AgentSelectionModalProps> = ({
     agent.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Load agents from mock data
+  // Load agents from API
   useEffect(() => {
     if (visible) {
-      setAgents(mockAgents);
-      setLoading(false);
+      loadAgents();
     }
   }, [visible]);
+
+  const loadAgents = async () => {
+    setLoading(true);
+    try {
+      const response = await agentService.getAgents(1, 50); // Load more agents
+      setAgents(response.agents);
+    } catch (error) {
+      console.error('Error loading agents:', error);
+      // Fallback to mock data if API fails
+      setAgents(mockAgents);
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   const handleAgentSelect = (agent: Agent) => {

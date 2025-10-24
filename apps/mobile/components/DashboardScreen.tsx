@@ -306,6 +306,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     <WorkersModal
       visible={workersVisible}
       onClose={() => setWorkersVisible(false)}
+      onNavigateToChat={onNavigateToChat}
     />
 
       {/* Tasks Modal */}

@@ -36,6 +36,7 @@ export function QuickActionBar() {
     fixedArea: {
       minHeight: 72,
       justifyContent: 'flex-end',
+      backgroundColor: 'transparent',
     },
   });
 

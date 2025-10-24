@@ -1,13 +1,13 @@
-import { Message } from '@/api/chat-api';
-import { commonStyles } from '@/constants/CommonStyles';
-import { fontWeights } from '@/constants/Fonts';
-import { useFileBrowser } from '@/hooks/useFileBrowser';
-import { useTheme } from '@/hooks/useThemeColor';
-import { useOpenToolView } from '@/stores/ui-store';
+import { Message } from '../api/chat-api';
+import { commonStyles } from '../constants/CommonStyles';
+import { fontWeights } from '../constants/Fonts';
+import { useFileBrowser } from '../hooks/useFileBrowser';
+import { useTheme } from '../hooks/useThemeColor';
+import { useOpenToolView } from '../stores/ui-store';
 
-import { parseFileAttachments } from '@/utils/file-parser';
-import { Markdown } from '@/utils/markdown-renderer';
-import { parseMessage, processStreamContent } from '@/utils/message-parser';
+import { parseFileAttachments } from '../utils/file-parser';
+import { Markdown } from '../utils/markdown-renderer';
+import { parseMessage, processStreamContent } from '../utils/message-parser';
 import { ChevronDown } from 'lucide-react-native';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Keyboard, StyleSheet, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
@@ -227,8 +227,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
 
     // Modal state
     const [modalVisible, setModalVisible] = useState(false);
-    const [selectedMessageText, setSelectedMessageText] = useState('');
-    const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+    const [selectedMessage, setSelectedMessage] = useState<Message | undefined>(undefined);
     const [sourceLayout, setSourceLayout] = useState<{ x: number; y: number; width: number; height: number } | undefined>();
 
 
@@ -292,17 +291,18 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
     }, []);
 
     const handleLongPress = useCallback((messageText: string, layout: { x: number; y: number; width: number; height: number }, messageId: string) => {
-        setSelectedMessageText(messageText);
-        setSourceLayout(layout);
-        setSelectedMessageId(messageId);
-        setModalVisible(true);
-    }, []);
+        const message = messages.find(m => m.message_id === messageId);
+        if (message) {
+            setSelectedMessage(message);
+            setSourceLayout(layout);
+            setModalVisible(true);
+        }
+    }, [messages]);
 
     const handleCloseModal = useCallback(() => {
         setModalVisible(false);
-        setSelectedMessageText('');
+        setSelectedMessage(undefined);
         setSourceLayout(undefined);
-        setSelectedMessageId(null);
     }, []);
 
     const handleToolPress = useCallback((toolCall: any, messageId: string) => {
@@ -450,8 +450,16 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
             <MessageActionModal
                 visible={modalVisible}
                 onClose={handleCloseModal}
-                messageText={selectedMessageText}
+                message={selectedMessage}
                 sourceLayout={sourceLayout}
+                onCopy={(text) => {
+                    // Handle copy functionality
+                    console.log('Copy text:', text);
+                }}
+                onDelete={(messageId) => {
+                    // Handle delete functionality
+                    console.log('Delete message:', messageId);
+                }}
             />
         </>
     );
@@ -464,17 +472,17 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
     },
     content: {
-        paddingHorizontal: 4,
+        paddingHorizontal: 16,
         paddingVertical: 0,
-        paddingBottom: 0,
+        paddingBottom: 20, // Minimal space for chat input
         flexGrow: 1,
     },
     messageContainer: {
         marginVertical: 8,
-        maxWidth: '92%',
+        maxWidth: '95%',
     },
     messageBubble: {
-        paddingHorizontal: 14,
+        paddingHorizontal: 13,
         paddingVertical: 11,
         borderRadius: 14,
         borderBottomRightRadius: 4,
@@ -492,6 +500,10 @@ const styles = StyleSheet.create({
     aiMessageContainer: {
         marginVertical: 4,
         width: '100%',
+        paddingHorizontal: 0,
+        paddingRight: 0,
+        marginRight: 0,
+        backgroundColor: 'transparent',
     },
     streamingContainer: {
         paddingVertical: 8,
@@ -548,6 +560,9 @@ const styles = StyleSheet.create({
     },
     markdownContent: {
         flex: 1,
+        width: '100%',
+        paddingRight: 0,
+        marginRight: 0,
     },
     toolIndicatorContainer: {
         paddingVertical: 4,

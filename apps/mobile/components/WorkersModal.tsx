@@ -1,189 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
-import { useTheme } from '@/hooks/useThemeColor';
+import { useTheme } from '../hooks/useThemeColor';
 import { X, Search, Wrench, MessageCircle, Settings, Star, Globe, Download, User, ArrowRight, Plus } from 'lucide-react-native';
-import { CreateWorkerChatInput } from './CreateWorkerChatInput';
-import { initiateAgent } from '@/api/chat-api';
-import { UploadedFile } from '@/utils/file-upload';
+import { WorkerCreationModal } from './WorkerCreationModal';
+import { AgentEditModal } from './AgentEditModal';
+import { agentService, Agent } from '../services/agentService';
+import { useSetSelectedAgent } from '../stores/ui-store';
 
 interface WorkersModalProps {
   visible: boolean;
   onClose: () => void;
+  onNavigateToChat?: () => void;
 }
 
-interface Worker {
-  id: string;
-  name: string;
-  description: string;
-  role: string;
-  capabilities: string[];
-  tags: string[];
-  isDefault: boolean;
-  isPublic: boolean;
-  downloadCount?: number;
-  createdAt: string;
-  iconName?: string;
-  iconColor?: string;
-  iconBackground?: string;
-  toolsCount: number;
-  status: 'active' | 'inactive' | 'building';
-}
+// Use the Agent interface from agentService
+type Worker = Agent;
 
-export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) => {
+export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose, onNavigateToChat }) => {
   const theme = useTheme();
+  const setSelectedAgent = useSetSelectedAgent();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'active' | 'public' | 'my'>('all');
   const [isLoading, setIsLoading] = useState(false);
-  const [chatInputValue, setChatInputValue] = useState('');
-  const [isSending, setIsSending] = useState(false);
-
-  // Mock data for workers
-  const [workers] = useState<Worker[]>([
-    {
-      id: '1',
-      name: 'Echo Assistant',
-      description: 'Your primary AI assistant for general tasks and conversations',
-      role: 'General Assistant',
-      capabilities: ['Chat', 'File Analysis', 'Code Review', 'Research'],
-      tags: ['AI', 'Assistant', 'General'],
-      isDefault: true,
-      isPublic: false,
-      createdAt: '2024-01-15',
-      iconName: 'Bot',
-      iconColor: '#3B82F6',
-      iconBackground: '#EFF6FF',
-      toolsCount: 12,
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Code Master',
-      description: 'Specialized in software development, debugging, and code optimization',
-      role: 'Developer',
-      capabilities: ['Code Review', 'Debugging', 'Architecture', 'Testing'],
-      tags: ['Development', 'Code', 'Programming'],
-      isDefault: false,
-      isPublic: true,
-      downloadCount: 1250,
-      createdAt: '2024-01-20',
-      iconName: 'Code',
-      iconColor: '#10B981',
-      iconBackground: '#ECFDF5',
-      toolsCount: 8,
-      status: 'active'
-    },
-    {
-      id: '3',
-      name: 'Data Analyst',
-      description: 'Expert in data analysis, visualization, and statistical modeling',
-      role: 'Data Scientist',
-      capabilities: ['Data Analysis', 'Visualization', 'Statistics', 'ML'],
-      tags: ['Data', 'Analytics', 'Science'],
-      isDefault: false,
-      isPublic: true,
-      downloadCount: 890,
-      createdAt: '2024-02-01',
-      iconName: 'BarChart',
-      iconColor: '#F59E0B',
-      iconBackground: '#FFFBEB',
-      toolsCount: 15,
-      status: 'active'
-    },
-    {
-      id: '4',
-      name: 'Content Creator',
-      description: 'Creates engaging content for blogs, social media, and marketing',
-      role: 'Content Writer',
-      capabilities: ['Writing', 'SEO', 'Social Media', 'Marketing'],
-      tags: ['Content', 'Writing', 'Marketing'],
-      isDefault: false,
-      isPublic: false,
-      createdAt: '2024-02-10',
-      iconName: 'PenTool',
-      iconColor: '#8B5CF6',
-      iconBackground: '#F3F4F6',
-      toolsCount: 6,
-      status: 'active'
-    },
-    {
-      id: '5',
-      name: 'Customer Support',
-      description: 'Handles customer inquiries, support tickets, and FAQ responses',
-      role: 'Support Agent',
-      capabilities: ['Customer Service', 'FAQ', 'Troubleshooting', 'Communication'],
-      tags: ['Support', 'Customer', 'Service'],
-      isDefault: false,
-      isPublic: true,
-      downloadCount: 2100,
-      createdAt: '2024-02-15',
-      iconName: 'Headphones',
-      iconColor: '#EF4444',
-      iconBackground: '#FEF2F2',
-      toolsCount: 10,
-      status: 'active'
-    },
-    {
-      id: '6',
-      name: 'Research Assistant',
-      description: 'Conducts research, fact-checking, and information gathering',
-      role: 'Researcher',
-      capabilities: ['Research', 'Fact-Checking', 'Information Gathering', 'Analysis'],
-      tags: ['Research', 'Information', 'Analysis'],
-      isDefault: false,
-      isPublic: false,
-      createdAt: '2024-02-20',
-      iconName: 'Search',
-      iconColor: '#06B6D4',
-      iconBackground: '#F0FDFA',
-      toolsCount: 7,
-      status: 'building'
-    },
-    {
-      id: '7',
-      name: 'Project Manager',
-      description: 'Manages projects, timelines, and team coordination',
-      role: 'Project Manager',
-      capabilities: ['Planning', 'Coordination', 'Timeline Management', 'Team Work'],
-      tags: ['Management', 'Project', 'Planning'],
-      isDefault: false,
-      isPublic: true,
-      downloadCount: 750,
-      createdAt: '2024-02-25',
-      iconName: 'Calendar',
-      iconColor: '#84CC16',
-      iconBackground: '#F7FEE7',
-      toolsCount: 9,
-      status: 'active'
-    },
-    {
-      id: '8',
-      name: 'Design Specialist',
-      description: 'Creates visual designs, mockups, and UI/UX solutions',
-      role: 'Designer',
-      capabilities: ['UI/UX', 'Visual Design', 'Prototyping', 'Branding'],
-      tags: ['Design', 'UI/UX', 'Visual'],
-      isDefault: false,
-      isPublic: false,
-      createdAt: '2024-03-01',
-      iconName: 'Palette',
-      iconColor: '#F97316',
-      iconBackground: '#FFF7ED',
-      toolsCount: 11,
-      status: 'inactive'
-    }
-  ]);
-
-  const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>(workers);
+  const [workers, setWorkers] = useState<Worker[]>([]);
+  const [filteredWorkers, setFilteredWorkers] = useState<Worker[]>([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
 
   useEffect(() => {
     if (visible) {
-      setIsLoading(true);
-      // Simulate loading
-      setTimeout(() => {
-        setIsLoading(false);
-      }, 500);
+      loadWorkers();
     }
   }, [visible]);
+
+  const loadWorkers = async () => {
+    setIsLoading(true);
+    try {
+      const response = await agentService.getAgents(1, 50); // Load more workers
+      setWorkers(response.agents);
+      setFilteredWorkers(response.agents);
+    } catch (error) {
+      console.error('Error loading workers:', error);
+      Alert.alert('Error', 'Failed to load workers. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     let filtered = workers;
@@ -192,22 +55,20 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
     if (searchQuery) {
       filtered = filtered.filter(worker =>
         worker.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        worker.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        worker.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        worker.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        (worker.description && worker.description.toLowerCase().includes(searchQuery.toLowerCase()))
       );
     }
 
     // Apply category filter
     switch (selectedFilter) {
       case 'active':
-        filtered = filtered.filter(worker => worker.status === 'active');
+        // All agents are considered active by default
         break;
       case 'public':
-        filtered = filtered.filter(worker => worker.isPublic);
+        filtered = filtered.filter(worker => worker.is_public);
         break;
       case 'my':
-        filtered = filtered.filter(worker => !worker.isPublic);
+        filtered = filtered.filter(worker => !worker.is_public);
         break;
       default:
         // 'all' - no additional filtering
@@ -218,106 +79,73 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
   }, [searchQuery, selectedFilter, workers]);
 
   const handleChatWithWorker = (worker: Worker) => {
-    Alert.alert(
-      'Start Chat',
-      `Start a conversation with ${worker.name}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Start Chat', 
-          onPress: () => {
-            // Navigate to chat with this worker
-            console.log('Starting chat with worker:', worker.name);
-            onClose();
-          }
-        }
-      ]
-    );
+    // Convert Worker (Agent) to the format expected by the chat system
+    const agentForChat = {
+      agent_id: worker.agent_id,
+      name: worker.name,
+      description: worker.description,
+      system_prompt: worker.system_prompt,
+      icon_name: worker.icon_name,
+      icon_color: worker.icon_color,
+      icon_background: worker.icon_background,
+      is_default: worker.is_default,
+      is_public: worker.is_public,
+      created_at: worker.created_at,
+      updated_at: worker.updated_at,
+      version_count: worker.version_count,
+      current_version_name: worker.current_version_name,
+    };
+
+    // Set the selected agent in the global state
+    setSelectedAgent(agentForChat);
+    
+    // Close the workers modal
+    onClose();
+    
+    // Navigate to chat view
+    if (onNavigateToChat) {
+      onNavigateToChat();
+    }
+    
+    console.log('Selected agent for chat:', worker.name);
   };
 
   const handleCustomizeWorker = (worker: Worker) => {
-    Alert.alert(
-      'Customize Worker',
-      `Customize ${worker.name} settings and capabilities?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Customize', 
-          onPress: () => {
-            console.log('Customizing worker:', worker.name);
-          }
-        }
-      ]
-    );
+    setEditingAgent(worker);
+    setShowEditModal(true);
   };
 
   const handleCreateWorker = () => {
-    Alert.alert(
-      'Create New Worker',
-      'Create a new custom AI worker?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Create', 
-          onPress: () => {
-            console.log('Creating new worker');
-          }
-        }
-      ]
-    );
+    setShowCreateModal(true);
   };
 
-  const handleSendMessage = async (message: string, selectedAgent?: any, attachedFiles?: UploadedFile[]) => {
-    if (isSending) {
-      console.log('Already sending, ignoring duplicate request');
-      return;
-    }
-
-    setIsSending(true);
-    
-    try {
-      console.log('🏭 WORKERS MODAL RECEIVED:');
-      console.log('📝 Message:', message);
-      console.log('📎 Attached Files:', attachedFiles?.length || 0);
-      console.log('📎 Attached Files Details:', attachedFiles);
-      console.log('🤖 Selected Agent:', selectedAgent?.agent_id || 'default');
-
-      // Prepare the message with file references
-      let finalMessage = message.trim();
-      if (attachedFiles && attachedFiles.length > 0) {
-        const fileInfo = attachedFiles
-          .map(file => `[Uploaded File: ${file.path}]`)
-          .join('\n');
-        finalMessage = finalMessage ? `${finalMessage}\n\n${fileInfo}` : fileInfo;
-      }
-
-      // Call the API to initiate agent with files
-      console.log('🚀 CALLING initiateAgent WITH:');
-      console.log('📝 Final Message:', finalMessage);
-      console.log('📎 Files Array:', attachedFiles || []);
-      console.log('🤖 Agent ID:', selectedAgent?.agent_id || '1');
-      
-      const result = await initiateAgent(finalMessage, {
-        agent_id: selectedAgent?.agent_id || '1', // Default to Tars agent
-        files: attachedFiles || [],
-        stream: true,
-      });
-
-      console.log('✅ Message sent successfully:', result);
-      
-      // Clear the input
-      setChatInputValue('');
-      
-      // Show success message
-      Alert.alert('Success', 'Message sent successfully!');
-      
-    } catch (error) {
-      console.error('❌ Error sending message:', error);
-      Alert.alert('Error', `Failed to send message: ${error.message || 'Unknown error'}`);
-    } finally {
-      setIsSending(false);
-    }
+  const handleWorkerCreated = (newWorker: Agent) => {
+    // Add the new worker to the list
+    setWorkers(prev => [newWorker, ...prev]);
+    setFilteredWorkers(prev => [newWorker, ...prev]);
+    setShowCreateModal(false);
   };
+
+  const handleAgentUpdated = (updatedAgent: Agent) => {
+    // Update the worker in the list
+    setWorkers(prev => prev.map(worker => 
+      worker.agent_id === updatedAgent.agent_id ? updatedAgent : worker
+    ));
+    setFilteredWorkers(prev => prev.map(worker => 
+      worker.agent_id === updatedAgent.agent_id ? updatedAgent : worker
+    ));
+    setShowEditModal(false);
+    setSelectedAgent(null);
+  };
+
+  const handleAgentDeleted = (agentId: string) => {
+    // Remove the worker from the list
+    setWorkers(prev => prev.filter(worker => worker.agent_id !== agentId));
+    setFilteredWorkers(prev => prev.filter(worker => worker.agent_id !== agentId));
+    setShowEditModal(false);
+    setSelectedAgent(null);
+  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -339,50 +167,45 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
 
   const renderWorkerCard = (worker: Worker) => (
     <TouchableOpacity
-      key={worker.id}
+      key={worker.agent_id}
       style={styles.workerCard}
       onPress={() => handleChatWithWorker(worker)}
       activeOpacity={0.7}
     >
       <View style={styles.workerCardHeader}>
-        <View style={[styles.workerIcon, { backgroundColor: worker.iconBackground || theme.mutedWithOpacity(0.1) }]}>
-          <Wrench size={20} color={worker.iconColor || theme.primary} />
+        <View style={[styles.workerIcon, { backgroundColor: worker.icon_background || theme.mutedWithOpacity(0.1) }]}>
+          <Wrench size={20} color={worker.icon_color || theme.primary} />
         </View>
         <View style={styles.workerInfo}>
           <View style={styles.workerTitleRow}>
             <Text style={styles.workerName}>{worker.name}</Text>
-            {worker.isDefault && (
+            {worker.is_default && (
               <View style={styles.defaultBadge}>
                 <Star size={12} color={theme.primary} />
                 <Text style={styles.defaultText}>Default</Text>
               </View>
             )}
-            {worker.isPublic && (
+            {worker.is_public && (
               <View style={styles.publicBadge}>
                 <Globe size={12} color={theme.foreground} />
                 <Text style={styles.publicText}>Public</Text>
               </View>
             )}
           </View>
-          <Text style={styles.workerRole}>{worker.role}</Text>
+          <Text style={styles.workerRole}>AI Assistant</Text>
           <Text style={styles.workerDescription} numberOfLines={2}>
-            {worker.description}
+            {worker.description || 'AI assistant for various tasks'}
           </Text>
         </View>
         <View style={styles.workerActions}>
-          <View style={[styles.statusIndicator, { backgroundColor: getStatusColor(worker.status) }]} />
+          <View style={[styles.statusIndicator, { backgroundColor: theme.primary }]} />
         </View>
       </View>
 
       <View style={styles.workerCardFooter}>
         <View style={styles.workerStats}>
-          <Text style={styles.statText}>{worker.toolsCount} tools</Text>
-          {worker.downloadCount && (
-            <Text style={styles.statText}>{worker.downloadCount} downloads</Text>
-          )}
-          <Text style={[styles.statusText, { color: getStatusColor(worker.status) }]}>
-            {getStatusText(worker.status)}
-          </Text>
+          <Text style={styles.statText}>Active</Text>
+          <Text style={styles.statText}>Created {new Date(worker.created_at).toLocaleDateString()}</Text>
         </View>
         <View style={styles.workerButtons}>
           <TouchableOpacity
@@ -398,19 +221,6 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
             <MessageCircle size={16} color={theme.primary} />
           </TouchableOpacity>
         </View>
-      </View>
-
-      <View style={styles.workerTags}>
-        {worker.tags.slice(0, 3).map((tag, index) => (
-          <View key={index} style={styles.tag}>
-            <Text style={styles.tagText}>{tag}</Text>
-          </View>
-        ))}
-        {worker.tags.length > 3 && (
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>+{worker.tags.length - 3}</Text>
-          </View>
-        )}
       </View>
     </TouchableOpacity>
   );
@@ -779,32 +589,6 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
               <Text style={styles.createButtonText}>Create New Worker</Text>
             </TouchableOpacity>
 
-            {/* Chat Input for Create Worker */}
-            <CreateWorkerChatInput
-              placeholder="Describe what you need help with..."
-              value={chatInputValue}
-              onChangeText={setChatInputValue}
-         onSubmit={(message, selectedAgent, attachedFiles) => {
-           console.log('🏭 WORKERS MODAL onSubmit CALLED with:');
-           console.log('📝 Message:', message);
-           console.log('📎 Attached Files:', attachedFiles?.length || 0);
-           console.log('🤖 Selected Agent:', selectedAgent?.agent_id || 'null');
-           handleSendMessage(message, selectedAgent, attachedFiles);
-         }}
-              onFileAttach={() => console.log('File attach pressed')}
-              onAgentSelect={() => console.log('Agent selected for worker creation')}
-              onIntegrations={() => {
-                // Close workers modal and open integrations modal
-                onClose();
-                // You would need to pass an onIntegrations prop to WorkersModal
-                // For now, we'll just close the modal
-                console.log('Opening integrations...');
-              }}
-              onTools={() => console.log('Tools pressed')}
-              onInstructions={() => console.log('Instructions pressed')}
-              onKnowledge={() => console.log('Knowledge pressed')}
-              onTriggers={() => console.log('Triggers pressed')}
-            />
 
             {/* Workers List */}
             {isLoading ? (
@@ -829,6 +613,25 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose }) 
           </ScrollView>
         </View>
       </View>
+
+      {/* Worker Creation Modal */}
+      <WorkerCreationModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onWorkerCreated={handleWorkerCreated}
+      />
+
+      {/* Agent Edit Modal */}
+      <AgentEditModal
+        visible={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingAgent(null);
+        }}
+        agent={editingAgent}
+        onAgentUpdated={handleAgentUpdated}
+        onAgentDeleted={handleAgentDeleted}
+      />
     </Modal>
   );
 };

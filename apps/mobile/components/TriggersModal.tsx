@@ -1,47 +1,51 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, RefreshControl, TextInput } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
-import { X, Zap, Clock, Calendar, MessageSquare, Plus } from 'lucide-react-native';
+import { X, Zap, Clock, Calendar, MessageSquare, Plus, Edit3, Trash2, Repeat, Github, Slack, Webhook, Hash, Sparkles, Globe, ChevronDown, ChevronRight } from 'lucide-react-native';
+import { triggersService, TriggerConfiguration, TriggerProvider, CreateTriggerRequest } from '@/services/triggersService';
+import { useSelectedProject } from '@/stores/ui-store';
 
 interface TriggerItemProps {
-  id: string;
-  name: string;
-  type: 'schedule' | 'webhook' | 'email' | 'manual';
-  description: string;
-  isActive: boolean;
-  lastTriggered?: string;
-  onToggle?: (id: string, isActive: boolean) => void;
+  trigger: TriggerConfiguration;
+  onToggle: (triggerId: string, isActive: boolean) => void;
+  onEdit: (trigger: TriggerConfiguration) => void;
+  onDelete: (trigger: TriggerConfiguration) => void;
 }
 
-const TriggerItem: React.FC<TriggerItemProps> = ({
-  name,
-  type,
-  description,
-  isActive,
-  lastTriggered,
-  onToggle,
-  id,
-}) => {
+const TriggerItem: React.FC<TriggerItemProps> = ({ trigger, onToggle, onEdit, onDelete }) => {
   const theme = useTheme();
-  
+
   const getIcon = () => {
-    switch (type) {
-      case 'schedule': return <Clock size={20} color={theme.primary} />;
-      case 'webhook': return <Zap size={20} color={theme.primary} />;
-      case 'email': return <MessageSquare size={20} color={theme.primary} />;
-      case 'manual': return <Calendar size={20} color={theme.primary} />;
-      default: return <Zap size={20} color={theme.primary} />;
+    const iconName = triggersService.getTriggerIcon(trigger.trigger_type);
+    const iconSize = 20;
+    const iconColor = triggersService.getTriggerTypeColor(trigger.trigger_type);
+
+    switch (iconName) {
+      case 'repeat':
+        return <Repeat size={iconSize} color={iconColor} />;
+      case 'message-square':
+        return <MessageSquare size={iconSize} color={iconColor} />;
+      case 'github':
+        return <Github size={iconSize} color={iconColor} />;
+      case 'slack':
+        return <Slack size={iconSize} color={iconColor} />;
+      case 'webhook':
+        return <Webhook size={iconSize} color={iconColor} />;
+      case 'hash':
+        return <Hash size={iconSize} color={iconColor} />;
+      case 'sparkles':
+        return <Sparkles size={iconSize} color={iconColor} />;
+      default:
+        return <Globe size={iconSize} color={iconColor} />;
     }
   };
 
   const getTypeColor = () => {
-    switch (type) {
-      case 'schedule': return '#10B981';
-      case 'webhook': return '#3B82F6';
-      case 'email': return '#F59E0B';
-      case 'manual': return '#8B5CF6';
-      default: return theme.primary;
-    }
+    return triggersService.getTriggerTypeColor(trigger.trigger_type);
+  };
+
+  const getScheduleDescription = () => {
+    return triggersService.formatScheduleDescription(trigger.config);
   };
 
   const styles = StyleSheet.create({
@@ -73,12 +77,12 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
       color: theme.foreground,
     },
     description: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.mutedForeground,
       marginTop: 2,
     },
-    lastTriggered: {
-      fontSize: 12,
+    scheduleInfo: {
+      fontSize: 11,
       color: theme.mutedForeground,
       marginTop: 4,
     },
@@ -87,14 +91,23 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
       paddingHorizontal: 8,
       paddingVertical: 2,
       borderRadius: 4,
-      marginTop: 4,
       alignSelf: 'flex-start',
+      marginTop: 4,
     },
     typeText: {
       fontSize: 10,
-      fontWeight: '600',
       color: getTypeColor(),
+      fontWeight: '600',
       textTransform: 'uppercase',
+    },
+    actionButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    actionButton: {
+      padding: 8,
+      borderRadius: 6,
+      backgroundColor: theme.mutedWithOpacity(0.1),
     },
     toggleContainer: {
       marginLeft: 10,
@@ -107,19 +120,35 @@ const TriggerItem: React.FC<TriggerItemProps> = ({
         {getIcon()}
       </View>
       <View style={styles.textContainer}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.description}>{description}</Text>
-        {lastTriggered && <Text style={styles.lastTriggered}>Last triggered: {lastTriggered}</Text>}
+        <Text style={styles.name}>{trigger.name}</Text>
+        <Text style={styles.description}>{trigger.description || 'No description'}</Text>
+        <Text style={styles.scheduleInfo}>
+          {trigger.trigger_type === 'schedule' ? getScheduleDescription() : `Updated: ${triggersService.formatDate(trigger.updated_at)}`}
+        </Text>
         <View style={styles.typeBadge}>
-          <Text style={styles.typeText}>{type}</Text>
+          <Text style={styles.typeText}>{trigger.trigger_type}</Text>
         </View>
+      </View>
+      <View style={styles.actionButtons}>
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={() => onEdit(trigger)}
+        >
+          <Edit3 size={16} color={theme.mutedForeground} />
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={() => onDelete(trigger)}
+        >
+          <Trash2 size={16} color={theme.destructive} />
+        </TouchableOpacity>
       </View>
       <View style={styles.toggleContainer}>
         <Switch
           trackColor={{ false: theme.muted, true: getTypeColor() }}
-          thumbColor={isActive ? theme.background : theme.foreground}
-          onValueChange={(newValue) => onToggle && onToggle(id, newValue)}
-          value={isActive}
+          thumbColor={trigger.is_active ? theme.background : theme.foreground}
+          value={trigger.is_active}
+          onValueChange={(value) => onToggle(trigger.trigger_id, value)}
         />
       </View>
     </View>
@@ -133,47 +162,150 @@ interface TriggersModalProps {
 
 export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }) => {
   const theme = useTheme();
-  const [triggers, setTriggers] = useState<TriggerItemProps[]>([
-    {
-      id: '1',
-      name: 'Daily Report',
-      type: 'schedule',
-      description: 'Generate daily summary report every morning at 9 AM',
-      isActive: true,
-      lastTriggered: '2 hours ago',
-    },
-    {
-      id: '2',
-      name: 'Email Notification',
-      type: 'email',
-      description: 'Trigger when new emails arrive in inbox',
-      isActive: true,
-      lastTriggered: '1 day ago',
-    },
-    {
-      id: '3',
-      name: 'Webhook Trigger',
-      type: 'webhook',
-      description: 'Execute when webhook receives data',
-      isActive: false,
-      lastTriggered: '3 days ago',
-    },
-    {
-      id: '4',
-      name: 'Manual Trigger',
-      type: 'manual',
-      description: 'Execute manually from dashboard',
-      isActive: true,
-    },
-  ]);
+  const selectedProject = useSelectedProject();
+  const [triggers, setTriggers] = useState<TriggerConfiguration[]>([]);
+  const [providers, setProviders] = useState<TriggerProvider[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [showCreateTrigger, setShowCreateTrigger] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<TriggerProvider | null>(null);
+  const [editingTrigger, setEditingTrigger] = useState<TriggerConfiguration | null>(null);
 
-  const handleToggle = (id: string, isActive: boolean) => {
-    setTriggers(prevTriggers =>
-      prevTriggers.map(trigger => (trigger.id === id ? { ...trigger, isActive } : trigger))
+  // Load triggers and providers on modal open
+  useEffect(() => {
+    if (visible && selectedProject?.id) {
+      loadTriggers();
+      loadProviders();
+    }
+  }, [visible, selectedProject?.id]);
+
+  const loadTriggers = async () => {
+    if (!selectedProject?.id) return;
+    
+    try {
+      setLoading(true);
+      const triggersData = await triggersService.getAgentTriggers(selectedProject.id);
+      setTriggers(triggersData);
+    } catch (error) {
+      console.error('Error loading triggers:', error);
+      Alert.alert('Error', 'Failed to load triggers');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadProviders = async () => {
+    try {
+      const providersData = await triggersService.getProviders();
+      setProviders(providersData);
+    } catch (error) {
+      console.error('Error loading providers:', error);
+      Alert.alert('Error', 'Failed to load trigger providers');
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadTriggers();
+    setRefreshing(false);
+  };
+
+  const handleToggle = async (triggerId: string, isActive: boolean) => {
+    try {
+      setLoading(true);
+      const updatedTrigger = await triggersService.toggleTrigger(triggerId, isActive);
+      setTriggers(prev => prev.map(t => t.trigger_id === triggerId ? updatedTrigger : t));
+    } catch (error) {
+      console.error('Error toggling trigger:', error);
+      Alert.alert('Error', 'Failed to toggle trigger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEdit = (trigger: TriggerConfiguration) => {
+    const provider = providers.find(p => p.provider_id === trigger.provider_id);
+    if (provider) {
+      setSelectedProvider(provider);
+      setEditingTrigger(trigger);
+      setShowCreateTrigger(true);
+    } else {
+      Alert.alert('Error', 'Provider not found for this trigger');
+    }
+  };
+
+  const handleDelete = (trigger: TriggerConfiguration) => {
+    Alert.alert(
+      'Delete Trigger',
+      `Are you sure you want to delete "${trigger.name}"? This action cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await triggersService.deleteTrigger(trigger.trigger_id);
+              setTriggers(prev => prev.filter(t => t.trigger_id !== trigger.trigger_id));
+              Alert.alert('Success', 'Trigger deleted successfully');
+            } catch (error) {
+              console.error('Error deleting trigger:', error);
+              Alert.alert('Error', 'Failed to delete trigger');
+            } finally {
+              setLoading(false);
+            }
+          },
+        },
+      ]
     );
   };
 
-  const activeTriggersCount = triggers.filter(trigger => trigger.isActive).length;
+  const handleCreateTrigger = () => {
+    if (providers.length === 0) {
+      Alert.alert('No Providers', 'No trigger providers available');
+      return;
+    }
+    
+    setEditingTrigger(null);
+    setSelectedProvider(null);
+    setShowCreateTrigger(true);
+  };
+
+  const handleProviderSelect = (provider: TriggerProvider) => {
+    setSelectedProvider(provider);
+  };
+
+  const handleSaveTrigger = async (triggerData: CreateTriggerRequest) => {
+    if (!selectedProject?.id) return;
+
+    try {
+      setLoading(true);
+      
+      if (editingTrigger) {
+        // Update existing trigger
+        const updatedTrigger = await triggersService.updateTrigger(editingTrigger.trigger_id, triggerData);
+        setTriggers(prev => prev.map(t => t.trigger_id === editingTrigger.trigger_id ? updatedTrigger : t));
+        Alert.alert('Success', 'Trigger updated successfully');
+      } else {
+        // Create new trigger
+        const newTrigger = await triggersService.createTrigger(selectedProject.id, triggerData);
+        setTriggers(prev => [newTrigger, ...prev]);
+        Alert.alert('Success', 'Trigger created successfully');
+      }
+      
+      setShowCreateTrigger(false);
+      setSelectedProvider(null);
+      setEditingTrigger(null);
+    } catch (error) {
+      console.error('Error saving trigger:', error);
+      Alert.alert('Error', 'Failed to save trigger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const activeTriggersCount = triggers.filter(trigger => trigger.is_active).length;
 
   const styles = StyleSheet.create({
     centeredView: {
@@ -183,8 +315,8 @@ export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }
       backgroundColor: 'rgba(0,0,0,0.5)',
     },
     modalView: {
-      width: '90%',
-      height: '80%',
+      width: '95%',
+      height: '85%',
       backgroundColor: theme.background,
       borderRadius: 20,
       padding: 20,
@@ -202,7 +334,7 @@ export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 20,
-      paddingRight: 8, // Add padding to match IntegrationsModal close button spacing
+      paddingRight: 8,
     },
     headerLeft: {
       flexDirection: 'row',
@@ -243,7 +375,6 @@ export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }
     triggersEnabledText: {
       fontSize: 14,
       color: theme.mutedForeground,
-      alignSelf: 'flex-end',
       marginBottom: 15,
     },
     addButton: {
@@ -251,7 +382,7 @@ export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }
       alignItems: 'center',
       backgroundColor: theme.primary,
       paddingHorizontal: 16,
-      paddingVertical: 10,
+      paddingVertical: 12,
       borderRadius: 10,
       marginBottom: 15,
     },
@@ -275,6 +406,92 @@ export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }
       color: theme.mutedForeground,
       textAlign: 'center',
       marginTop: 16,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    loadingText: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      marginTop: 10,
+    },
+    createTriggerContainer: {
+      backgroundColor: theme.card,
+      borderRadius: 10,
+      padding: 16,
+      marginBottom: 15,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    createTriggerTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.foreground,
+      marginBottom: 15,
+    },
+    providerGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
+      marginBottom: 15,
+    },
+    providerButton: {
+      flex: 1,
+      minWidth: '45%',
+      backgroundColor: theme.background,
+      borderRadius: 8,
+      padding: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      alignItems: 'center',
+    },
+    selectedProviderButton: {
+      borderColor: theme.primary,
+      backgroundColor: theme.primary + '10',
+    },
+    providerIcon: {
+      marginBottom: 8,
+    },
+    providerName: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: theme.foreground,
+      textAlign: 'center',
+    },
+    providerDescription: {
+      fontSize: 10,
+      color: theme.mutedForeground,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+    createTriggerButtons: {
+      flexDirection: 'row',
+      gap: 10,
+    },
+    createButton: {
+      flex: 1,
+      backgroundColor: theme.primary,
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    createButtonText: {
+      color: theme.background,
+      fontWeight: '600',
+    },
+    cancelButton: {
+      flex: 1,
+      backgroundColor: theme.muted,
+      paddingVertical: 10,
+      borderRadius: 8,
+      alignItems: 'center',
+    },
+    cancelButtonText: {
+      color: theme.foreground,
+      fontWeight: '600',
     },
   });
 
@@ -306,28 +523,154 @@ export const TriggersModal: React.FC<TriggersModalProps> = ({ visible, onClose }
 
           <Text style={styles.triggersEnabledText}>{activeTriggersCount} / {triggers.length} triggers active</Text>
 
-          <TouchableOpacity style={styles.addButton}>
+          <TouchableOpacity style={styles.addButton} onPress={handleCreateTrigger}>
             <Plus size={16} color={theme.background} />
             <Text style={styles.addButtonText}>Create New Trigger</Text>
           </TouchableOpacity>
 
-          <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            {triggers.length === 0 ? (
+          {showCreateTrigger && (
+            <View style={styles.createTriggerContainer}>
+              <Text style={styles.createTriggerTitle}>
+                {editingTrigger ? 'Edit Trigger' : 'Create New Trigger'}
+              </Text>
+              
+              {!selectedProvider ? (
+                <View>
+                  <Text style={{ fontSize: 14, color: theme.foreground, marginBottom: 10 }}>
+                    Select a trigger provider:
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View style={styles.providerGrid}>
+                      {providers.map(provider => (
+                        <TouchableOpacity
+                          key={provider.provider_id}
+                          style={styles.providerButton}
+                          onPress={() => handleProviderSelect(provider)}
+                        >
+                          <View style={styles.providerIcon}>
+                            {(() => {
+                              const iconName = triggersService.getTriggerIcon(provider.trigger_type);
+                              const iconColor = triggersService.getTriggerTypeColor(provider.trigger_type);
+                              const iconSize = 24;
+                              
+                              switch (iconName) {
+                                case 'repeat':
+                                  return <Repeat size={iconSize} color={iconColor} />;
+                                case 'message-square':
+                                  return <MessageSquare size={iconSize} color={iconColor} />;
+                                case 'github':
+                                  return <Github size={iconSize} color={iconColor} />;
+                                case 'slack':
+                                  return <Slack size={iconSize} color={iconColor} />;
+                                case 'webhook':
+                                  return <Webhook size={iconSize} color={iconColor} />;
+                                case 'hash':
+                                  return <Hash size={iconSize} color={iconColor} />;
+                                case 'sparkles':
+                                  return <Sparkles size={iconSize} color={iconColor} />;
+                                default:
+                                  return <Globe size={iconSize} color={iconColor} />;
+                              }
+                            })()}
+                          </View>
+                          <Text style={styles.providerName}>{provider.name}</Text>
+                          <Text style={styles.providerDescription}>{provider.description}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+              ) : (
+                <View>
+                  <Text style={{ fontSize: 14, color: theme.foreground, marginBottom: 10 }}>
+                    Selected: {selectedProvider.name}
+                  </Text>
+                  <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 15 }}>
+                    {selectedProvider.description}
+                  </Text>
+                  
+                  <View style={{ 
+                    backgroundColor: theme.mutedWithOpacity(0.1), 
+                    padding: 12, 
+                    borderRadius: 8, 
+                    marginBottom: 15 
+                  }}>
+                    <Text style={{ 
+                      fontSize: 12, 
+                      color: theme.mutedForeground, 
+                      textAlign: 'center' 
+                    }}>
+                      Trigger configuration is not yet implemented in the mobile app. Please use the web interface to configure triggers.
+                    </Text>
+                  </View>
+                  
+                  <TouchableOpacity 
+                    style={[styles.createButton, { marginBottom: 10 }]}
+                    onPress={() => {
+                      Alert.alert(
+                        'Trigger Configuration',
+                        'Trigger configuration is not yet implemented in the mobile app. Please use the web interface to configure triggers.',
+                        [
+                          { text: 'Cancel', onPress: () => setShowCreateTrigger(false) },
+                          { text: 'Open Web', onPress: () => {
+                            // Could open web interface here
+                            setShowCreateTrigger(false);
+                          }}
+                        ]
+                      );
+                    }}
+                  >
+                    <Text style={styles.createButtonText}>Configure Trigger</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              <View style={styles.createTriggerButtons}>
+                <TouchableOpacity 
+                  style={styles.cancelButton}
+                  onPress={() => {
+                    setShowCreateTrigger(false);
+                    setSelectedProvider(null);
+                    setEditingTrigger(null);
+                  }}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          <ScrollView 
+            contentContainerStyle={styles.scrollViewContent}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={theme.primary}
+              />
+            }
+          >
+            {loading && triggers.length === 0 ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.primary} />
+                <Text style={styles.loadingText}>Loading triggers...</Text>
+              </View>
+            ) : triggers.length === 0 ? (
               <View style={styles.emptyState}>
                 <Zap size={48} color={theme.mutedForeground} />
-                <Text style={styles.emptyStateText}>No triggers configured</Text>
+                <Text style={styles.emptyStateText}>No triggers configured yet</Text>
+                <Text style={[styles.emptyStateText, { marginTop: 8, fontSize: 14 }]}>
+                  Create triggers to automate your agent's actions
+                </Text>
               </View>
             ) : (
               triggers.map(trigger => (
                 <TriggerItem
-                  key={trigger.id}
-                  id={trigger.id}
-                  name={trigger.name}
-                  type={trigger.type}
-                  description={trigger.description}
-                  isActive={trigger.isActive}
-                  lastTriggered={trigger.lastTriggered}
+                  key={trigger.trigger_id}
+                  trigger={trigger}
                   onToggle={handleToggle}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
                 />
               ))
             )}

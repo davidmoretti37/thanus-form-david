@@ -584,6 +584,40 @@ export const useChatSession = (projectId: string) => {
                     setIsInitialized(true);
                 }
 
+                // 🔧 ENSURE TOOLS: Make sure agent has tools enabled before starting
+                if (selectedAgent?.agent_id) {
+                    try {
+                        console.log('🔧 ENSURE TOOLS: Checking agent tools for:', selectedAgent.agent_id);
+                        // Import toolsService here to avoid circular dependency
+                        const { toolsService } = await import('../services/toolsService');
+                        
+                        // Try to get current tools
+                        try {
+                            const currentTools = await toolsService.getAgentTools(selectedAgent.agent_id);
+                            console.log('🔧 ENSURE TOOLS: Current tools:', currentTools);
+                        } catch (err) {
+                            console.log('🔧 ENSURE TOOLS: No tools found, enabling fallback tools');
+                            // Enable fallback tools if none exist
+                            const fallbackTools = [
+                                'sb_shell_tool', 'sb_files_tool', 'web_search_tool', 
+                                'browser_tool', 'sb_vision_tool', 'data_providers_tool'
+                            ].map(toolName => ({
+                                name: toolName,
+                                enabled: true,
+                                description: `Tool: ${toolName}`
+                            }));
+                            
+                            await toolsService.updateAgentTools(selectedAgent.agent_id, {
+                                agentpress_tools: fallbackTools,
+                                mcp_tools: []
+                            });
+                            console.log('🔧 ENSURE TOOLS: Fallback tools enabled');
+                        }
+                    } catch (toolErr) {
+                        console.log('🔧 ENSURE TOOLS: Could not configure tools, continuing anyway');
+                    }
+                }
+
                 const result = await initiateAgent(content.trim(), {
                     stream: true,
                     enable_context_manager: true,
@@ -620,15 +654,54 @@ export const useChatSession = (projectId: string) => {
                     });
                     const result = await startAgentMutation.mutateAsync({
                         threadId: newThread.thread_id,
+                        options: {
+                            agent_id: selectedAgent?.agent_id,
+                            model_name: selectedModel?.name,
+                        }
                     });
                     agentStream.startStreaming(result.agent_run_id);
                 } else {
+                    // 🔧 ENSURE TOOLS: Make sure agent has tools enabled for existing thread too
+                    if (selectedAgent?.agent_id) {
+                        try {
+                            console.log('🔧 ENSURE TOOLS: Checking agent tools for existing thread');
+                            const { toolsService } = await import('../services/toolsService');
+                            
+                            try {
+                                const currentTools = await toolsService.getAgentTools(selectedAgent.agent_id);
+                                console.log('🔧 ENSURE TOOLS: Current tools for existing thread:', currentTools);
+                            } catch (err) {
+                                console.log('🔧 ENSURE TOOLS: No tools found for existing thread, enabling fallback tools');
+                                const fallbackTools = [
+                                    'sb_shell_tool', 'sb_files_tool', 'web_search_tool', 
+                                    'browser_tool', 'sb_vision_tool', 'data_providers_tool'
+                                ].map(toolName => ({
+                                    name: toolName,
+                                    enabled: true,
+                                    description: `Tool: ${toolName}`
+                                }));
+                                
+                                await toolsService.updateAgentTools(selectedAgent.agent_id, {
+                                    agentpress_tools: fallbackTools,
+                                    mcp_tools: []
+                                });
+                                console.log('🔧 ENSURE TOOLS: Fallback tools enabled for existing thread');
+                            }
+                        } catch (toolErr) {
+                            console.log('🔧 ENSURE TOOLS: Could not configure tools for existing thread, continuing anyway');
+                        }
+                    }
+
                     const messagePromise = addMessage.mutateAsync({
                         threadId: currentThreadId,
                         content: content.trim(),
                     });
                     const agentPromise = startAgentMutation.mutateAsync({
                         threadId: currentThreadId,
+                        options: {
+                            agent_id: selectedAgent?.agent_id,
+                            model_name: selectedModel?.name,
+                        }
                     });
                     const results = await Promise.allSettled([messagePromise, agentPromise]);
 

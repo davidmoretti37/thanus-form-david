@@ -1,7 +1,7 @@
 import { commonStyles } from '@/constants/CommonStyles';
 import { useChatSession, useNewChatSession } from '@/hooks/useChatHooks';
 import { useThemedStyles, useTheme } from '@/hooks/useThemeColor';
-import { useIsNewChatMode, useSelectedProject } from '@/stores/ui-store';
+import { useIsNewChatMode, useSelectedProject, useSelectedAgent, useSetSelectedAgent } from '@/stores/ui-store';
 import { UploadedFile } from '@/utils/file-upload';
 import React, { useEffect, useState } from 'react';
 import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity, KeyboardAvoidingView, Text } from 'react-native';
@@ -12,7 +12,7 @@ import { KnowledgeModal } from './KnowledgeModal';
 import { TriggersModal } from './TriggersModal';
 import { IntegrationsModal } from './IntegrationsModal';
 import { MessageThread } from './MessageThread';
-import { SkeletonText } from './Skeleton';
+import { Skeleton } from './Skeleton';
 import { Body } from './Typography';
 import { useUIStore } from '@/stores/ui-store';
 import { X } from 'lucide-react-native';
@@ -32,7 +32,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
   const [instructionsModalVisible, setInstructionsModalVisible] = useState(false);
   const [knowledgeModalVisible, setKnowledgeModalVisible] = useState(false);
   const [triggersModalVisible, setTriggersModalVisible] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<{id: string, name: string} | null>(null);
+  const selectedAgent = useSelectedAgent();
+  const setSelectedAgent = useSetSelectedAgent();
     const [integrationsModalVisible, setIntegrationsModalVisible] = useState(false);
     const isNewChatMode = useIsNewChatMode();
     const [isAtBottomOfChat, setIsAtBottomOfChat] = useState(true);
@@ -92,7 +93,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
         container: {
             flex: 1,
             backgroundColor: theme.background,
-            position: 'relative',
+            position: 'relative' as const,
         },
         loadingContainer: {
             ...commonStyles.flexCenter,
@@ -131,7 +132,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
       marginTop: 2,
       paddingBottom: 6,
       alignItems: 'center' as const,
-      backgroundColor: theme.background,
+      backgroundColor: 'transparent',
     },
     chip: {
       flexDirection: 'row' as const,
@@ -175,7 +176,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
     if (!isNewChatMode && selectedProject && isLoadingThread) {
         return (
             <View style={styles.loadingContainer}>
-                <SkeletonText lines={3} />
+                <Skeleton />
             </View>
         );
     }
@@ -228,7 +229,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
         </>
       )}
       <SelectedQuickActionChips />
-      <CreateWorkerChatInput
+      <View style={{ marginTop: -60, marginBottom: 40 }}>
+        <CreateWorkerChatInput
         placeholder={
           isGenerating
             ? "AI is responding..."
@@ -248,12 +250,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
           
           // Store the selected agent for use in modals
           if (selectedAgent) {
-            const agentForModals = {
-              id: selectedAgent.agent_id,
-              name: selectedAgent.name || 'Unknown Agent'
-            };
-            setSelectedAgent(agentForModals);
-            console.log('🔧 ChatContainer: Updated selectedAgent for modals:', agentForModals);
+            setSelectedAgent(selectedAgent);
+            console.log('🔧 ChatContainer: Updated selectedAgent for modals:', selectedAgent);
           }
           
           if (message.trim() || (attachedFiles && attachedFiles.length > 0)) {
@@ -269,10 +267,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
         onAgentSelect={(agent) => {
           console.log('🔧 Agent selected in ChatContainer:', agent);
           if (agent) {
-            setSelectedAgent({
-              id: agent.agent_id,
-              name: agent.name || 'Unknown Agent'
-            });
+            setSelectedAgent(agent);
             console.log('🔧 ChatContainer: Updated selectedAgent state:', agent.agent_id, agent.name);
           }
         }}
@@ -290,13 +285,13 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
       <ToolsModal
         visible={toolsModalVisible}
         onClose={() => setToolsModalVisible(false)}
-        selectedAgent={selectedAgent}
+        selectedAgent={selectedAgent ? { id: selectedAgent.agent_id, name: selectedAgent.name } : null}
       />
       
       <InstructionsModal
         visible={instructionsModalVisible}
         onClose={() => setInstructionsModalVisible(false)}
-        selectedAgent={selectedAgent}
+        selectedAgent={selectedAgent ? { id: selectedAgent.agent_id, name: selectedAgent.name } : null}
       />
       
       <KnowledgeModal
@@ -314,5 +309,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
         onClose={() => setIntegrationsModalVisible(false)}
       />
         </View>
+      </View>
     );
 }; 

@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert } from 'react-native';
-import { useTheme } from '@/hooks/useThemeColor';
+import { useTheme } from '../hooks/useThemeColor';
 import { Paperclip, ArrowUp, Settings, Bot, ChevronDown, Wrench, Brain, Database, Zap, X, File } from 'lucide-react-native';
 import { AgentSelectionModal } from './AgentSelectionModal';
-import { Agent } from '@/services/agentService';
-import { useAgentPreloader } from '@/hooks/useAgentPreloader';
-import { pickFiles, UploadedFile, handleLocalFiles } from '@/utils/file-upload';
+import { Agent } from '../services/agentService';
+import { useAgentPreloader } from '../hooks/useAgentPreloader';
+import { pickFiles, UploadedFile, handleLocalFiles } from '../utils/file-upload';
 import { FileAttachment } from './FileAttachment';
+import { useSelectedAgent } from '../stores/ui-store';
 
 interface CreateWorkerChatInputProps {
   placeholder?: string;
@@ -36,14 +37,14 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
   onTriggers,
 }) => {
   const theme = useTheme();
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const globalSelectedAgent = useSelectedAgent();
   const [agentSelectionVisible, setAgentSelectionVisible] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<UploadedFile[]>([]);
   
   // Debug selectedAgent state changes
   useEffect(() => {
-    console.log('🔍 selectedAgent state changed:', selectedAgent);
-  }, [selectedAgent]);
+    console.log('🔍 globalSelectedAgent state changed:', globalSelectedAgent);
+  }, [globalSelectedAgent]);
   
   // Preload agents when this component mounts
   useAgentPreloader();
@@ -51,14 +52,12 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
   // Debug component lifecycle
   useEffect(() => {
     console.log('🔄 CreateWorkerChatInput mounted/updated');
-    console.log('🔍 Initial selectedAgent:', selectedAgent);
+    console.log('🔍 Initial globalSelectedAgent:', globalSelectedAgent);
   }, []);
 
   const handleAgentSelect = (agent: Agent) => {
     console.log('Agent selected in CreateWorkerChatInput:', agent.name);
-    console.log('🔍 Setting selectedAgent to:', agent);
-    setSelectedAgent(agent);
-    console.log('✅ selectedAgent state updated');
+    console.log('🔍 Calling onAgentSelect with:', agent);
     onAgentSelect?.(agent); // Call the original callback with the agent
   };
 
@@ -98,7 +97,8 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
   const styles = StyleSheet.create({
     mainContainer: {
       marginHorizontal: 16,
-      marginBottom: 32,
+      marginBottom: 16,
+      marginTop: 20,
     },
     container: {
       backgroundColor: theme.background,
@@ -303,7 +303,7 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
                    <TouchableOpacity 
                      style={[
                        styles.agentButton, 
-                       selectedAgent && styles.agentButtonSelected
+                       globalSelectedAgent && styles.agentButtonSelected
                      ]} 
                      onPress={() => {
                        console.log('🔘 AGENT BUTTON PRESSED!');
@@ -311,11 +311,11 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
                      }}
                      activeOpacity={0.7}
                    >
-              {selectedAgent ? (
+              {globalSelectedAgent ? (
                 <>
                   <Bot size={14} color={theme.primary} />
                   <Text style={[styles.agentButtonText, { color: theme.primary, fontWeight: '600' }]}>
-                    {selectedAgent.name}
+                    {globalSelectedAgent.name}
                   </Text>
                   <ChevronDown size={12} color={theme.primary} />
                 </>
@@ -338,23 +338,22 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
                          console.log('🚀 SUBMITTING MESSAGE:');
                          console.log('📝 Message:', value);
                          console.log('📎 Attached Files:', attachedFiles.length);
-                         console.log('🔍 Current selectedAgent state:', selectedAgent);
-                         console.log('🤖 Selected Agent:', selectedAgent ? {
-                           id: selectedAgent.agent_id,
-                           name: selectedAgent.name,
-                           description: selectedAgent.description
+                         console.log('🔍 Current globalSelectedAgent state:', globalSelectedAgent);
+                         console.log('🤖 Selected Agent:', globalSelectedAgent ? {
+                           id: globalSelectedAgent.agent_id,
+                           name: globalSelectedAgent.name,
+                           description: globalSelectedAgent.description
                          } : 'No agent selected');
-                         console.log('📡 Will send to backend with agent:', selectedAgent?.agent_id || 'null');
+                         console.log('📡 Will send to backend with agent:', globalSelectedAgent?.agent_id || 'null');
                          console.log('🚀 CALLING onSubmit with:', {
                            message: value,
-                           agent: selectedAgent?.agent_id || 'null',
+                           agent: globalSelectedAgent?.agent_id || 'null',
                            files: attachedFiles.length
                          });
                          
-                         onSubmit(value, selectedAgent || undefined, attachedFiles);
+                         onSubmit(value, globalSelectedAgent || undefined, attachedFiles);
                          console.log('✅ onSubmit call completed');
                          onChangeText('');
-                         setSelectedAgent(null); // Clear selection after submit
                          setAttachedFiles([]); // Clear files after submit
                        }
                      }}
@@ -404,7 +403,7 @@ export const CreateWorkerChatInput: React.FC<CreateWorkerChatInputProps> = ({
         visible={agentSelectionVisible}
         onClose={() => setAgentSelectionVisible(false)}
         onAgentSelect={handleAgentSelect}
-        selectedAgentId={selectedAgent?.agent_id}
+        selectedAgentId={globalSelectedAgent?.agent_id}
       />
     </View>
   );
