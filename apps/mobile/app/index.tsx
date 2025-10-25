@@ -70,6 +70,4 @@ export default function HomeScreen() {
             )}
         </View>
     );
-} 
-// TEMPORARY DEBUG: Add this to see what's happening
-// Check the Expo logs for "🔐 AUTH DEBUG" message
+}

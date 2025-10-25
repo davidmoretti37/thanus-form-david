@@ -11,22 +11,10 @@
     "newArchEnabled": true,
     "description": "Suna is a fully open source AI assistant that helps you accomplish real-world tasks with ease. Through natural conversation, Suna becomes your digital companion for research, data analysis, and everyday challenges.",
     "primaryColor": "#121215",
-    "privacy": "public",
     "platforms": [
       "ios",
       "android",
       "web"
-    ],
-    "keywords": [
-      "AI",
-      "artificial intelligence",
-      "browser automation",
-      "web scraping",
-      "file management",
-      "AI assistant",
-      "open source",
-      "research",
-      "data analysis"
     ],
     "githubUrl": "https://github.com/InventuAI/tars",
     "ios": {

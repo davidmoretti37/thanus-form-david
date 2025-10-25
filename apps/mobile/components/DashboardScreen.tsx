@@ -13,7 +13,8 @@ import { BillingModal } from './BillingModal';
 import { EnvManagerModal } from './EnvManagerModal';
 import { CalendarModal } from './CalendarModal';
 import { AgentMentionInput } from './AgentMentionInput';
-import { Plus, Zap, CreditCard, Plug, KeyRound, Wrench, Palette, MessageSquare, Calendar, Bell, Settings, Sun, Moon } from 'lucide-react-native';
+import { KnowledgeModal } from './KnowledgeModal';
+import { Plus, Zap, CreditCard, Plug, KeyRound, Wrench, Palette, MessageSquare, Calendar, Bell, Settings, Sun, Moon, Database } from 'lucide-react-native';
 
 interface DashboardScreenProps {
   onNavigateToChat: () => void;
@@ -44,6 +45,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
   const [billingVisible, setBillingVisible] = useState(false);
   const [envManagerVisible, setEnvManagerVisible] = useState(false);
   const [calendarVisible, setCalendarVisible] = useState(false);
+  const [knowledgeVisible, setKnowledgeVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [chatInputValue, setChatInputValue] = useState('');
 
@@ -150,6 +152,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       onPress: () => setTasksVisible(true),
       size: 'medium' as const,
       image: colorScheme === 'dark' ? require('../assets/images/tasks-image.png') : require('../assets/images/fadzz5.png'),
+      webGradients: []
+    },
+    {
+      title: 'Jardim do Conhecimento',
+      description: 'Organize documentos, insights e arquivos em um só lugar',
+      icon: <Database size={26} color="#ffffff" />,
+      onPress: () => setKnowledgeVisible(true),
+      size: 'medium' as const,
+      image: colorScheme === 'dark' ? require('../assets/images/fadzz3.png') : require('../assets/images/fadzz5.png'),
       webGradients: []
     },
   ];
@@ -351,6 +362,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
                value={selectedDate}
                onChange={handleDateSelect}
              />
+
+    {/* Knowledge Modal */ }
+    <KnowledgeModal
+      visible={knowledgeVisible}
+      onClose={() => setKnowledgeVisible(false)}
+    />
 
            </>
          );

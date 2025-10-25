@@ -1,80 +1,76 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createClient } from '@supabase/supabase-js';
 import { AppState } from 'react-native';
-import Constants from 'expo-constants';
 import 'react-native-url-polyfill/auto';
 
-// Use your existing environment variables
-const supabaseUrl = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+console.log('🚀 SUPABASE CONFIG LOADED 🚀');
 
-// Debug logging
-console.log('🔍 SupabaseConfig: Loading environment variables...');
-console.log('EXPO_PUBLIC_SUPABASE_URL:', supabaseUrl ? '✅ Set' : '❌ Not set');
-console.log('EXPO_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '✅ Set' : '❌ Not set');
+// Debug environment variables
+console.log('🔍 process.env.EXPO_PUBLIC_SUPABASE_URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+console.log('🔍 process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY:', process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ? 'Set (length: ' + process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY.length + ')' : 'Not set');
 
-// Validate that required env vars are set - but be more lenient during development
-if (!supabaseUrl) {
-  console.error('❌ EXPO_PUBLIC_SUPABASE_URL is not properly configured');
-  console.log('Please set EXPO_PUBLIC_SUPABASE_URL in your environment variables');
-  console.log('Current value:', supabaseUrl);
-}
+// Read from environment variables
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://yqbloumlsjjylabnoasg.supabase.co';
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxYmxvdW1sc2pqeWxhYm5vYXNnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg3MjY0MzcsImV4cCI6MjA3NDMwMjQzN30.Y0dgOB-zt_cQC_H787PhfHnZRwl9Uhou9jkY9FPtIbc';
 
-if (!supabaseAnonKey) {
-  console.error('❌ EXPO_PUBLIC_SUPABASE_ANON_KEY is not properly configured');
-  console.log('Please set EXPO_PUBLIC_SUPABASE_ANON_KEY in your environment variables');
-  console.log('Current value:', supabaseAnonKey);
-}
+console.log('✅ Final Supabase URL:', supabaseUrl);
+console.log('✅ Final Supabase Key:', supabaseAnonKey ? 'Set (length: ' + supabaseAnonKey.length + ')' : 'Not set');
 
-// Create Supabase client with proper error handling
-export const supabase = (() => {
-  try {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error('Supabase credentials not configured');
-    }
+// Create Supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    storage: AsyncStorage,
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false,
+  },
+});
 
-    return createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        storage: AsyncStorage,
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: false,
-      },
-    });
-  } catch (error) {
-    console.error('Failed to initialize Supabase client:', error);
-    // Return a mock client that throws errors for all operations
-    return {
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: new Error('Supabase not configured') }),
-        getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
-        signInWithPassword: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-        signUp: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-        signOut: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-        onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
-        startAutoRefresh: () => {},
-        stopAutoRefresh: () => {},
-      },
-      from: () => ({
-        select: () => ({
-          eq: () => Promise.resolve({ data: [], error: { code: 'MOCK_ERROR', message: 'Supabase not configured' } })
-        })
-      })
-    } as any;
+// Auto-refresh token when app becomes active
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') {
+    supabase.auth.startAutoRefresh();
+  } else {
+    supabase.auth.stopAutoRefresh();
   }
-})();
-
-// Auto-refresh token when app becomes active (only if real client)
-if (supabaseUrl && supabaseAnonKey) {
-  AppState.addEventListener('change', (state) => {
-    if (state === 'active') {
-      supabase.auth.startAutoRefresh();
-    } else {
-      supabase.auth.stopAutoRefresh();
-    }
-  });
-}
+});
 
 export const createSupabaseClient = () => {
   return supabase;
-}; 
+};
+
+// Export server URL for other services
+export const SERVER_URL = supabaseUrl;
+
+// Export utility functions to avoid circular dependencies
+export const getSupabaseSession = async () => {
+  try {
+    const { data: { session }, error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error getting Supabase session:', error);
+      return null;
+    }
+    
+    return session;
+  } catch (error) {
+    console.error('Error getting Supabase session:', error);
+    return null;
+  }
+};
+
+export const getSupabaseUser = async () => {
+  try {
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error) {
+      console.error('Error getting Supabase user:', error);
+      return null;
+    }
+    
+    return user;
+  } catch (error) {
+    console.error('Error getting Supabase user:', error);
+    return null;
+  }
+};

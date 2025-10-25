@@ -1,5 +1,5 @@
 import { SERVER_URL } from '@/constants/Server';
-import { getSupabaseSession } from '@/utils/supabase';
+import { getSupabaseSession } from '@/constants/SupabaseConfig';
 
 export interface IntegrationProfile {
   profile_id: string;

@@ -1,5 +1,4 @@
-import { SERVER_URL } from '@/constants/SupabaseConfig';
-import { getSupabaseSession } from '@/utils/supabase';
+import { SERVER_URL, getSupabaseSession } from '@/constants/SupabaseConfig';
 
 export interface KnowledgeFolder {
   folder_id: string;

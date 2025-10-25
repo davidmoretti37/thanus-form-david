@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert, ActivityIndicator, RefreshControl } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
-import { X, Database, Plus, FileText, Upload, Folder, FolderPlus, Trash2, Edit3, ChevronRight, ChevronDown, MoreVertical, Search } from 'lucide-react-native';
+import { X, Database, FileText, Upload, Folder, Trash2, Edit3, ChevronRight, ChevronDown, Search, Leaf } from 'lucide-react-native';
 import { knowledgeService, KnowledgeFolder, KnowledgeEntry } from '@/services/knowledgeService';
 import * as DocumentPicker from 'expo-document-picker';
+import { AnimatedKnowledgeBackground } from './AnimatedKnowledgeBackground';
 
 interface TreeItem {
   id: string;
@@ -141,19 +142,19 @@ const TreeItemComponent: React.FC<TreeItemProps> = ({
           {getExpandIcon()}
         </TouchableOpacity>
         
-        <View style={styles.iconContainer}>
-          {getIcon()}
-        </View>
+      <View style={styles.iconContainer}>
+        {getIcon()}
+      </View>
         
-        <View style={styles.textContainer}>
+      <View style={styles.textContainer}>
           <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.details}>
+        <Text style={styles.details}>
             {item.type === 'folder' 
               ? `${getEntryCount()} items • ${getLastUpdated()}`
               : `${getFileSize()} • ${getLastUpdated()}`
             }
-          </Text>
-        </View>
+        </Text>
+      </View>
         
         <View style={styles.actionButtons}>
           {item.type === 'folder' && (
@@ -561,18 +562,61 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
       borderRadius: 16,
       backgroundColor: theme.mutedWithOpacity(0.1),
     },
-    titleContainer: {
-      marginBottom: 20,
+    heroContent: {
+      flexDirection: 'column',
+      gap: 16,
     },
-    title: {
+    heroTextContainer: {
+      flex: 1,
+      gap: 6,
+    },
+    heroTitle: {
       fontSize: 22,
       fontWeight: 'bold',
       color: theme.foreground,
     },
-    subtitle: {
+    heroSubtitle: {
       fontSize: 14,
       color: theme.mutedForeground,
-      marginTop: 5,
+      lineHeight: 20,
+    },
+    heroButtonRow: {
+      flexDirection: 'row',
+      gap: 12,
+    },
+    heroSecondaryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.border,
+      backgroundColor: theme.background,
+      flex: 1,
+      gap: 8,
+    },
+    heroSecondaryButtonText: {
+      color: theme.foreground,
+      fontWeight: '600',
+      fontSize: 14,
+    },
+    heroPrimaryButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      borderRadius: 12,
+      backgroundColor: theme.primary,
+      flex: 1,
+      gap: 8,
+    },
+    heroPrimaryButtonText: {
+      color: theme.background,
+      fontWeight: '600',
+      fontSize: 14,
     },
     searchBarContainer: {
       flexDirection: 'row',
@@ -589,41 +633,6 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
       height: 40,
       color: theme.foreground,
       marginLeft: 10,
-    },
-    actionButtons: {
-      flexDirection: 'row',
-      gap: 10,
-      marginBottom: 15,
-    },
-    addButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.primary,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderRadius: 10,
-      flex: 1,
-    },
-    addButtonText: {
-      color: theme.background,
-      fontSize: 14,
-      fontWeight: '600',
-      marginLeft: 8,
-    },
-    uploadButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.secondary,
-      paddingHorizontal: 16,
-      paddingVertical: 10,
-      borderRadius: 10,
-      flex: 1,
-    },
-    uploadButtonText: {
-      color: theme.background,
-      fontSize: 14,
-      fontWeight: '600',
-      marginLeft: 8,
     },
     scrollViewContent: {
       paddingBottom: 20,
@@ -724,62 +733,69 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
               <View style={styles.headerIcon}>
                 <Database size={16} color={theme.primary} />
               </View>
-              <Text style={styles.headerText}>Knowledge Base</Text>
+              <Text style={styles.headerText}>Jardim do Conhecimento</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <X size={20} color={theme.mutedForeground} />
             </TouchableOpacity>
           </View>
 
-          <View style={styles.titleContainer}>
-            <Text style={styles.title}>Organize Documents</Text>
-            <Text style={styles.subtitle}>Manage files and folders for AI agents to search and reference</Text>
+
+          <AnimatedKnowledgeBackground>
+            <View style={styles.heroContent}>
+              <View style={styles.heroTextContainer}>
+                <Text style={styles.heroTitle}>Jardim do Conhecimento</Text>
+                <Text style={styles.heroSubtitle}>
+                  Cultive suas sementes de memória para que os agentes de IA possam colher sabedoria
+                </Text>
           </View>
+
+              <View style={styles.heroButtonRow}>
+                <TouchableOpacity
+                  style={styles.heroSecondaryButton}
+                  onPress={() => setShowCreateFolder(true)}
+                >
+                  <Leaf size={16} color={theme.primary} />
+                  <Text style={styles.heroSecondaryButtonText}>Caixa de Sementes</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.heroPrimaryButton}
+                  onPress={() => {
+                    if (folders.length === 0) {
+                      Alert.alert('Sem pastas', 'Crie uma pasta antes de adicionar arquivos.');
+                      return;
+                    }
+                    const folderNames = folders.map(f => f.name);
+                    Alert.alert(
+                      'Selecionar Pasta',
+                      'Escolha o canteiro onde as sementes serão plantadas:',
+                      [
+                        { text: 'Cancelar', style: 'cancel' },
+                        ...folderNames.map((name, index) => ({
+                          text: name,
+                          onPress: () => handleUpload(folders[index].folder_id),
+                        })),
+                      ],
+                    );
+                  }}
+                >
+                  <Leaf size={16} color={theme.background} />
+                  <Text style={styles.heroPrimaryButtonText}>Adicionar Sementes</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </AnimatedKnowledgeBackground>
 
           <View style={styles.searchBarContainer}>
             <Search size={20} color={theme.mutedForeground} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search knowledge base..."
+              placeholder="Buscar no jardim..."
               placeholderTextColor={theme.mutedForeground}
               value={searchQuery}
               onChangeText={setSearchQuery}
             />
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={styles.addButton}
-              onPress={() => setShowCreateFolder(true)}
-            >
-              <FolderPlus size={16} color={theme.background} />
-              <Text style={styles.addButtonText}>New Folder</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={styles.uploadButton}
-              onPress={() => {
-                if (folders.length === 0) {
-                  Alert.alert('No Folders', 'Please create a folder first before uploading files.');
-                  return;
-                }
-                // Show folder selection for upload
-                const folderNames = folders.map(f => f.name);
-                Alert.alert(
-                  'Select Folder',
-                  'Choose a folder to upload files to:',
-                  [
-                    { text: 'Cancel', style: 'cancel' },
-                    ...folderNames.map((name, index) => ({
-                      text: name,
-                      onPress: () => handleUpload(folders[index].folder_id)
-                    }))
-                  ]
-                );
-              }}
-            >
-              <Upload size={16} color={theme.background} />
-              <Text style={styles.uploadButtonText}>Upload File</Text>
-            </TouchableOpacity>
           </View>
 
           {showCreateFolder && (
@@ -825,7 +841,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                   <Text style={styles.createButtonText}>
                     {loading ? 'Creating...' : 'Create'}
                   </Text>
-                </TouchableOpacity>
+          </TouchableOpacity>
               </View>
             </View>
           )}
