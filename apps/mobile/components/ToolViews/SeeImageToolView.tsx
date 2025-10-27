@@ -10,4 +10,4 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import { PinchGestureHandler, PinchGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { PinchGestureHandler, PinchGestureHandlerGestureEvent } from '@/utils/safeGestureHandler';

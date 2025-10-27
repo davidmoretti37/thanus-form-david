@@ -97,14 +97,12 @@ export default function RootLayout() {
     <AppProviders>
       <LanguageProvider>
         <SafeAreaProvider>
-          {/* <GestureHandlerRootView style={{ flex: 1 }}> */}
           <PanelProvider>
             <ThemeProvider value={customTheme}>
               <Stack screenOptions={{ headerShown: false }} />
               <StatusBar style="auto" />
             </ThemeProvider>
           </PanelProvider>
-          {/* </GestureHandlerRootView> */}
         </SafeAreaProvider>
       </LanguageProvider>
     </AppProviders>

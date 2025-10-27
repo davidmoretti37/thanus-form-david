@@ -13,7 +13,6 @@ import { Stack, SplashScreen } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useColorScheme } from 'nativewind';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -88,19 +87,17 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <LanguageProvider>
-          <AuthProvider>
-            <BottomSheetModalProvider>
-              <ThemeProvider value={NAV_THEME[activeColorScheme]}>
-                <StatusBar style={activeColorScheme === 'dark' ? 'light' : 'dark'} />
-                <Stack screenOptions={{ headerShown: false }} />
-                <PortalHost />
-              </ThemeProvider>
-            </BottomSheetModalProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </GestureHandlerRootView>
+      <LanguageProvider>
+        <AuthProvider>
+          <BottomSheetModalProvider>
+            <ThemeProvider value={NAV_THEME[activeColorScheme]}>
+              <StatusBar style={activeColorScheme === 'dark' ? 'light' : 'dark'} />
+              <Stack screenOptions={{ headerShown: false }} />
+              <PortalHost />
+            </ThemeProvider>
+          </BottomSheetModalProvider>
+        </AuthProvider>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }
