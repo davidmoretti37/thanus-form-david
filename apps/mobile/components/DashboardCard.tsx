@@ -6,7 +6,7 @@ import { WebStyleRadialGradient } from './RadialGradient';
 
 type CardSize = 'large' | 'medium' | 'small'
 
-interface DashboardCardProps {
+export interface DashboardCardProps {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -23,6 +23,8 @@ interface DashboardCardProps {
     opacity: number;
     stopPosition: number;
   }>;
+  customBackground?: (props: { height: number; borderRadius: number }) => React.ReactNode;
+  disableDefaultBackground?: boolean;
 }
 
 export const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -35,7 +37,9 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   glowColorA = 'rgba(37, 99, 235, 0.35)',
   glowColorB = 'rgba(34, 211, 238, 0.30)',
   image,
-  webGradients
+  webGradients,
+  customBackground,
+  disableDefaultBackground = false,
 }) => {
   const theme = useTheme();
 
@@ -177,28 +181,34 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       {/* Web-style radial gradients with exact same patterns */}
       <View pointerEvents="none" style={styles.backgroundWrap}>
-        {webGradients ? (
-          <WebStyleRadialGradient
-            gradients={webGradients}
-            containerSize={{ width: 400, height: heightBySize }}
-            style={{ borderRadius: 16 }}
-          />
-        ) : (
-          <>
-            <View style={styles.glowC} />
-            <View style={styles.glowA} />
-            <View style={styles.glowB} />
-          </>
+        {!disableDefaultBackground && (
+          webGradients ? (
+            <WebStyleRadialGradient
+              gradients={webGradients}
+              containerSize={{ width: 400, height: heightBySize }}
+              style={{ borderRadius: 16 }}
+            />
+          ) : (
+            <>
+              <View style={styles.glowC} />
+              <View style={styles.glowA} />
+              <View style={styles.glowB} />
+            </>
+          )
         )}
         <View style={styles.surface} />
       </View>
-      {image && (
-        <View style={styles.imageContainer}>
-          <Image 
-            source={image} 
-            style={styles.backgroundImage}
-            resizeMode="cover"
-          />
+      {(customBackground || image) && (
+        <View style={styles.imageContainer} pointerEvents="none">
+          {customBackground ? (
+            customBackground({ height: heightBySize, borderRadius: 16 })
+          ) : (
+            <Image 
+              source={image} 
+              style={styles.backgroundImage}
+              resizeMode="cover"
+            />
+          )}
           <View style={styles.overlay} />
         </View>
       )}

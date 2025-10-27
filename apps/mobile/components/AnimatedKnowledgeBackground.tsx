@@ -12,30 +12,146 @@ type Particle = {
   opacity: number;
 };
 
+const DEFAULT_ACCENT_COLOR = '#22c55e';
+
+const clampOpacity = (value: number) => {
+  if (Number.isNaN(value)) return 1;
+  if (value < 0) return 0;
+  if (value > 1) return 1;
+  return value;
+};
+
+const hexToRgba = (hex: string, alpha: number) => {
+  let sanitized = hex.replace('#', '');
+  if (sanitized.length === 3) {
+    sanitized = sanitized
+      .split('')
+      .map((char) => char + char)
+      .join('');
+  }
+
+  if (sanitized.length !== 6) {
+    return hexToRgba(DEFAULT_ACCENT_COLOR, alpha);
+  }
+
+  const num = parseInt(sanitized, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `rgba(${r}, ${g}, ${b}, ${clampOpacity(alpha)})`;
+};
+
+const rgbStringToRgba = (rgb: string, alpha: number) => {
+  const match = rgb.match(/rgba?\((\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i);
+  if (!match) {
+    return hexToRgba(DEFAULT_ACCENT_COLOR, alpha);
+  }
+
+  const [, r, g, b] = match;
+  return `rgba(${r}, ${g}, ${b}, ${clampOpacity(alpha)})`;
+};
+
+const colorWithOpacity = (color: string | undefined, alpha: number) => {
+  if (!color) {
+    return hexToRgba(DEFAULT_ACCENT_COLOR, alpha);
+  }
+
+  if (color.startsWith('#')) {
+    return hexToRgba(color, alpha);
+  }
+
+  if (color.startsWith('rgb')) {
+    return rgbStringToRgba(color, alpha);
+  }
+
+  return hexToRgba(DEFAULT_ACCENT_COLOR, alpha);
+};
+
 interface AnimatedKnowledgeBackgroundProps {
   children?: React.ReactNode;
   style?: ViewStyle;
   height?: number;
+  showShimmer?: boolean;
+  accentColor?: string;
+  backgroundTintOpacity?: number;
+  motionSpeedMultiplier?: number;
+  connectionIntensity?: number;
 }
 
 const PARTICLE_COUNT = 28;
 const CONNECTION_DISTANCE = 90;
+const BASE_VELOCITY = 0.35;
+const MIN_SPEED_MULTIPLIER = 0.1;
+const MIN_INTERVAL_MS = 16;
+const MIN_CONNECTION_INTENSITY = 0.1;
+const MAX_CONNECTION_INTENSITY = 2;
 
 export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundProps> = ({
   children,
   style,
   height = 220,
+  showShimmer = true,
+  accentColor,
+  backgroundTintOpacity = 0.18,
+  motionSpeedMultiplier = 1,
+  connectionIntensity = 1,
 }) => {
   const theme = useTheme();
   const [layout, setLayout] = useState({ width: 0, height });
   const [, forceRerender] = useState(0);
   const particlesRef = useRef<Particle[]>([]);
   const frameRef = useRef(0);
+  const speedRef = useRef<number>(Math.max(MIN_SPEED_MULTIPLIER, motionSpeedMultiplier));
 
   const shimmer = useRef(new Animated.Value(0)).current;
+  const shimmerAnimation = useRef<Animated.CompositeAnimation | null>(null);
+
+  const themePrimary = (theme as any).primary as string | undefined;
+  const themePrimaryWithOpacity = (theme as any).primaryWithOpacity as ((opacity: number) => string) | undefined;
+  const themeBackgroundWithOpacity = (theme as any).backgroundWithOpacity as ((opacity: number) => string) | undefined;
+  const isDarkTheme = Boolean((theme as any).isDark);
+  const speedMultiplier = Math.max(MIN_SPEED_MULTIPLIER, motionSpeedMultiplier);
+  const clampedConnectionIntensity = Math.max(
+    MIN_CONNECTION_INTENSITY,
+    Math.min(connectionIntensity, MAX_CONNECTION_INTENSITY),
+  );
+  const effectiveConnectionDistance = CONNECTION_DISTANCE * clampedConnectionIntensity;
+  const symbolBaseOpacity = isDarkTheme ? 0.12 : 0.24;
+
+  const getAccentColor = useCallback(
+    (opacity: number) => {
+      if (accentColor) {
+        return colorWithOpacity(accentColor, opacity);
+      }
+
+      if (typeof themePrimary === 'string') {
+        return colorWithOpacity(themePrimary, opacity);
+      }
+
+      if (typeof themePrimaryWithOpacity === 'function') {
+        return themePrimaryWithOpacity(opacity);
+      }
+
+      return colorWithOpacity(undefined, opacity);
+    },
+    [accentColor, themePrimary, themePrimaryWithOpacity],
+  );
+
+  const containerBackgroundColor = accentColor
+    ? colorWithOpacity(accentColor, backgroundTintOpacity)
+    : typeof themeBackgroundWithOpacity === 'function'
+      ? themeBackgroundWithOpacity(0.35)
+      : (theme as any).background;
 
   useEffect(() => {
-    Animated.loop(
+    if (!showShimmer) {
+      shimmerAnimation.current?.stop();
+      shimmer.stopAnimation();
+      shimmer.setValue(0);
+      return;
+    }
+
+    shimmerAnimation.current = Animated.loop(
       Animated.sequence([
         Animated.timing(shimmer, {
           toValue: 1,
@@ -49,16 +165,22 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
           useNativeDriver: true,
         }),
       ]),
-    ).start();
-  }, [shimmer]);
+    );
 
-  const initializeParticles = useCallback((width: number, heightValue: number) => {
+    shimmerAnimation.current.start();
+
+    return () => {
+      shimmerAnimation.current?.stop();
+    };
+  }, [showShimmer, shimmer]);
+
+  const initializeParticles = useCallback((width: number, heightValue: number, speed: number) => {
     particlesRef.current = Array.from({ length: PARTICLE_COUNT }).map(() => ({
       x: Math.random() * width,
       y: Math.random() * heightValue,
       radius: Math.random() * 2.2 + 1.2,
-      vx: (Math.random() - 0.5) * 0.35,
-      vy: (Math.random() - 0.5) * 0.35,
+      vx: (Math.random() - 0.5) * BASE_VELOCITY * speed,
+      vy: (Math.random() - 0.5) * BASE_VELOCITY * speed,
       opacity: Math.random() * 0.4 + 0.3,
     }));
     forceRerender((v) => v + 1);
@@ -67,9 +189,12 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
   useEffect(() => {
     if (layout.width === 0 || layout.height === 0) return;
 
-    if (particlesRef.current.length === 0) {
-      initializeParticles(layout.width, layout.height);
+    if (particlesRef.current.length === 0 || speedRef.current !== speedMultiplier) {
+      initializeParticles(layout.width, layout.height, speedMultiplier);
+      speedRef.current = speedMultiplier;
     }
+
+    const intervalDelay = Math.max(MIN_INTERVAL_MS, 60 / speedMultiplier);
 
     const interval = setInterval(() => {
       const nextParticles = particlesRef.current.map((particle) => {
@@ -99,10 +224,10 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
       particlesRef.current = nextParticles;
       frameRef.current += 1;
       forceRerender((v) => v + 1);
-    }, 60);
+    }, intervalDelay);
 
     return () => clearInterval(interval);
-  }, [layout, initializeParticles]);
+  }, [layout, initializeParticles, speedMultiplier]);
 
   const connections = useMemo(() => {
     const nodes = particlesRef.current;
@@ -116,20 +241,21 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
         const dy = a.y - b.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < CONNECTION_DISTANCE) {
+        if (distance < effectiveConnectionDistance) {
+          const intensityScale = clampedConnectionIntensity;
           lines.push({
             x1: a.x,
             y1: a.y,
             x2: b.x,
             y2: b.y,
-            opacity: (1 - distance / CONNECTION_DISTANCE) * 0.18,
+            opacity: (1 - distance / effectiveConnectionDistance) * 0.18 * intensityScale,
           });
         }
       }
     }
 
     return lines;
-  }, [layout.width, layout.height, frameRef.current]);
+  }, [layout.width, layout.height, frameRef.current, effectiveConnectionDistance, clampedConnectionIntensity]);
 
   const codeSymbols = useMemo(() => ['<', '>', '{', '}', '[', ']', '/', '=', '+', '-'], []);
 
@@ -147,9 +273,9 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
     <View
       style={[
         styles.container,
-        { backgroundColor: theme.backgroundWithOpacity ? theme.backgroundWithOpacity(0.35) : theme.background },
-        style,
+        { backgroundColor: containerBackgroundColor },
         { height },
+        style,
       ]}
       onLayout={handleLayout}
     >
@@ -162,7 +288,7 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
               y1={line.y1}
               x2={line.x2}
               y2={line.y2}
-              stroke={theme.primaryWithOpacity ? theme.primaryWithOpacity(line.opacity) : 'rgba(74, 222, 128, 0.15)'}
+              stroke={getAccentColor(Math.min(line.opacity + 0.08, 0.35))}
               strokeWidth={1}
             />
           ))}
@@ -173,7 +299,7 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
               cx={particle.x}
               cy={particle.y}
               r={particle.radius}
-              fill={theme.primaryWithOpacity ? theme.primaryWithOpacity(particle.opacity) : 'rgba(74, 222, 128, 0.7)'}
+              fill={getAccentColor(Math.min(particle.opacity + 0.1, 1))}
             />
           ))}
 
@@ -185,7 +311,7 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
                 key={`symbol-${symbol}-${index}`}
                 x={x}
                 y={y}
-                fill={theme.primaryWithOpacity ? theme.primaryWithOpacity(0.1) : 'rgba(74, 222, 128, 0.12)'}
+                fill={getAccentColor(symbolBaseOpacity)}
                 fontSize={12}
               >
                 {symbol}
@@ -195,20 +321,42 @@ export const AnimatedKnowledgeBackground: React.FC<AnimatedKnowledgeBackgroundPr
         </Svg>
       )}
 
-      <Animated.View
-        pointerEvents="none"
+      {showShimmer && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.shimmer,
+            {
+              backgroundColor: accentColor
+                ? getAccentColor(0.16)
+                : themePrimaryWithOpacity
+                  ? themePrimaryWithOpacity(0.1)
+                  : 'rgba(255,255,255,0.08)',
+              transform: [{ translateX: shimmerTranslate }],
+            },
+          ]}
+        />
+      )}
+
+      <View
         style={[
-          styles.shimmer,
-          {
-            backgroundColor: theme.primaryWithOpacity ? theme.primaryWithOpacity(0.1) : 'rgba(255,255,255,0.08)',
-            transform: [{ translateX: shimmerTranslate }],
-          },
+          styles.overlay,
+          accentColor
+            ? {
+                borderColor: colorWithOpacity(accentColor, 0.3),
+                backgroundColor: 'transparent',
+              }
+            : {
+                borderColor: themePrimaryWithOpacity
+                  ? themePrimaryWithOpacity(0.05)
+                  : 'rgba(255,255,255,0.05)',
+                backgroundColor: 'transparent',
+              },
         ]}
+        pointerEvents="none"
       />
 
-      <View style={styles.overlay} />
-
-      <View style={styles.content}>{children}</View>
+      <View style={[styles.content, { zIndex: 10, position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }]}>{children}</View>
     </View>
   );
 };
@@ -222,10 +370,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    height: '100%',
-    paddingHorizontal: 20,
-    paddingVertical: 18,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     justifyContent: 'center',
+    alignItems: 'center',
   },
   shimmer: {
     position: 'absolute',

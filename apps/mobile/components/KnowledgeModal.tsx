@@ -564,7 +564,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
     },
     heroContent: {
       flexDirection: 'column',
-      gap: 16,
+      gap: 6,
     },
     heroTextContainer: {
       flex: 1,
@@ -582,41 +582,41 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
     },
     heroButtonRow: {
       flexDirection: 'row',
-      gap: 12,
+      gap: 8,
     },
     heroSecondaryButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderRadius: 12,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      borderRadius: 8,
       borderWidth: 1,
       borderColor: theme.border,
       backgroundColor: theme.background,
-      flex: 1,
-      gap: 8,
+      minWidth: 60,
+      gap: 3,
     },
     heroSecondaryButtonText: {
       color: theme.foreground,
       fontWeight: '600',
-      fontSize: 14,
+      fontSize: 16,
     },
     heroPrimaryButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 10,
-      paddingHorizontal: 14,
-      borderRadius: 12,
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+      borderRadius: 8,
       backgroundColor: theme.primary,
-      flex: 1,
-      gap: 8,
+      minWidth: 60,
+      gap: 3,
     },
     heroPrimaryButtonText: {
       color: theme.background,
       fontWeight: '600',
-      fontSize: 14,
+      fontSize: 16,
     },
     searchBarContainer: {
       flexDirection: 'row',
@@ -741,15 +741,8 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
           </View>
 
 
-          <AnimatedKnowledgeBackground>
+          <AnimatedKnowledgeBackground accentColor="#16a34a" motionSpeedMultiplier={1.5} connectionIntensity={0.7} height={110}>
             <View style={styles.heroContent}>
-              <View style={styles.heroTextContainer}>
-                <Text style={styles.heroTitle}>Jardim do Conhecimento</Text>
-                <Text style={styles.heroSubtitle}>
-                  Cultive suas sementes de memória para que os agentes de IA possam colher sabedoria
-                </Text>
-          </View>
-
               <View style={styles.heroButtonRow}>
                 <TouchableOpacity
                   style={styles.heroSecondaryButton}

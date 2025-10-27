@@ -4,6 +4,8 @@ import { useTheme } from '@/hooks/useThemeColor';
 import { useColorSchemeControls } from '@/hooks/useColorScheme';
 import { useAgentPreloader } from '@/hooks/useAgentPreloader';
 import { DashboardCard } from './DashboardCard';
+import type { DashboardCardProps } from './DashboardCard';
+import { AnimatedKnowledgeBackground } from './AnimatedKnowledgeBackground';
 import { IntegrationsModal } from './IntegrationsModal';
 import { WorkersModal } from './WorkersModal';
 import { TasksModal } from './TasksModal';
@@ -108,7 +110,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     console.log('Theme switched to:', newTheme);
   };
 
-  const dashboardCards = [
+  const dashboardCards: DashboardCardProps[] = [
     {
       title: 'Create Worker',
       description: 'Create your own Virtual Employees with Create Worker',
@@ -160,8 +162,21 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
       icon: <Database size={26} color="#ffffff" />,
       onPress: () => setKnowledgeVisible(true),
       size: 'medium' as const,
-      image: colorScheme === 'dark' ? require('../assets/images/fadzz3.png') : require('../assets/images/fadzz5.png'),
-      webGradients: []
+      customBackground: ({ height, borderRadius }) => (
+        <AnimatedKnowledgeBackground
+          height={height}
+          style={{
+            marginBottom: 0,
+            borderRadius,
+            backgroundColor: 'transparent',
+          }}
+          showShimmer={false}
+          accentColor="#16a34a"
+          motionSpeedMultiplier={2}
+          connectionIntensity={0.55}
+        />
+      ),
+      disableDefaultBackground: true,
     },
   ];
 
@@ -287,8 +302,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
             icon={card.icon}
             onPress={card.onPress}
             size={card.size}
-            image={(card as any).image}
-            webGradients={(card as any).webGradients}
+            image={card.image}
+            webGradients={card.webGradients}
+            customBackground={card.customBackground}
+            disableDefaultBackground={card.disableDefaultBackground}
           />
         ))}
         
