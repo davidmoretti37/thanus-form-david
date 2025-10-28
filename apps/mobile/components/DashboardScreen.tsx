@@ -110,11 +110,13 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     console.log('Theme switched to:', newTheme);
   };
 
+  const iconColor = colorScheme === 'dark' ? '#ffffff' : '#1f2937'; // Dark color for light mode
+
   const dashboardCards: DashboardCardProps[] = [
     {
       title: 'Create Worker',
       description: 'Create your own Virtual Employees with Create Worker',
-      icon: <Plus size={28} color="#ffffff" />,
+      icon: <Plus size={28} color={iconColor} />,
       onPress: onNavigateToChat,
       size: 'medium' as const,
       image: colorScheme === 'dark' ? require('../assets/images/fads.png') : require('../assets/images/fadzz.png'),
@@ -123,7 +125,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     {
       title: 'Artifacts',
       description: 'Micro-applications and creative tools',
-      icon: <Zap size={26} color="#ffffff" />,
+      icon: <Zap size={26} color={iconColor} />,
       onPress: onNavigateToArtifacts,
       size: 'medium' as const,
       image: colorScheme === 'dark' ? require('../assets/images/artifacts-image.png') : require('../assets/images/fadzz2.png'),
@@ -132,7 +134,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     {
       title: 'Integrations',
       description: 'Connect external services and APIs',
-      icon: <Plug size={24} color="#ffffff" />,
+      icon: <Plug size={24} color={iconColor} />,
       onPress: () => setIntegrationsVisible(true),
       size: 'medium' as const,
       image: colorScheme === 'dark' ? require('../assets/images/integrations-image.png') : require('../assets/images/fadzz3.png'),
@@ -141,7 +143,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     {
       title: 'Workers',
       description: 'Your specialized virtual employees',
-      icon: <Wrench size={26} color="#ffffff" />,
+      icon: <Wrench size={26} color={iconColor} />,
       onPress: () => setWorkersVisible(true),
       size: 'medium' as const,
       image: colorScheme === 'dark' ? require('../assets/images/workers-image.png') : require('../assets/images/fadzz4.png'),
@@ -150,7 +152,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     {
       title: 'Tasks',
       description: 'Automated tasks and triggers',
-      icon: <MessageSquare size={24} color="#ffffff" />,
+      icon: <MessageSquare size={24} color={iconColor} />,
       onPress: () => setTasksVisible(true),
       size: 'medium' as const,
       image: colorScheme === 'dark' ? require('../assets/images/tasks-image.png') : require('../assets/images/fadzz5.png'),
@@ -159,7 +161,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
     {
       title: 'Jardim do Conhecimento',
       description: 'Organize documentos, insights e arquivos em um só lugar',
-      icon: <Database size={26} color="#ffffff" />,
+      icon: <Database size={26} color={iconColor} />,
       onPress: () => setKnowledgeVisible(true),
       size: 'medium' as const,
       customBackground: ({ height, borderRadius }) => (
@@ -267,26 +269,26 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ onNavigateToCh
                      style={styles.iconButton}
                      onPress={handleCalendar}
                    >
-                     <Calendar size={20} color={theme.mutedForeground} />
+                     <Calendar size={20} color={theme.foreground} />
                    </TouchableOpacity>
                    <TouchableOpacity style={styles.iconButton}>
-                     <Bell size={20} color={theme.mutedForeground} />
+                     <Bell size={20} color={theme.foreground} />
                    </TouchableOpacity>
-                   <TouchableOpacity 
+                   <TouchableOpacity
                      style={styles.iconButton}
                      onPress={handleThemeToggle}
                    >
                      {colorScheme === 'dark' ? (
-                       <Sun size={20} color={theme.mutedForeground} />
+                       <Sun size={20} color={theme.foreground} />
                      ) : (
-                       <Moon size={20} color={theme.mutedForeground} />
+                       <Moon size={20} color={theme.foreground} />
                      )}
                    </TouchableOpacity>
-                   <TouchableOpacity 
+                   <TouchableOpacity
                      style={styles.iconButton}
                      onPress={() => setSettingsVisible(true)}
                    >
-                     <Settings size={20} color={theme.mutedForeground} />
+                     <Settings size={20} color={theme.foreground} />
                    </TouchableOpacity>
                  </View>
       </View>

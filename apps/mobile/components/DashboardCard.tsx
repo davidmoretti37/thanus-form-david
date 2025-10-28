@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
+import { useColorScheme } from '@/hooks/useColorScheme';
 import { ArrowRight, Plus, Zap, CreditCard, Plug, KeyRound, Wrench, Palette } from 'lucide-react-native';
 import { WebStyleRadialGradient } from './RadialGradient';
 
@@ -42,6 +43,11 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
   disableDefaultBackground = false,
 }) => {
   const theme = useTheme();
+  const colorScheme = useColorScheme();
+
+  // Dynamic border color and width based on theme
+  const borderColor = colorScheme === 'dark' ? '#ffffff' : '#000000';
+  const borderWidth = colorScheme === 'dark' ? 0.5 : 1;
 
   // Size tokens
   const heightBySize = size === 'large' ? 180 : size === 'small' ? 112 : 144;
@@ -57,7 +63,8 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
       paddingHorizontal: paddingH,
       paddingVertical: paddingV,
       marginBottom: 16,
-      borderWidth: 0, // Remove border for seamless blending
+      borderWidth,
+      borderColor,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.15,
@@ -132,7 +139,7 @@ export const DashboardCard: React.FC<DashboardCardProps> = ({
     },
     description: {
       fontSize: descSize,
-      color: theme.mutedForeground,
+      color: theme.foreground,
       lineHeight: 20,
     },
     iconContainer: {

@@ -26,16 +26,16 @@ interface TreeItemProps {
   onUpload: (folderId: string) => void;
 }
 
-const TreeItemComponent: React.FC<TreeItemProps> = ({ 
-  item, 
-  onPress, 
-  onToggleExpand, 
-  onDelete, 
-  onEdit, 
-  onUpload 
+const TreeItemComponent: React.FC<TreeItemProps> = ({
+  item,
+  onPress,
+  onToggleExpand,
+  onDelete,
+  onEdit,
+  onUpload
 }) => {
   const theme = useTheme();
-  
+
   const getIcon = () => {
     if (item.type === 'folder') {
       return <Folder size={20} color={theme.primary} />;
@@ -46,8 +46,8 @@ const TreeItemComponent: React.FC<TreeItemProps> = ({
 
   const getExpandIcon = () => {
     if (item.type === 'folder') {
-      return item.expanded ? 
-        <ChevronDown size={16} color={theme.mutedForeground} /> : 
+      return item.expanded ?
+        <ChevronDown size={16} color={theme.mutedForeground} /> :
         <ChevronRight size={16} color={theme.mutedForeground} />;
     }
     return null;
@@ -129,57 +129,57 @@ const TreeItemComponent: React.FC<TreeItemProps> = ({
 
   return (
     <View>
-      <TouchableOpacity 
-        style={styles.itemContainer} 
-        onPress={() => onPress(item)} 
+      <TouchableOpacity
+        style={styles.itemContainer}
+        onPress={() => onPress(item)}
         activeOpacity={0.7}
       >
-        <TouchableOpacity 
-          style={styles.expandButton} 
+        <TouchableOpacity
+          style={styles.expandButton}
           onPress={() => onToggleExpand(item)}
           disabled={item.type !== 'folder'}
         >
           {getExpandIcon()}
         </TouchableOpacity>
-        
+
       <View style={styles.iconContainer}>
         {getIcon()}
       </View>
-        
+
       <View style={styles.textContainer}>
           <Text style={styles.name}>{item.name}</Text>
         <Text style={styles.details}>
-            {item.type === 'folder' 
+            {item.type === 'folder'
               ? `${getEntryCount()} items • ${getLastUpdated()}`
               : `${getFileSize()} • ${getLastUpdated()}`
             }
         </Text>
       </View>
-        
+
         <View style={styles.actionButtons}>
           {item.type === 'folder' && (
-            <TouchableOpacity 
-              style={styles.actionButton} 
+            <TouchableOpacity
+              style={styles.actionButton}
               onPress={() => onUpload(item.id)}
             >
               <Upload size={14} color={theme.mutedForeground} />
             </TouchableOpacity>
           )}
-          <TouchableOpacity 
-            style={styles.actionButton} 
+          <TouchableOpacity
+            style={styles.actionButton}
             onPress={() => onEdit(item)}
           >
             <Edit3 size={14} color={theme.mutedForeground} />
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionButton} 
+          <TouchableOpacity
+            style={styles.actionButton}
             onPress={() => onDelete(item)}
           >
             <Trash2 size={14} color={theme.destructive} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
-      
+
       {/* Render children if expanded */}
       {item.expanded && item.children && (
         <View>
@@ -297,7 +297,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
         name: newFolderName.trim(),
         description: newFolderDescription.trim() || undefined,
       });
-      
+
       setFolders(prev => [newFolder, ...prev]);
       setNewFolderName('');
       setNewFolderDescription('');
@@ -313,9 +313,9 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
 
   const handleToggleExpand = (item: TreeItem) => {
     if (item.type === 'folder') {
-      setTreeData(prev => 
-        prev.map(folder => 
-          folder.id === item.id 
+      setTreeData(prev =>
+        prev.map(folder =>
+          folder.id === item.id
             ? { ...folder, expanded: !folder.expanded }
             : folder
         )
@@ -340,7 +340,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
   const handleDelete = (item: TreeItem) => {
     const itemName = item.name;
     const itemType = item.type === 'folder' ? 'Folder' : 'File';
-    
+
     Alert.alert(
       `Delete ${itemType}`,
       `Are you sure you want to delete "${itemName}"? This action cannot be undone.`,
@@ -352,7 +352,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
           onPress: async () => {
             try {
               setLoading(true);
-              
+
               if (item.type === 'folder') {
                 await knowledgeService.deleteFolder(item.id);
                 setFolders(prev => prev.filter(f => f.folder_id !== item.id));
@@ -368,15 +368,15 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                   ...prev,
                   [parentId]: prev[parentId]?.filter(e => e.entry_id !== item.id) || []
                 }));
-                
+
                 // Update folder entry count
-                setFolders(prev => prev.map(f => 
-                  f.folder_id === parentId 
+                setFolders(prev => prev.map(f =>
+                  f.folder_id === parentId
                     ? { ...f, entry_count: Math.max(0, f.entry_count - 1) }
                     : f
                 ));
               }
-              
+
               Alert.alert('Success', `${itemType} deleted successfully`);
             } catch (error) {
               console.error(`Error deleting ${item.type}:`, error);
@@ -405,8 +405,8 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                 try {
                   setLoading(true);
                   await knowledgeService.updateFolder(item.id, { name: newName.trim() });
-                  setFolders(prev => prev.map(f => 
-                    f.folder_id === item.id 
+                  setFolders(prev => prev.map(f =>
+                    f.folder_id === item.id
                       ? { ...f, name: newName.trim() }
                       : f
                   ));
@@ -441,8 +441,8 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                   await knowledgeService.updateEntry(item.id, { summary: newSummary.trim() });
                   setFolderEntries(prev => ({
                     ...prev,
-                    [item.parentId!]: prev[item.parentId!]?.map(e => 
-                      e.entry_id === item.id 
+                    [item.parentId!]: prev[item.parentId!]?.map(e =>
+                      e.entry_id === item.id
                         ? { ...e, summary: newSummary.trim() }
                         : e
                     ) || []
@@ -474,25 +474,25 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
       if (!result.canceled && result.assets && result.assets[0]) {
         const file = result.assets[0];
         setLoading(true);
-        
+
         // Create a File object from the document picker result
         const response = await fetch(file.uri);
         const blob = await response.blob();
         const fileObj = new File([blob], file.name, { type: file.mimeType || 'application/octet-stream' });
-        
+
         const newEntry = await knowledgeService.uploadFile(folderId, fileObj);
         setFolderEntries(prev => ({
           ...prev,
           [folderId]: [newEntry, ...(prev[folderId] || [])]
         }));
-        
+
         // Update folder entry count
-        setFolders(prev => prev.map(f => 
-          f.folder_id === folderId 
+        setFolders(prev => prev.map(f =>
+          f.folder_id === folderId
             ? { ...f, entry_count: f.entry_count + 1 }
             : f
         ));
-        
+
         Alert.alert('Success', 'File uploaded successfully');
       }
     } catch (error) {
@@ -505,7 +505,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
 
   const filteredTreeData = treeData.filter(item =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (item.children && item.children.some(child => 
+    (item.children && item.children.some(child =>
       child.name.toLowerCase().includes(searchQuery.toLowerCase())
     ))
   );
@@ -741,7 +741,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
           </View>
 
 
-          <AnimatedKnowledgeBackground accentColor="#16a34a" motionSpeedMultiplier={1.5} connectionIntensity={0.7} height={110}>
+          <AnimatedKnowledgeBackground accentColor="#16a34a" motionSpeedMultiplier={3.0} connectionIntensity={0.7} height={110} showShimmer={false}>
             <View style={styles.heroContent}>
               <View style={styles.heroButtonRow}>
                 <TouchableOpacity
@@ -816,7 +816,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                 />
               </View>
               <View style={styles.createFolderButtons}>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.cancelButton}
                   onPress={() => {
                     setShowCreateFolder(false);
@@ -826,7 +826,7 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                 >
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.createButton}
                   onPress={handleCreateFolder}
                   disabled={loading}
@@ -834,12 +834,12 @@ export const KnowledgeModal: React.FC<KnowledgeModalProps> = ({ visible, onClose
                   <Text style={styles.createButtonText}>
                     {loading ? 'Creating...' : 'Create'}
                   </Text>
-          </TouchableOpacity>
+                </TouchableOpacity>
               </View>
             </View>
           )}
 
-          <ScrollView 
+          <ScrollView
             contentContainerStyle={styles.scrollViewContent}
             refreshControl={
               <RefreshControl
