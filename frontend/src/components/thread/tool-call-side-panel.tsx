@@ -6,7 +6,7 @@ import React, { memo, useMemo, useCallback } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ApiMessageType } from '@/components/thread/types';
-import { CircleDashed, X, ChevronLeft, ChevronRight, Computer, Minimize2, Globe, Wrench } from 'lucide-react';
+import { CircleDashed, X, ChevronLeft, ChevronRight, Computer, Minimize2, Maximize2, Globe, Wrench } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
@@ -139,6 +139,8 @@ interface PanelHeaderProps {
   variant?: 'drawer' | 'desktop' | 'motion';
   showMinimize?: boolean;
   layoutId?: string;
+  onToggleFullscreen?: () => void;
+  isFullscreen?: boolean;
 }
 
 const PanelHeader: React.FC<PanelHeaderProps> = memo(function PanelHeader({
@@ -148,6 +150,8 @@ const PanelHeader: React.FC<PanelHeaderProps> = memo(function PanelHeader({
   variant = 'desktop',
   showMinimize = false,
   layoutId,
+  onToggleFullscreen,
+  isFullscreen,
 }) {
   const title = getComputerTitle(agentName);
   
@@ -226,6 +230,17 @@ const PanelHeader: React.FC<PanelHeaderProps> = memo(function PanelHeader({
               <span>Running</span>
             </Badge>
           )}
+          {onToggleFullscreen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleFullscreen}
+              className="h-8 w-8"
+              title={isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
@@ -275,6 +290,10 @@ export function ToolCallSidePanel({
 
   const isMobile = useIsMobile();
   const { isOpen: isDocumentModalOpen } = useDocumentModalStore();
+
+  // Fullscreen state for desktop panel
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  const toggleFullscreen = React.useCallback(() => setIsFullscreen((v) => !v), []);
 
   const sandbox = project?.sandbox;
   
@@ -871,6 +890,8 @@ export function ToolCallSidePanel({
             isStreaming={isStreaming}
             variant="motion"
             layoutId={CONTENT_LAYOUT_ID}
+            onToggleFullscreen={toggleFullscreen}
+            isFullscreen={isFullscreen}
           />
         )}
 
@@ -989,7 +1010,7 @@ export function ToolCallSidePanel({
               damping: 35
             }
           }}
-          className={compact 
+          className={(compact || isFullscreen) 
             ? "m-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)] border rounded-3xl flex flex-col z-30"
             : "fixed top-2 right-2 bottom-4 border rounded-3xl flex flex-col z-30 w-[40vw] sm:w-[450px] md:w-[500px] lg:w-[550px] xl:w-[645px]"
           }
