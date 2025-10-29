@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
-import { X, Search, Clock, Zap, Plus, History, CheckCircle, Circle, XCircle, Play, Pause, Settings, Calendar, AlertCircle } from 'lucide-react-native';
+import { X, Search, Clock, Zap, Plus, History, CheckCircle, Circle, XCircle, Play, Pause, Settings, Calendar, AlertCircle, FileText } from 'lucide-react-native';
+import { useCreationsStore } from '@/stores/creationsStore';
 
 interface TasksModalProps {
   visible: boolean;
@@ -25,7 +26,7 @@ interface Task {
 export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
   const theme = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'active' | 'scheduled' | 'event'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'active' | 'scheduled' | 'event' | 'creations'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
 
@@ -143,6 +144,8 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
     }
   }, [visible]);
 
+  const creations = useCreationsStore((s) => s.creations);
+
   useEffect(() => {
     let filtered = tasks;
 
@@ -165,6 +168,10 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
         break;
       case 'event':
         filtered = filtered.filter(task => task.type === 'event');
+        break;
+      case 'creations':
+        // In creations view, we'll map creations to pseudo tasks below
+        filtered = [] as any;
         break;
       default:
         // 'all' - no additional filtering
@@ -317,6 +324,34 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
           </View>
         </View>
       </TouchableOpacity>
+    );
+  };
+
+  const renderCreationCard = (c: ReturnType<typeof useCreationsStore.getState>['creations'][number]) => {
+    return (
+      <View key={c.id} style={styles.taskCard}>
+        <View style={styles.taskCardHeader}>
+          <View style={styles.taskIconContainer}>
+            <FileText size={20} color={theme.primary} />
+          </View>
+          <View style={styles.taskInfo}>
+            <View style={styles.taskTitleRow}>
+              <Text style={styles.taskName}>{c.title || 'Creation'}</Text>
+            </View>
+            {!!c.description && (
+              <Text style={styles.taskDescription} numberOfLines={2}>{c.description}</Text>
+            )}
+            <Text style={styles.agentName}>Tool: {c.sourceTool || 'Unknown'}{c.threadId ? `  •  Thread: ${c.threadId.slice(0, 8)}` : ''}</Text>
+          </View>
+        </View>
+        <View style={styles.taskCardFooter}>
+          <View style={styles.taskDetails}>
+            <Text style={styles.detailText}>Created: {new Date(c.createdAt).toLocaleString()}</Text>
+            {c.filePath ? <Text style={styles.detailText}>File: {c.filePath}</Text> : null}
+            {c.url ? <Text style={styles.detailText}>URL: {c.url}</Text> : null}
+          </View>
+        </View>
+      </View>
     );
   };
 
@@ -618,7 +653,8 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
               { key: 'all', label: 'All' },
               { key: 'active', label: 'Active' },
               { key: 'scheduled', label: 'Scheduled' },
-              { key: 'event', label: 'Event-based' }
+              { key: 'event', label: 'Event-based' },
+              { key: 'creations', label: 'Creations' },
             ].map((filter) => (
               <TouchableOpacity
                 key={filter.key}
@@ -646,25 +682,45 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
               <Text style={styles.createButtonText}>Create New Task</Text>
             </TouchableOpacity>
 
-            {/* Tasks List */}
+            {/* Tasks or Creations List */}
             {isLoading ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyStateText}>Loading tasks...</Text>
               </View>
-            ) : filteredTasks.length === 0 ? (
-              <View style={styles.emptyState}>
-                <View style={styles.emptyStateIcon}>
-                  <Clock size={24} color={theme.mutedForeground} />
+            ) : selectedFilter === 'creations' ? (
+              creations.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyStateIcon}>
+                    <FileText size={24} color={theme.mutedForeground} />
+                  </View>
+                  <Text style={styles.emptyStateTitle}>No creations yet</Text>
+                  <Text style={styles.emptyStateText}>
+                    Creations you trigger in chat (files, URLs, outputs) will appear here.
+                  </Text>
                 </View>
-                <Text style={styles.emptyStateTitle}>No tasks found</Text>
-                <Text style={styles.emptyStateText}>
-                  {searchQuery ? `No tasks match "${searchQuery}"` : 'No tasks available'}
-                </Text>
-              </View>
+              ) : (
+                <View style={styles.tasksList}>
+                  {creations
+                    .filter(c => !searchQuery || (c.title?.toLowerCase().includes(searchQuery.toLowerCase()) || c.description?.toLowerCase().includes(searchQuery.toLowerCase())))
+                    .map(c => renderCreationCard(c))}
+                </View>
+              )
             ) : (
-              <View style={styles.tasksList}>
-                {filteredTasks.map(task => renderTaskCard(task))}
-              </View>
+              filteredTasks.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyStateIcon}>
+                    <Clock size={24} color={theme.mutedForeground} />
+                  </View>
+                  <Text style={styles.emptyStateTitle}>No tasks found</Text>
+                  <Text style={styles.emptyStateText}>
+                    {searchQuery ? `No tasks match "${searchQuery}"` : 'No tasks available'}
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.tasksList}>
+                  {filteredTasks.map(task => renderTaskCard(task))}
+                </View>
+              )
             )}
           </ScrollView>
         </View>

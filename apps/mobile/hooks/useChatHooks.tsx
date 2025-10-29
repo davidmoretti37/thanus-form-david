@@ -17,6 +17,7 @@ import {
 import { projectKeys } from '@/api/project-api';
 import { createSupabaseClient } from '@/constants/SupabaseConfig';
 import { useNewChatSessionKey, useSetIsGenerating, useUpdateNewChatProject, useUpdateToolSnapshots, useSelectedAgent, useSelectedModel } from '@/stores/ui-store';
+import { useCreationsStore } from '@/stores/creationsStore';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -459,6 +460,35 @@ export const useChatSession = (projectId: string) => {
                 return [...prev, message];
             }
         });
+
+        // Opportunistically capture creations from tool results
+        try {
+            if ((message.type === 'tool' || message.type === 'assistant') && message.content) {
+                const contentObj: any = typeof message.content === 'string' ? JSON.parse(message.content || '{}') : message.content;
+                const toolName = contentObj?.tool_execution?.function_name || contentObj?.name || undefined;
+                const result = contentObj?.tool_execution?.result || contentObj?.result || contentObj;
+
+                const filePath = result?.file_path || result?.path || result?.output_path;
+                const url = result?.url || result?.preview_url || result?.public_url;
+                const hasArtifact = Boolean(filePath || url || result?.html || result?.markdown || result?.image);
+
+                if (hasArtifact) {
+                    const addCreation = useCreationsStore.getState().addCreation;
+                    addCreation({
+                        id: message.message_id,
+                        title: result?.title || toolName || 'Creation',
+                        description: result?.summary || result?.description || (typeof result === 'string' ? result.slice(0, 140) : undefined),
+                        createdAt: message.created_at || new Date().toISOString(),
+                        sourceTool: toolName,
+                        threadId: message.thread_id,
+                        filePath,
+                        url,
+                    });
+                }
+            }
+        } catch (e) {
+            // best-effort only
+        }
     }, []);
 
     // EXACT FRONTEND PATTERN - Stream status handler
