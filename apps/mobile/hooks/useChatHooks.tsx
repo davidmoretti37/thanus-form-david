@@ -445,6 +445,7 @@ export const useChatSession = (projectId: string) => {
     const updateToolSnapshots = useUpdateToolSnapshots();
     const selectedAgent = useSelectedAgent();
     const selectedModel = useSelectedModel();
+    const defaultModelId = 'openrouter/deepseek/deepseek-chat-v3.1';
 
     // EXACT FRONTEND PATTERN - Stream message handler
     const handleNewMessageFromStream = useCallback((message: Message) => {
@@ -623,7 +624,7 @@ export const useChatSession = (projectId: string) => {
                     enable_context_manager: true,
                     files: files,
                     agent_id: selectedAgent?.agent_id,
-                    model_name: selectedModel?.name,
+                    model_name: selectedModel?.name || defaultModelId,
                 });
 
                 setThreadId(result.thread_id);
@@ -700,7 +701,7 @@ export const useChatSession = (projectId: string) => {
                         threadId: currentThreadId,
                         options: {
                             agent_id: selectedAgent?.agent_id,
-                            model_name: selectedModel?.name,
+                            model_name: selectedModel?.name || defaultModelId,
                         }
                     });
                     const results = await Promise.allSettled([messagePromise, agentPromise]);
