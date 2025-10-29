@@ -143,15 +143,32 @@ class ToolsService {
   }): Promise<void> {
     try {
       const headers = await this.getAuthHeaders();
+      const url = `${this.baseUrl}/agents/${agentId}/tools`;
 
-      const response = await fetch(`${this.baseUrl}/agents/${agentId}/tools`, {
+      // Debug headers and URL
+      console.log('🔧 ToolsService.updateAgentTools URL:', url);
+      console.log('🔧 ToolsService.updateAgentTools Headers:', headers);
+
+      if (!headers['Authorization']) {
+        console.warn('🔧 ToolsService.updateAgentTools: Missing Authorization header. Is the user logged in?');
+      }
+
+      const response = await fetch(url, {
         method: 'PUT',
         headers,
         body: JSON.stringify(tools),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update agent tools: ${response.statusText}`);
+        let bodyText = '';
+        try {
+          bodyText = await response.text();
+        } catch (_e) {
+          // ignore
+        }
+        console.log('🔧 ToolsService.updateAgentTools status:', response.status);
+        console.log('🔧 ToolsService.updateAgentTools body:', bodyText);
+        throw new Error(`Failed to update agent tools: status=${response.status} body=${bodyText}`);
       }
     } catch (error) {
       console.error('Error updating agent tools:', error);

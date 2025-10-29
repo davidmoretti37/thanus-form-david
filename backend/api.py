@@ -73,6 +73,7 @@ async def lifespan(app: FastAPI):
         credentials_api.initialize(db)
         template_api.initialize(db)
         composio_api.initialize(db)
+        calendar_api.initialize(db)
         api_cliente_api.initialize(db)
         
         yield
@@ -186,6 +187,9 @@ api_router.include_router(triggers_api.router)
 
 from core.composio_integration import api as composio_api
 api_router.include_router(composio_api.router)
+
+from core.calendar import api as calendar_api
+api_router.include_router(calendar_api.router)
 
 from core.google.google_slides_api import router as google_slides_router
 api_router.include_router(google_slides_router)

@@ -1,6 +1,9 @@
 import { fontWeights } from '@/constants/Fonts';
 import { supabase } from '@/constants/SupabaseConfig';
 import { useTheme } from '@/hooks/useThemeColor';
+import * as AuthSession from 'expo-auth-session';
+import Constants from 'expo-constants';
+import * as WebBrowser from 'expo-web-browser';
 import React, { useState } from 'react';
 import {
     Alert,
@@ -21,6 +24,8 @@ interface AuthOverlayProps {
     onClose: () => void;
 }
 
+WebBrowser.maybeCompleteAuthSession();
+
 export const AuthOverlay: React.FC<AuthOverlayProps> = ({ visible, onClose }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -29,6 +34,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ visible, onClose }) =>
     const [mode, setMode] = useState<'signin' | 'signup' | 'forgot'>('signin');
     const [showSuccess, setShowSuccess] = useState(false);
     const [successEmail, setSuccessEmail] = useState('');
+    const [oauthLoading, setOauthLoading] = useState<'google' | null>(null);
 
     const theme = useTheme();
 
@@ -74,6 +80,42 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ visible, onClose }) =>
             color: theme.background,
             fontSize: 16,
             fontFamily: fontWeights[600],
+        },
+        socialButton: {
+            borderWidth: 1,
+            borderColor: theme.border,
+            borderRadius: 12,
+            height: 48,
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginTop: 8,
+            flexDirection: 'row',
+            gap: 8,
+            backgroundColor: theme.card,
+        },
+        socialButtonText: {
+            color: theme.foreground,
+            fontSize: 16,
+            fontFamily: fontWeights[600],
+        },
+        dividerRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 8,
+            marginTop: 4,
+            gap: 8,
+        },
+        dividerLine: {
+            flex: 1,
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: theme.border,
+        },
+        dividerText: {
+            color: theme.mutedForeground,
+            fontSize: 12,
+            fontFamily: fontWeights[500],
+            textTransform: 'uppercase',
+            letterSpacing: 0.5,
         },
         switchButton: {
             alignItems: 'center',
@@ -252,6 +294,60 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ visible, onClose }) =>
         }
     };
 
+    const handleGoogleSignIn = async () => {
+        try {
+            setOauthLoading('google');
+
+            const redirectUri = AuthSession.makeRedirectUri({
+                scheme: Constants.expoConfig?.scheme ?? 'tarsmobile',
+                path: 'auth/callback',
+            });
+
+            const { data, error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: redirectUri,
+                    skipBrowserRedirect: Platform.OS !== 'web',
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                },
+            });
+
+            if (error) {
+                throw error;
+            }
+
+            if (Platform.OS === 'web') {
+                return;
+            }
+
+            if (data?.url) {
+                const result = await AuthSession.startAsync({ authUrl: data.url });
+
+                if (result.type === 'success') {
+                    const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(result.params);
+
+                    if (exchangeError) {
+                        throw exchangeError;
+                    }
+
+                    onClose();
+                } else if (result.type === 'error') {
+                    throw new Error(result.params?.error_description || 'Unable to continue with Google');
+                }
+            } else {
+                throw new Error('Unable to initiate Google sign-in');
+            }
+        } catch (error) {
+            console.error('Google sign-in error:', error);
+            Alert.alert('Sign In Error', error instanceof Error ? error.message : 'Unable to continue with Google');
+        } finally {
+            setOauthLoading(null);
+        }
+    };
+
     const resetForm = () => {
         setEmail('');
         setPassword('');
@@ -381,6 +477,26 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ visible, onClose }) =>
                                     {loading ? 'Loading...' : mode === 'signup' ? 'Sign Up' : mode === 'forgot' ? 'Send Reset Link' : 'Sign In'}
                                 </Text>
                             </TouchableOpacity>
+
+                            {mode !== 'forgot' && (
+                                <>
+                                    <View style={styles.dividerRow}>
+                                        <View style={styles.dividerLine} />
+                                        <Text style={styles.dividerText}>Or continue with</Text>
+                                        <View style={styles.dividerLine} />
+                                    </View>
+
+                                    <TouchableOpacity
+                                        style={[styles.socialButton, (oauthLoading === 'google' || loading) && styles.buttonDisabled]}
+                                        onPress={handleGoogleSignIn}
+                                        disabled={oauthLoading === 'google' || loading}
+                                    >
+                                        <Text style={styles.socialButtonText}>
+                                            {oauthLoading === 'google' ? 'Connecting...' : 'Continue with Google'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
 
                             {mode === 'signin' && (
                                 <TouchableOpacity

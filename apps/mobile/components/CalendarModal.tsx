@@ -1,15 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   Modal,
-  SafeAreaView,
-  Dimensions,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { X, ChevronLeft, ChevronRight, Clock } from 'lucide-react-native';
+import { calendarService, CalendarEvent } from '@/services/calendarService';
 
 interface CalendarModalProps {
   visible: boolean;
@@ -28,6 +29,10 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
 }) => {
   const theme = useTheme();
   const [viewDate, setViewDate] = useState<Date>(value ?? new Date());
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[]>([]);
+  const [showDayDetails, setShowDayDetails] = useState(false);
 
   const { monthLabel, yearLabel, firstDayOfWeek, daysInMonth } = useMemo(() => {
     const m = viewDate.getMonth();
@@ -62,11 +67,67 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
 
   const today = new Date();
 
+  // Fetch events when modal opens or month changes
+  useEffect(() => {
+    if (visible) {
+      loadEvents();
+    } else {
+      setEvents([]);
+      setSelectedDayEvents([]);
+      setShowDayDetails(false);
+    }
+  }, [visible, viewDate]);
+
+  const loadEvents = async () => {
+    try {
+      setLoadingEvents(true);
+      const monthEvents = await calendarService.getEventsForMonth(
+        viewDate.getFullYear(),
+        viewDate.getMonth()
+      );
+      setEvents(monthEvents);
+    } catch (error) {
+      console.error('Error loading calendar events:', error);
+      setEvents([]);
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
+
+  const getEventsForDay = (day: number): CalendarEvent[] => {
+    const dateObj = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
+    const dateStr = dateObj.toISOString().split('T')[0];
+    
+    return events.filter(event => {
+      const eventDate = new Date(event.start_time).toISOString().split('T')[0];
+      return eventDate === dateStr;
+    });
+  };
+
   const handleSelect = (day: number) => {
     const d = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    onChange?.(d);
-    onClose();
+    const dayEvents = getEventsForDay(day);
+    
+    if (dayEvents.length > 0) {
+      // Show events for this day
+      setSelectedDayEvents(dayEvents);
+      setShowDayDetails(true);
+    } else {
+      // Just select the date if no events
+      onChange?.(d);
+      onClose();
+    }
   };
+
+  const formatTime = (dateTime: string): string => {
+    const date = new Date(dateTime);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
 
   const styles = StyleSheet.create({
     modalOverlay: {
@@ -181,6 +242,64 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
       width: 40,
       height: 32,
     },
+    eventIndicator: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.primary,
+      position: 'absolute',
+      bottom: 2,
+    },
+    dayButtonWithEvents: {
+      position: 'relative',
+    },
+    eventsList: {
+      marginTop: 16,
+      maxHeight: 300,
+    },
+    eventItem: {
+      padding: 12,
+      marginBottom: 8,
+      borderRadius: 8,
+      backgroundColor: theme.card,
+      borderWidth: 1,
+      borderColor: theme.border,
+    },
+    eventTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: theme.foreground,
+      marginBottom: 4,
+    },
+    eventTime: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      marginBottom: 2,
+    },
+    eventLocation: {
+      fontSize: 12,
+      color: theme.mutedForeground,
+      fontStyle: 'italic',
+    },
+    backButton: {
+      padding: 8,
+      marginBottom: 12,
+    },
+    backButtonText: {
+      fontSize: 14,
+      color: theme.primary,
+      fontWeight: '500',
+    },
+    noEventsText: {
+      fontSize: 14,
+      color: theme.mutedForeground,
+      textAlign: 'center',
+      marginTop: 16,
+    },
+    loadingContainer: {
+      alignItems: 'center',
+      padding: 16,
+    },
   });
 
   return (
@@ -237,6 +356,8 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
                 const dateObj = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
                 const isToday = isSameDay(dateObj, today);
                 const isSelected = value ? isSameDay(dateObj, value) : false;
+                const dayEvents = getEventsForDay(day);
+                const hasEvents = dayEvents.length > 0;
 
                 return (
                   <TouchableOpacity
@@ -245,6 +366,7 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
                       styles.dayButton,
                       isSelected && styles.dayButtonSelected,
                       !isSelected && isToday && styles.dayButtonToday,
+                      hasEvents && styles.dayButtonWithEvents,
                     ]}
                     onPress={() => handleSelect(day)}
                     activeOpacity={0.7}
@@ -259,11 +381,72 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
                     >
                       {day}
                     </Text>
+                    {hasEvents && (
+                      <View style={styles.eventIndicator} />
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
           </View>
+
+          {/* Loading indicator */}
+          {loadingEvents && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.primary} />
+            </View>
+          )}
+
+          {/* Day Events List */}
+          {showDayDetails && (
+            <ScrollView style={styles.eventsList}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => {
+                  setShowDayDetails(false);
+                  setSelectedDayEvents([]);
+                }}
+              >
+                <Text style={styles.backButtonText}>← Back to Calendar</Text>
+              </TouchableOpacity>
+              
+              {selectedDayEvents.length > 0 ? (
+                selectedDayEvents.map((event) => (
+                  <View key={event.id} style={styles.eventItem}>
+                    <Text style={styles.eventTitle}>{event.title}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                      <Clock size={12} color={theme.mutedForeground} />
+                      <Text style={[styles.eventTime, { marginLeft: 4 }]}>
+                        {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                      </Text>
+                    </View>
+                    {event.location && (
+                      <Text style={styles.eventLocation}>{event.location}</Text>
+                    )}
+                    {event.description && (
+                      <Text style={[styles.eventTime, { marginTop: 8 }]}>{event.description}</Text>
+                    )}
+                    {event.attendees && event.attendees.length > 0 && (
+                      <Text style={[styles.eventTime, { marginTop: 4 }]}>
+                        Attendees: {event.attendees.join(', ')}
+                      </Text>
+                    )}
+                  </View>
+                ))
+              ) : (
+                <Text style={styles.noEventsText}>No events for this day</Text>
+              )}
+            </ScrollView>
+          )}
+
+          {/* If no day details shown, show month events summary */}
+          {!showDayDetails && !loadingEvents && events.length > 0 && (
+            <View style={{ marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: theme.border }}>
+              <Text style={{ fontSize: 12, color: theme.mutedForeground, marginBottom: 8 }}>
+                {events.length} event{events.length !== 1 ? 's' : ''} this month
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </Modal>

@@ -4,7 +4,7 @@ from core.prompts.prompt import SYSTEM_PROMPT
 SUNA_CONFIG = {
     "name": "Echo",
     "description": "Echo is your AI assistant with access to various tools and integrations to help you with tasks across domains.",
-    "model": "openai/gpt-4o-mini",
+    "model": "openrouter/deepseek/deepseek-chat-v3.1",
     "system_prompt": SYSTEM_PROMPT,
     "configured_mcps": [],
     "custom_mcps": [],

@@ -4,7 +4,7 @@ import { useThemedStyles, useTheme } from '@/hooks/useThemeColor';
 import { useIsNewChatMode, useSelectedProject, useSelectedAgent, useSetSelectedAgent } from '@/stores/ui-store';
 import { UploadedFile } from '@/utils/file-upload';
 import React, { useEffect, useState } from 'react';
-import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity, KeyboardAvoidingView, Text } from 'react-native';
+import { Keyboard, KeyboardEvent, Platform, View, TouchableOpacity, KeyboardAvoidingView, Text, Alert } from 'react-native';
 import { CreateWorkerChatInput } from './CreateWorkerChatInput';
 import { ToolsModal } from './ToolsModal';
 import { InstructionsModal } from './InstructionsModal';
@@ -18,6 +18,7 @@ import { useUIStore } from '@/stores/ui-store';
 import { X } from 'lucide-react-native';
 import { QuickActionBar } from '@/components/quick-actions/QuickActionBar';
 import { ChatHeader } from './ChatHeader';
+import { ChatSnack } from './ChatSnack';
 
 interface ChatContainerProps {
     className?: string;
@@ -57,6 +58,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
         isGenerating,
         streamContent,
         streamError,
+        activeToolCall,
     } = chatSession;
 
     // For project mode, we still need these specific loading states
@@ -230,6 +232,19 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ className, onNavig
       )}
       <SelectedQuickActionChips />
       <View style={{ marginTop: -60, marginBottom: 40 }}>
+        {keyboardHeight === 0 && (
+          <ChatSnack
+            toolCall={activeToolCall}
+            visible={Boolean(activeToolCall)}
+            onPressTool={activeToolCall ? () => {
+              if (!selectedAgent) {
+                Alert.alert('Select an agent', 'Choose an agent to manage its tools before opening the tool configuration.');
+                return;
+              }
+              setToolsModalVisible(true);
+            } : undefined}
+          />
+        )}
         <CreateWorkerChatInput
         placeholder={
           isGenerating

@@ -490,8 +490,11 @@ class Configuration:
             # Check if the field is Optional
             is_optional = hasattr(field_type, "__origin__") and field_type.__origin__ is Union and type(None) in field_type.__args__
             
+            # Get the field value, defaulting to None if attribute doesn't exist
+            field_value = getattr(self, field, None)
+            
             # If not optional and value is None, add to missing fields
-            if not is_optional and getattr(self, field) is None:
+            if not is_optional and field_value is None:
                 missing_fields.append(field)
         
         if missing_fields:

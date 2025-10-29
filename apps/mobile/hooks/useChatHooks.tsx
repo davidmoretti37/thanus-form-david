@@ -754,6 +754,7 @@ export const useChatSession = (projectId: string) => {
         streamStatus: agentStream.status,
         streamContent: agentStream.textContent,
         streamError: agentStream.error,
+        activeToolCall: agentStream.toolCall,
         isSending,
     };
 };

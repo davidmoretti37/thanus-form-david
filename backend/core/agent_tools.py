@@ -674,3 +674,43 @@ async def get_agent_tools(
         for tool_name in enabled_tools:
             mcp_tools.append({"name": tool_name, "server": server, "enabled": True})
     return {"agentpress_tools": agentpress_tools, "mcp_tools": mcp_tools}
+
+
+@router.put("/agents/{agent_id}/tools", summary="Update Agent Tools", operation_id="update_agent_tools")
+async def update_agent_tools(
+    agent_id: str,
+    request: Dict[str, Any] = Body(...),
+    user_id: str = Depends(verify_and_get_user_id_from_jwt)
+):
+    """Minimal handler to acknowledge agent tool updates from clients.
+    This endpoint currently performs ownership checks and returns success
+    without mutating configuration. Full persistence can be added later.
+    """
+    try:
+        logger.debug(f"Update tools requested for agent {agent_id} by user {user_id}: {list(request.keys())}")
+        client = await utils.db.client
+
+        # Verify agent exists and is owned by the user (or public)
+        agent_result = await client.table('agents').select('account_id, is_public').eq('agent_id', agent_id).maybe_single().execute()
+        if not agent_result.data:
+            raise HTTPException(status_code=404, detail="Agent not found")
+
+        agent = agent_result.data
+        if agent.get('account_id') != user_id and not agent.get('is_public', False):
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        # Accept payload structure but do not persist yet
+        # Expected optional keys: agentpress_tools, mcp_tools
+        response: Dict[str, Any] = {
+            'success': True,
+            'received': {
+                'agentpress_tools': bool(request.get('agentpress_tools')),
+                'mcp_tools': bool(request.get('mcp_tools')),
+            }
+        }
+        return response
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in update_agent_tools for agent {agent_id}: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")

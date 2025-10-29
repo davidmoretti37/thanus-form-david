@@ -2,13 +2,10 @@ from typing import Dict, List, Optional, Set
 from .ai_models import Model, ModelProvider, ModelCapability, ModelPricing, ModelConfig
 from core.utils.config import config, EnvMode
 
-FREE_MODEL_ID = "openai/gpt-4o-mini"
+FREE_MODEL_ID = "openrouter/deepseek/deepseek-chat-v3.1"
 
-# Set premium model ID based on environment
-if config.ENV_MODE == EnvMode.LOCAL:
-    PREMIUM_MODEL_ID = "openai/gpt-4o"
-else:  # STAGING or PRODUCTION
-    PREMIUM_MODEL_ID = "openai/gpt-4o"
+# Force premium model to a quota-friendly default to avoid 429s
+PREMIUM_MODEL_ID = "openrouter/deepseek/deepseek-chat-v3.1"
 
 is_local = config.ENV_MODE == EnvMode.LOCAL
 
