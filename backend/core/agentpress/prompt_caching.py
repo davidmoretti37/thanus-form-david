@@ -38,9 +38,12 @@ from typing import Dict, Any, List, Optional
 from core.utils.logger import logger
 
 
-def get_resolved_model_id(model_name: str) -> str:
+def get_resolved_model_id(model_name: str | None) -> str:
     """Resolve model name to its canonical ID through the model registry."""
     try:
+        if not model_name:
+            logger.debug("Model name is None/empty; returning empty string")
+            return ""
         from core.ai_models.registry import ModelRegistry
         registry = ModelRegistry()
         model = registry.get(model_name)
@@ -54,10 +57,12 @@ def get_resolved_model_id(model_name: str) -> str:
             return model_name
     except Exception as e:
         logger.warning(f"Error resolving model name: {e}")
-        return model_name
+        return model_name or ""
 
-def is_anthropic_model(model_name: str) -> bool:
+def is_anthropic_model(model_name: str | None) -> bool:
     """Check if model supports Anthropic prompt caching."""
+    if not model_name:
+        return False
     resolved_model = get_resolved_model_id(model_name).lower()
     return any(provider in resolved_model for provider in ['anthropic', 'claude', 'sonnet', 'haiku', 'opus'])
 
