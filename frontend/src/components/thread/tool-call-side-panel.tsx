@@ -291,8 +291,8 @@ export function ToolCallSidePanel({
   const isMobile = useIsMobile();
   const { isOpen: isDocumentModalOpen } = useDocumentModalStore();
 
-  // Fullscreen state for desktop panel
-  const [isFullscreen, setIsFullscreen] = React.useState(false);
+  // Fullscreen state for desktop panel (default to full-screen)
+  const [isFullscreen, setIsFullscreen] = React.useState(true);
   const toggleFullscreen = React.useCallback(() => setIsFullscreen((v) => !v), []);
 
   const sandbox = project?.sandbox;
@@ -720,7 +720,7 @@ export function ToolCallSidePanel({
     if (isMobile) {
       return (
         <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-          <DrawerContent className="h-[85vh]">
+          <DrawerContent className="h-screen">
             <PanelHeader 
               agentName={agentName}
               onClose={handleClose}
@@ -1010,9 +1010,16 @@ export function ToolCallSidePanel({
               damping: 35
             }
           }}
-          className={(compact || isFullscreen) 
-            ? "m-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)] border rounded-3xl flex flex-col z-30"
-            : "fixed top-2 right-2 bottom-4 border rounded-3xl flex flex-col z-30 w-[40vw] sm:w-[450px] md:w-[500px] lg:w-[550px] xl:w-[645px]"
+          className={
+            isFullscreen
+              ? "fixed inset-0 w-screen h-screen border-0 rounded-none flex flex-col z-50"
+              : (
+                  (compact
+                    ? "m-4 h-[calc(100%-2rem)] w-[calc(100%-2rem)] border rounded-3xl flex flex-col z-30"
+                    : "fixed top-2 right-2 bottom-4 border rounded-3xl flex flex-col z-30 w-[40vw] sm:w-[450px] md:w-[500px] lg:w-[550px] xl:w-[645px]")
+                ) +
+                // Force full-screen overlay on very small screens regardless of state
+                " max-sm:fixed max-sm:inset-0 max-sm:w-screen max-sm:h-screen max-sm:rounded-none max-sm:border-0 max-sm:z-50"
           }
           style={{
             overflow: 'hidden',
