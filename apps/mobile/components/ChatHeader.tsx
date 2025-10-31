@@ -6,7 +6,6 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AgentModelSelector } from './AgentModelSelector';
 import { H5, H6 } from './Typography';
-import { ThemeSwitcher } from './ThemeSwitcher';
 import { useSetLeftPanelVisible, useSetRightPanelVisible, useUIStore } from '@/stores/ui-store';
 
 interface ChatHeaderProps {
@@ -129,9 +128,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                     {/* Spacer */}
                     <View style={styles.titleSection} />
 
-                    {/* Right controls: theme toggle + settings */}
+                    {/* Right controls: settings */}
                     <View style={styles.rightRow}>
-                        <ThemeSwitcher variant="icon" />
                         <TouchableOpacity
                             style={[styles.iconButton, styles.spacing]}
                             onPress={() => {

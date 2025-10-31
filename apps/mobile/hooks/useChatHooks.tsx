@@ -463,21 +463,29 @@ export const useChatSession = (projectId: string) => {
 
         // Opportunistically capture creations from tool results
         try {
-            if ((message.type === 'tool' || message.type === 'assistant') && message.content) {
+            const msgType = String((message as any).type);
+            if ((msgType === 'tool' || msgType === 'assistant') && message.content) {
                 const contentObj: any = typeof message.content === 'string' ? JSON.parse(message.content || '{}') : message.content;
                 const toolName = contentObj?.tool_execution?.function_name || contentObj?.name || undefined;
                 const result = contentObj?.tool_execution?.result || contentObj?.result || contentObj;
+                const args = contentObj?.tool_execution?.arguments || contentObj?.arguments || {};
 
-                const filePath = result?.file_path || result?.path || result?.output_path;
-                const url = result?.url || result?.preview_url || result?.public_url;
-                const hasArtifact = Boolean(filePath || url || result?.html || result?.markdown || result?.image);
+                // Prefer artifacts from result; fall back to arguments for tools that return status only
+                const filePath = result?.file_path || result?.path || result?.output_path || args?.file_path || args?.path;
+                const url = result?.url || result?.preview_url || result?.public_url || args?.url;
+                const hasArtifact = Boolean(
+                    filePath || url || result?.html || result?.markdown || result?.image || args?.html || args?.markdown || args?.image
+                );
 
                 if (hasArtifact) {
                     const addCreation = useCreationsStore.getState().addCreation;
                     addCreation({
                         id: message.message_id,
                         title: result?.title || toolName || 'Creation',
-                        description: result?.summary || result?.description || (typeof result === 'string' ? result.slice(0, 140) : undefined),
+                        description:
+                            result?.summary ||
+                            result?.description ||
+                            (typeof result === 'string' ? result.slice(0, 140) : undefined),
                         createdAt: message.created_at || new Date().toISOString(),
                         sourceTool: toolName,
                         threadId: message.thread_id,

@@ -36,7 +36,8 @@ export interface IntegrationCategory {
 }
 
 class IntegrationsService {
-  private baseUrl = `${SERVER_URL}/api/composio`;
+  // SERVER_URL already includes /api
+  private baseUrl = `${SERVER_URL}/composio`;
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
     const session = await getSupabaseSession();
@@ -65,7 +66,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch toolkits: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch toolkits: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();
@@ -89,7 +91,7 @@ class IntegrationsService {
       }));
     } catch (error) {
       console.error('Error fetching toolkits:', error);
-      throw error;
+      return [];
     }
   }
 
@@ -107,7 +109,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch profiles: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch profiles: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();
@@ -143,7 +146,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch tools: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch tools: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();
@@ -174,7 +178,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch categories: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch categories: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();
@@ -210,7 +215,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create profile: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to create profile: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();
@@ -243,7 +249,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to update tools: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to update tools: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();
@@ -268,7 +275,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to delete profile: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to delete profile: ${response.status} ${response.statusText} ${body}`);
       }
     } catch (error) {
       console.error('Error deleting profile:', error);
@@ -286,7 +294,8 @@ class IntegrationsService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch toolkit details: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch toolkit details: ${response.status} ${response.statusText} ${body}`);
       }
 
       const data = await response.json();

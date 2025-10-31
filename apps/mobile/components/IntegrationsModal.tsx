@@ -4,6 +4,7 @@ import { useTheme } from '@/hooks/useThemeColor';
 import { X, Search, Zap, Server, Settings, ChevronDown, ChevronUp, ExternalLink, CheckCircle, List } from 'lucide-react-native';
 import { IntegrationSettingsModal } from './IntegrationSettingsModal';
 import { integrationsService, IntegrationToolkit, IntegrationProfile } from '@/services/integrationsService';
+import { AddCustomMCPModal } from './AddCustomMCPModal';
 
 interface IntegrationsModalProps {
   visible: boolean;
@@ -42,6 +43,7 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
   const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [selectedIntegration, setSelectedIntegration] = useState<IntegrationApp | null>(null);
   const [enabledToolsCounts, setEnabledToolsCounts] = useState<Record<string, number>>({});
+  const [showAddMcp, setShowAddMcp] = useState(false);
   
   // Real data from API
   const [toolkits, setToolkits] = useState<IntegrationToolkit[]>([]);
@@ -704,7 +706,13 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
             </View>
             
             {/* Add Custom MCP Button */}
-            <TouchableOpacity style={styles.customMCPButton}>
+            <TouchableOpacity
+              style={styles.customMCPButton}
+              onPress={() => {
+                console.log('🔧 Add Custom MCP (Integrations) pressed');
+                setShowAddMcp(true);
+              }}
+            >
               <Server size={16} color={theme.foreground} />
               <Text style={styles.customMCPButtonText}>Add Custom MCP</Text>
             </TouchableOpacity>
@@ -814,6 +822,17 @@ export const IntegrationsModal: React.FC<IntegrationsModalProps> = ({ visible, o
               )}
             </View>
           </ScrollView>
+
+          {/* Embedded custom MCP overlay so it appears above */}
+          <AddCustomMCPModal
+            visible={showAddMcp}
+            onClose={() => setShowAddMcp(false)}
+            agentId={''}
+            onSaved={() => {
+              setShowAddMcp(false);
+            }}
+            embedded
+          />
         </View>
       </View>
 

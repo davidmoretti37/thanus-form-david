@@ -224,12 +224,13 @@ export function CodeRenderer({ content, language = 'text', showLineNumbers = tru
                 data={codeLines}
                 renderItem={renderCodeLine}
                 keyExtractor={(item) => item.key}
-                showsVerticalScrollIndicator={true}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
                 style={{ flex: 1 }}
                 initialNumToRender={50}
                 maxToRenderPerBatch={25}
                 windowSize={10}
-                removeClippedSubviews={true}
+                removeClippedSubviews={false}
                 getItemLayout={(data, index) => ({
                     length: 20,
                     offset: 20 * index,

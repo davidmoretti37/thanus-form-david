@@ -1,4 +1,5 @@
-import { SERVER_URL, getSupabaseSession } from '@/constants/SupabaseConfig';
+import { SERVER_URL } from '@/constants/Server';
+import { getSupabaseSession } from '@/constants/SupabaseConfig';
 
 export interface KnowledgeFolder {
   folder_id: string;
@@ -31,7 +32,7 @@ export interface UpdateEntryRequest {
 }
 
 class KnowledgeService {
-  private baseUrl = SERVER_URL; // SERVER_URL already includes /api
+  private baseUrl = SERVER_URL; // constants/Server provides backend base (includes /api)
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
     const session = await getSupabaseSession();
@@ -147,7 +148,10 @@ class KnowledgeService {
     }
   }
 
-  async uploadFile(folderId: string, file: File): Promise<KnowledgeEntry> {
+  async uploadFile(
+    folderId: string,
+    file: { uri: string; name: string; type: string }
+  ): Promise<KnowledgeEntry> {
     try {
       const session = await getSupabaseSession();
       if (!session?.access_token) {
@@ -155,10 +159,16 @@ class KnowledgeService {
       }
 
       const formData = new FormData();
-      formData.append('file', file);
+      // React Native: append file as { uri, name, type }
+      formData.append('file', {
+        uri: file.uri,
+        name: file.name,
+        type: file.type,
+      } as any);
 
       const response = await fetch(`${this.baseUrl}/knowledge-base/folders/${folderId}/upload`, {
         method: 'POST',
+        // Let fetch set multipart/form-data boundary automatically
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },

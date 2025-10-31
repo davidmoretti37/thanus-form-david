@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Alert } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import * as Clipboard from 'expo-clipboard';
+import { CreateTaskModal } from './tasks/CreateTaskModal';
+import { CreateTaskTypePicker } from './tasks/CreateTaskTypePicker';
 import { useTheme } from '@/hooks/useThemeColor';
 import { X, Search, Clock, Zap, Plus, History, CheckCircle, Circle, XCircle, Play, Pause, Settings, Calendar, AlertCircle, FileText } from 'lucide-react-native';
 import { useCreationsStore } from '@/stores/creationsStore';
+import { triggersService, type TriggerConfiguration } from '@/services/triggersService';
 
 interface TasksModalProps {
   visible: boolean;
@@ -29,6 +34,11 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'active' | 'scheduled' | 'event' | 'creations'>('all');
   const [isLoading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [createVisible, setCreateVisible] = useState(false);
+  const [createType, setCreateType] = useState<'schedule' | 'event'>('schedule');
+  const [typePickerVisible, setTypePickerVisible] = useState(false);
+  const [triggers, setTriggers] = useState<TriggerConfiguration[]>([]);
+  const [editingTrigger, setEditingTrigger] = useState<TriggerConfiguration | null>(null);
 
   // Mock data for tasks
   const [tasks] = useState<Task[]>([
@@ -141,6 +151,8 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
       setTimeout(() => {
         setIsLoading(false);
       }, 500);
+      // Load triggers from backend
+      triggersService.getAllTriggers().then(setTriggers).catch(() => {});
     }
   }, [visible]);
 
@@ -215,25 +227,7 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
   };
 
   const handleCreateTask = () => {
-    Alert.alert(
-      'Create New Task',
-      'What type of task would you like to create?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Scheduled Task', 
-          onPress: () => {
-            console.log('Creating scheduled task');
-          }
-        },
-        { 
-          text: 'Event-based Task', 
-          onPress: () => {
-            console.log('Creating event-based task');
-          }
-        }
-      ]
-    );
+    setTypePickerVisible(true);
   };
 
   const getStatusColor = (status: string) => {
@@ -327,9 +321,93 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
     );
   };
 
-  const renderCreationCard = (c: ReturnType<typeof useCreationsStore.getState>['creations'][number]) => {
+  const renderTriggerCard = (t: TriggerConfiguration) => {
+    const isSchedule = (t.trigger_type || '').toLowerCase().includes('schedule');
+    const TypeIcon = isSchedule ? Clock : Zap;
     return (
-      <View key={c.id} style={styles.taskCard}>
+      <TouchableOpacity
+        key={t.trigger_id}
+        style={styles.taskCard}
+        activeOpacity={0.7}
+        onPress={() => handleConfigureTrigger(t)}
+      >
+        <View style={styles.taskCardHeader}>
+          <View style={styles.taskIconContainer}>
+            <TypeIcon size={20} color={theme.primary} />
+          </View>
+          <View style={styles.taskInfo}>
+            <View style={styles.taskTitleRow}>
+              <Text style={styles.taskName}>{t.name || 'Task'}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: (t.is_active ? theme.primary : theme.mutedForeground) + '20' }]}>
+                <Text style={[styles.statusText, { color: t.is_active ? theme.primary : theme.mutedForeground }]}>
+                  {t.is_active ? 'Active' : 'Paused'}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.taskDescription} numberOfLines={2}>
+              {(t.config as any)?.agent_prompt || (isSchedule ? 'Scheduled agent task' : 'Event-based task')}
+            </Text>
+            <Text style={styles.agentName}>Type: {t.provider_id}</Text>
+          </View>
+        </View>
+        <View style={styles.taskCardFooter}>
+          <View style={styles.taskDetails}>
+            {isSchedule && (t.config as any)?.cron_expression ? (
+              <Text style={styles.detailText}>Cron: {(t.config as any).cron_expression}</Text>
+            ) : null}
+          </View>
+          <View style={styles.taskActions}>
+            <TouchableOpacity style={styles.actionButton} onPress={() => handleToggleExisting(t)}>
+              <Pause size={16} color={t.is_active ? theme.mutedForeground : theme.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={() => handleConfigureTrigger(t)}>
+              <Settings size={16} color={theme.mutedForeground} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableOpacity>
+    );
+  };
+
+  const handleToggleExisting = async (t: TriggerConfiguration) => {
+    try {
+      const updated = await triggersService.toggleTrigger(t.trigger_id, !t.is_active);
+      setTriggers(prev => prev.map(x => x.trigger_id === t.trigger_id ? updated : x));
+    } catch (e) {
+      Alert.alert('Failed', 'Could not update task status.');
+    }
+  };
+
+  const handleConfigureTrigger = (t: TriggerConfiguration) => {
+    setEditingTrigger(t);
+    setCreateType((t.provider_id === 'schedule') ? 'schedule' : 'event');
+    setCreateVisible(true);
+  };
+
+  const renderCreationCard = (c: ReturnType<typeof useCreationsStore.getState>['creations'][number]) => {
+    const openCreation = async () => {
+      try {
+        if (c.url && typeof c.url === 'string') {
+          await WebBrowser.openBrowserAsync(c.url);
+          return;
+        }
+        const details = [
+          c.title && `Title: ${c.title}`,
+          c.description && `Description: ${c.description}`,
+          c.filePath && `File: ${c.filePath}`,
+          c.url && `URL: ${c.url}`,
+          `Created: ${new Date(c.createdAt).toLocaleString()}`,
+        ].filter(Boolean).join('\n');
+        Alert.alert('Creation', details, [
+          { text: 'Copy', onPress: async () => { await Clipboard.setStringAsync(c.url || c.filePath || ''); } },
+          { text: 'Close', style: 'cancel' }
+        ]);
+      } catch (e) {
+        Alert.alert('Unable to open', 'This creation cannot be opened.');
+      }
+    };
+    return (
+      <TouchableOpacity key={c.id} style={styles.taskCard} activeOpacity={0.7} onPress={openCreation}>
         <View style={styles.taskCardHeader}>
           <View style={styles.taskIconContainer}>
             <FileText size={20} color={theme.primary} />
@@ -351,7 +429,7 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
             {c.url ? <Text style={styles.detailText}>URL: {c.url}</Text> : null}
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -445,16 +523,24 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
     },
     filterContainer: {
       flexDirection: 'row',
-      paddingHorizontal: 20,
-      paddingBottom: 16,
-      gap: 8,
+      paddingHorizontal: 16,
+      paddingBottom: 0,
+      gap: 6,
+      alignItems: 'center',
+    },
+    filterScroll: {
+      // Tighten the vertical space beneath the chips
+      marginBottom: 8,
     },
     filterButton: {
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 20,
       borderWidth: 1,
       borderColor: theme.border,
+      flexShrink: 0,
+      height: 36,
+      justifyContent: 'center',
     },
     activeFilterButton: {
       backgroundColor: theme.primary + '20',
@@ -471,26 +557,31 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
     content: {
       flex: 1,
       paddingHorizontal: 20,
+      marginTop: -8,
+    },
+    contentContainer: {
+      paddingTop: 0,
     },
     createButton: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: theme.primary,
+      backgroundColor: theme.card,
       paddingVertical: 14,
       paddingHorizontal: 20,
       borderRadius: 12,
+      marginTop: 4,
       marginBottom: 16,
       borderWidth: 1,
-      borderColor: theme.primary,
-      shadowColor: theme.primary,
+      borderColor: theme.border,
+      shadowColor: '#000',
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
+      shadowOpacity: 0.1,
       shadowRadius: 4,
       elevation: 3,
     },
     createButtonText: {
-      color: 'white',
+      color: theme.foreground,
       fontSize: 16,
       fontWeight: '600',
       marginLeft: 8,
@@ -647,38 +738,50 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
             </View>
           </View>
 
-          {/* Filters */}
-          <View style={styles.filterContainer}>
-            {[
-              { key: 'all', label: 'All' },
-              { key: 'active', label: 'Active' },
-              { key: 'scheduled', label: 'Scheduled' },
-              { key: 'event', label: 'Event-based' },
-              { key: 'creations', label: 'Creations' },
-            ].map((filter) => (
-              <TouchableOpacity
-                key={filter.key}
-                style={[
-                  styles.filterButton,
-                  selectedFilter === filter.key && styles.activeFilterButton
-                ]}
-                onPress={() => setSelectedFilter(filter.key as any)}
-              >
-                <Text style={[
-                  styles.filterButtonText,
-                  selectedFilter === filter.key && styles.activeFilterButtonText
-                ]}>
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {/* Content (includes Filters) */}
+          <ScrollView
+            style={styles.content}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+            contentInsetAdjustmentBehavior="never"
+          >
+            {/* Filters */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filterContainer}
+              style={styles.filterScroll}
+            >
+              {[
+                { key: 'all', label: 'All' },
+                { key: 'active', label: 'Active' },
+                { key: 'scheduled', label: 'Scheduled' },
+                { key: 'event', label: 'Event-based' },
+                { key: 'creations', label: 'Creations' },
+              ].map((filter) => (
+                <TouchableOpacity
+                  key={filter.key}
+                  style={[
+                    styles.filterButton,
+                    selectedFilter === filter.key && styles.activeFilterButton
+                  ]}
+                  onPress={() => setSelectedFilter(filter.key as any)}
+                >
+                  <Text style={[
+                    styles.filterButtonText,
+                    selectedFilter === filter.key && styles.activeFilterButtonText
+                  ]}
+                  numberOfLines={1}
+                  >
+                    {filter.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
 
-          {/* Content */}
-          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {/* Create New Task Button */}
             <TouchableOpacity style={styles.createButton} onPress={handleCreateTask}>
-              <Plus size={20} color="white" />
+              <Plus size={20} color={theme.foreground} />
               <Text style={styles.createButtonText}>Create New Task</Text>
             </TouchableOpacity>
 
@@ -706,23 +809,52 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
                 </View>
               )
             ) : (
-              filteredTasks.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <View style={styles.emptyStateIcon}>
-                    <Clock size={24} color={theme.mutedForeground} />
-                  </View>
-                  <Text style={styles.emptyStateTitle}>No tasks found</Text>
-                  <Text style={styles.emptyStateText}>
-                    {searchQuery ? `No tasks match "${searchQuery}"` : 'No tasks available'}
-                  </Text>
+              (triggers.length > 0) ? (
+                <View style={styles.tasksList}>
+                  {triggers
+                    .filter(t => !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase()))
+                    .map(t => renderTriggerCard(t))}
                 </View>
               ) : (
-                <View style={styles.tasksList}>
-                  {filteredTasks.map(task => renderTaskCard(task))}
-                </View>
+                filteredTasks.length === 0 ? (
+                  <View style={styles.emptyState}>
+                    <View style={styles.emptyStateIcon}>
+                      <Clock size={24} color={theme.mutedForeground} />
+                    </View>
+                    <Text style={styles.emptyStateTitle}>No tasks found</Text>
+                    <Text style={styles.emptyStateText}>
+                      {searchQuery ? `No tasks match "${searchQuery}"` : 'No tasks available'}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={styles.tasksList}>
+                    {filteredTasks.map(task => renderTaskCard(task))}
+                  </View>
+                )
               )
             )}
           </ScrollView>
+          <CreateTaskModal
+            visible={createVisible}
+            type={createType}
+            onClose={() => setCreateVisible(false)}
+            onCreated={() => {
+              setCreateVisible(false);
+              triggersService.getAllTriggers().then(setTriggers).catch(() => {});
+              Alert.alert(editingTrigger ? 'Task updated' : 'Task created', editingTrigger ? 'Your task was updated.' : 'Your task has been created.');
+            }}
+            mode={editingTrigger ? 'edit' : 'create'}
+            existingTrigger={editingTrigger}
+          />
+          <CreateTaskTypePicker
+            visible={typePickerVisible}
+            onClose={() => setTypePickerVisible(false)}
+            onPick={(t) => {
+              setTypePickerVisible(false);
+              setCreateType(t);
+              setCreateVisible(true);
+            }}
+          />
         </View>
       </View>
     </Modal>

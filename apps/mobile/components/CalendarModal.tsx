@@ -114,8 +114,8 @@ export const CalendarModal: React.FC<CalendarModalProps> = ({
       setShowDayDetails(true);
     } else {
       // Just select the date if no events
-      onChange?.(d);
-      onClose();
+    onChange?.(d);
+    onClose();
     }
   };
 

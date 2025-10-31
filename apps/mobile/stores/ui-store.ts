@@ -90,6 +90,8 @@ interface UIState {
   // Agent & Model selection
   selectedAgent: Agent | null;
   selectedModel: Model | null;
+  setSelectedAgent: (agent: Agent | null) => void;
+  setSelectedModel: (model: Model | null) => void;
 
   // Quick actions selected for creation context
   selectedQuickActions: { actionId: string; optionId: string; actionLabel: string; optionLabel: string }[];
@@ -200,8 +202,8 @@ export const useUIStore = create<UIState>()(
     setIsTyping: (typing) => set({ isTyping: typing }),
     
     // Agent & Model actions
-    setSelectedAgent: (agent) => set({ selectedAgent: agent }),
-    setSelectedModel: (model) => set({ selectedModel: model }),
+    setSelectedAgent: (agent: Agent | null) => set({ selectedAgent: agent }),
+    setSelectedModel: (model: Model | null) => set({ selectedModel: model }),
     
     // Chat/Project actions
     setSelectedProject: (project) => set({ selectedProject: project }),
@@ -376,6 +378,32 @@ export const useUIStore = create<UIState>()(
                   
                   toolSnapshots.push(snapshot);
                   console.log('✅ CREATED SNAPSHOT:', registryName);
+
+                  // Also persist to Creations history if there is a tangible artifact
+                  try {
+                      const result = toolContent?.tool_execution?.result || toolContent?.result || toolContent;
+                      const args = toolContent?.tool_execution?.arguments || toolContent?.arguments || {};
+                      const filePath = result?.file_path || result?.path || result?.output_path || args?.file_path || args?.path;
+                      const url = result?.url || result?.preview_url || result?.public_url || args?.url;
+                      const hasArtifact = Boolean(
+                        filePath || url || result?.html || result?.markdown || result?.image || args?.html || args?.markdown || args?.image
+                      );
+                      if (hasArtifact) {
+                          // Import lazily to avoid circular deps
+                          const { useCreationsStore } = require('./creationsStore');
+                          const addCreation = useCreationsStore.getState().addCreation;
+                          addCreation({
+                              id: resultMsg.id || `tool-${Date.now()}-${index}`,
+                              title: result?.title || registryName || 'Creation',
+                              description: result?.summary || result?.description || (typeof result === 'string' ? result.slice(0, 140) : undefined),
+                              createdAt: resultMsg.created_at || new Date().toISOString(),
+                              sourceTool: registryName,
+                              threadId: resultMsg.thread_id,
+                              filePath,
+                              url,
+                          });
+                      }
+                  } catch {}
               }
           } catch (error) {
               console.log('❌ PARSE ERROR:', error);

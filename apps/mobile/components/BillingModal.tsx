@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, ScrollView, Alert, Linking } from 'react-native';
 import { useTheme } from '@/hooks/useThemeColor';
 import { 
   X, 
@@ -20,6 +20,8 @@ import {
   AlertTriangle,
   RotateCcw
 } from 'lucide-react-native';
+import Constants from 'expo-constants';
+import { billingService } from '@/services/billingService';
 
 interface BillingModalProps {
   visible: boolean;
@@ -113,21 +115,46 @@ export const BillingModal: React.FC<BillingModalProps> = ({ visible, onClose }) 
   const theme = useTheme();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('yearly');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
-  // Debug theme values
-  console.log('BillingModal theme:', {
-    mode: theme.mode,
-    primary: theme.primary,
-    foreground: theme.foreground
-  });
+  // Map app plans to Stripe price IDs via env/extra, so we don't hardcode secrets
+  const priceIdMap = {
+    Plus: {
+      monthly: Constants.expoConfig?.extra?.EXPO_PUBLIC_STRIPE_TIER_2_20_ID || process.env.EXPO_PUBLIC_STRIPE_TIER_2_20_ID,
+      yearly: Constants.expoConfig?.extra?.EXPO_PUBLIC_STRIPE_TIER_2_20_YEARLY_ID || process.env.EXPO_PUBLIC_STRIPE_TIER_2_20_YEARLY_ID,
+    },
+    Pro: {
+      monthly: Constants.expoConfig?.extra?.EXPO_PUBLIC_STRIPE_TIER_6_50_ID || process.env.EXPO_PUBLIC_STRIPE_TIER_6_50_ID,
+      yearly: Constants.expoConfig?.extra?.EXPO_PUBLIC_STRIPE_TIER_6_50_YEARLY_ID || process.env.EXPO_PUBLIC_STRIPE_TIER_6_50_YEARLY_ID,
+    },
+    Business: {
+      monthly: Constants.expoConfig?.extra?.EXPO_PUBLIC_STRIPE_TIER_12_100_ID || process.env.EXPO_PUBLIC_STRIPE_TIER_12_100_ID,
+      yearly: Constants.expoConfig?.extra?.EXPO_PUBLIC_STRIPE_TIER_12_100_YEARLY_ID || process.env.EXPO_PUBLIC_STRIPE_TIER_12_100_YEARLY_ID,
+    },
+  } as const;
 
-  const handlePlanSelect = (planName: string) => {
-    setSelectedPlan(planName);
-    Alert.alert(
-      'Plan Selected',
-      `${planName} plan selected! Billing integration will be available soon.`,
-      [{ text: 'OK' }]
-    );
+  const handlePlanSelect = async (planName: string) => {
+    try {
+      setSelectedPlan(planName);
+      setLoadingPlan(planName);
+
+      const priceId = priceIdMap[planName as keyof typeof priceIdMap]?.[billingPeriod];
+      if (!priceId) {
+        Alert.alert('Billing not configured', 'Stripe price ID is missing. Please set EXPO_PUBLIC_STRIPE_* env vars.');
+        return;
+      }
+
+      // Use a neutral HTTPS return URL; Stripe requires HTTPS. Replace with your production app URL if available.
+      const successUrl = 'https://tars.ai/billing/return-success';
+      const cancelUrl = 'https://tars.ai/billing/return-cancel';
+
+      const { checkout_url } = await billingService.createCheckoutSession(priceId, successUrl, cancelUrl);
+      await Linking.openURL(checkout_url);
+    } catch (e: any) {
+      Alert.alert('Checkout failed', e?.message || 'Unknown error');
+    } finally {
+      setLoadingPlan(null);
+    }
   };
 
   const styles = StyleSheet.create({
@@ -435,8 +462,11 @@ export const BillingModal: React.FC<BillingModalProps> = ({ visible, onClose }) 
                   <TouchableOpacity
                     style={styles.selectButton}
                     onPress={() => handlePlanSelect(tier.name)}
+                    disabled={loadingPlan === tier.name}
                   >
-                    <Text style={styles.selectButtonText}>{tier.buttonText}</Text>
+                    <Text style={styles.selectButtonText}>
+                      {loadingPlan === tier.name ? 'Opening…' : tier.buttonText}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -447,7 +477,6 @@ export const BillingModal: React.FC<BillingModalProps> = ({ visible, onClose }) 
           <View style={styles.footer}>
             <Text style={styles.footerText}>
               All plans include a 7-day free trial. Cancel anytime.
-              {'\n'}Billing integration coming soon to mobile app.
             </Text>
           </View>
         </View>

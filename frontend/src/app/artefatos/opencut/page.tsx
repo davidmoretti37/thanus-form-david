@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
  */
 export default function ArtefatosOpenCutPage() {
   const [showEditor, setShowEditor] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
 
   useEffect(() => {
     // Breve animação de carregamento para transição suave (igual ao Excalidraw)
@@ -68,6 +69,36 @@ export default function ArtefatosOpenCutPage() {
           />
         )}
       </div>
+
+      {/* Onboarding overlay to explain the basic flow */}
+      {showEditor && showHelp && (
+        <div className="pointer-events-none absolute inset-0 flex items-start justify-center p-4">
+          <div className="pointer-events-auto mt-6 w-full max-w-3xl rounded-lg border border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70 shadow-sm">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+              <h2 className="text-sm font-semibold">Getting started with the Video Editor</h2>
+              <button className="text-xs text-muted-foreground hover:text-foreground" onClick={() => setShowHelp(false)}>Dismiss</button>
+            </div>
+            <div className="grid gap-3 p-4 sm:grid-cols-3">
+              <div className="rounded-md border border-dashed border-border p-3">
+                <div className="text-xs font-medium mb-1">1) Import media</div>
+                <p className="text-xs text-muted-foreground">Use the Import button at the top of the editor to add videos, audio, or images.</p>
+              </div>
+              <div className="rounded-md border border-dashed border-border p-3">
+                <div className="text-xs font-medium mb-1">2) Build your timeline</div>
+                <p className="text-xs text-muted-foreground">Drag clips onto the timeline. Trim, split, and move them as needed.</p>
+              </div>
+              <div className="rounded-md border border-dashed border-border p-3">
+                <div className="text-xs font-medium mb-1">3) Export</div>
+                <p className="text-xs text-muted-foreground">Click Export to render your video. Finished files appear under Creations.</p>
+              </div>
+            </div>
+            <div className="flex items-center justify-end gap-2 px-4 pb-4">
+              <a href="https://opencut.app" target="_blank" rel="noreferrer" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">OpenCut docs</a>
+              <button className="text-xs rounded-md border border-border px-3 py-1.5 hover:bg-accent" onClick={() => setShowHelp(false)}>Got it</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

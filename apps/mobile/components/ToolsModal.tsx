@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput, Switch, ActivityIndicator, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '@/hooks/useThemeColor';
-import { X, Search, Folder, Terminal, Globe, Users, Building2, ArrowRight, Server, Zap, ChevronDown, ChevronRight, Settings2 } from 'lucide-react-native';
+import { X, Search, Folder, Terminal, Globe, Users, Building2, ArrowRight, Server, Zap, ChevronDown, ChevronRight, Settings2, Plus } from 'lucide-react-native';
 import { toolsService, AgentTool } from '@/services/toolsService';
+import { AddCustomMCPModal } from './AddCustomMCPModal';
 
 interface ToolMethod {
   name: string;
@@ -192,15 +193,15 @@ const ToolItem: React.FC<ToolItemProps> = ({
               disabled={!isEnabled}
             >
               {isExpanded ? (
-                <ChevronDown size={16} color={isEnabled ? theme.foreground : theme.mutedForeground} />
+                <ChevronDown size={16} color={isEnabled ? useTheme().foreground : useTheme().mutedForeground} />
               ) : (
-                <ChevronRight size={16} color={isEnabled ? theme.foreground : theme.mutedForeground} />
+                <ChevronRight size={16} color={isEnabled ? useTheme().foreground : useTheme().mutedForeground} />
               )}
             </TouchableOpacity>
           )}
           <Switch
-            trackColor={{ false: theme.muted, true: theme.primary }}
-            thumbColor={isEnabled ? theme.background : theme.foreground}
+            trackColor={{ false: useTheme().muted, true: useTheme().primary }}
+            thumbColor={isEnabled ? useTheme().background : useTheme().foreground}
             onValueChange={(newValue) => onToggle && onToggle(id, newValue)}
             value={isEnabled}
           />
@@ -210,7 +211,7 @@ const ToolItem: React.FC<ToolItemProps> = ({
       {hasGranularControl && isExpanded && isEnabled && toolGroup && (
         <View style={itemStyles.methodsContainer}>
           <View style={itemStyles.methodsHeader}>
-            <Settings2 size={16} color={theme.mutedForeground} />
+            <Settings2 size={16} color={useTheme().mutedForeground} />
             <Text style={itemStyles.methodsHeaderText}>Individual Capabilities</Text>
           </View>
           {toolGroup.methods
@@ -231,8 +232,8 @@ const ToolItem: React.FC<ToolItemProps> = ({
                 <Switch
                   value={isMethodEnabled(method.name)}
                   onValueChange={(value) => onMethodToggle?.(id, method.name, value)}
-                  trackColor={{ false: theme.muted, true: theme.primary }}
-                  thumbColor={isMethodEnabled(method.name) ? theme.background : theme.foreground}
+                  trackColor={{ false: useTheme().muted, true: useTheme().primary }}
+                  thumbColor={isMethodEnabled(method.name) ? useTheme().background : useTheme().foreground}
                   disabled={method.is_core}
                 />
               </View>
@@ -270,6 +271,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
   const [error, setError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [showAddMcp, setShowAddMcp] = useState(false);
 
   console.log('🔧 ToolsModal: Rendered with visible:', visible, 'selectedAgent:', selectedAgent);
 
@@ -413,7 +415,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
       }
       
       // Get current agent configuration to see which tools are enabled
-      let agentTools = { agentpress_tools: [], mcp_tools: [] };
+      let agentTools: { agentpress_tools: AgentTool[]; mcp_tools: AgentTool[] } = { agentpress_tools: [], mcp_tools: [] };
       
       // 🔧 LOCAL STORAGE: Try to load from local storage first
       try {
@@ -440,7 +442,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
           
           // 🔧 AUTO-CONFIGURE: If API fails, automatically enable fallback tools
           console.log('🔧 AUTO-CONFIGURE: Enabling fallback tools for agent');
-          const fallbackTools = Object.keys(allTools).map(toolName => ({
+          const fallbackTools: AgentTool[] = Object.keys(allTools).map(toolName => ({
             name: toolName,
             enabled: true,
             description: allTools[toolName].description
@@ -477,7 +479,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
       // 🔧 AUTO-ENABLE: Always enable fallback tools for better user experience
       if (Object.keys(allTools).length > 0) {
         console.log('🔧 AUTO-ENABLE: Enabling fallback tools for agent');
-        const fallbackTools = Object.keys(allTools).map(toolName => ({
+        const fallbackTools: AgentTool[] = Object.keys(allTools).map(toolName => ({
           name: toolName,
           enabled: true,
           description: allTools[toolName].description
@@ -535,7 +537,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
           methods: toolMetadata?.methods ? (Array.isArray(toolMetadata.methods) 
             ? toolMetadata.methods.map((method: any) => ({
                 name: method.name,
-                display_name: method.display_name || method.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                display_name: method.display_name || method.name.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
                 description: method.description || `Method: ${method.name}`,
                 enabled: method.enabled ?? true,
                 is_core: method.is_core ?? false,
@@ -543,7 +545,7 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
               }))
             : Object.entries(toolMetadata.methods).map(([methodName, methodData]: [string, any]) => ({
                 name: methodName,
-                display_name: methodData?.display_name || methodName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                display_name: methodData?.display_name || methodName.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
                 description: methodData?.description || `Method: ${methodName}`,
                 enabled: methodData?.enabled ?? true,
                 is_core: methodData?.is_core ?? false,
@@ -942,6 +944,14 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
                 : 'Select which tools your agent can use'
               }
             </Text>
+            {selectedAgent ? (
+              <View style={{ alignItems: 'flex-end', marginTop: 8 }}>
+                <TouchableOpacity onPress={() => { console.log('🔧 Add custom MCP pressed'); setShowAddMcp(true); }} style={{ flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: theme.border, backgroundColor: theme.card }}>
+                  <Plus size={16} color={theme.foreground} />
+                  <Text style={{ color: theme.foreground, fontWeight: '600' }}>Add custom MCP</Text>
+                </TouchableOpacity>
+              </View>
+            ) : null}
           </View>
 
           <Text style={styles.toolsEnabledText}>{enabledToolsCount} / {tools.length} tools enabled</Text>
@@ -1015,6 +1025,18 @@ export const ToolsModal: React.FC<ToolsModalProps> = ({ visible, onClose, select
               )}
             </TouchableOpacity>
           </View>
+
+          {/* Embedded MCP overlay inside the modal view so it layers correctly */}
+          <AddCustomMCPModal
+            visible={showAddMcp}
+            onClose={() => setShowAddMcp(false)}
+            agentId={selectedAgent?.id || ''}
+            onSaved={() => {
+              setShowAddMcp(false);
+              loadTools();
+            }}
+            embedded
+          />
         </View>
       </View>
     </Modal>

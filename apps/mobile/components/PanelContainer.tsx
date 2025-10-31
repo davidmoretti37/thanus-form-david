@@ -40,7 +40,6 @@ export const PanelContainer: React.FC<PanelContainerProps> = ({
         },
         center: {
             flex: 1,
-            marginRight: rightPanelVisible ? SCREEN_WIDTH * 0.4 : 0,
         },
     }));
 
@@ -112,7 +111,7 @@ export const PanelContainer: React.FC<PanelContainerProps> = ({
                     position: 'absolute',
                     top: 0,
                     right: 0,
-                    width: SCREEN_WIDTH * 0.4, // Only take 40% of screen width
+                    width: SCREEN_WIDTH, // Cover the whole screen
                     height: '100%',
                     zIndex: 1000,
                     backgroundColor: theme.background,

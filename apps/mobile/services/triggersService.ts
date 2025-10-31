@@ -1,4 +1,5 @@
-import { SERVER_URL, getSupabaseSession } from '@/constants/SupabaseConfig';
+import { SERVER_URL as API_SERVER_URL } from '@/constants/Server';
+import { getSupabaseSession } from '@/constants/SupabaseConfig';
 
 export interface TriggerProvider {
   provider_id: string;
@@ -50,7 +51,7 @@ export interface UpcomingRunsResponse {
 }
 
 class TriggersService {
-  private baseUrl = SERVER_URL; // SERVER_URL already includes /api
+  private baseUrl = API_SERVER_URL; // Already includes /api
 
   private async getAuthHeaders(): Promise<Record<string, string>> {
     const session = await getSupabaseSession();
@@ -76,7 +77,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch providers: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch providers: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();
@@ -96,7 +98,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch agent triggers: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch agent triggers: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();
@@ -116,8 +119,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to create trigger: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to create trigger: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();
@@ -137,8 +140,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to update trigger: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to update trigger: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();
@@ -157,8 +160,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to delete trigger: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to delete trigger: ${response.status} ${response.statusText} ${body}`);
       }
     } catch (error) {
       console.error('Error deleting trigger:', error);
@@ -176,8 +179,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `Failed to toggle trigger: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to toggle trigger: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();
@@ -196,7 +199,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch trigger: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch trigger: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();
@@ -216,7 +220,8 @@ class TriggersService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch all triggers: ${response.statusText}`);
+        const body = await response.text().catch(() => '');
+        throw new Error(`Failed to fetch all triggers: ${response.status} ${response.statusText} ${body}`);
       }
 
       return await response.json();

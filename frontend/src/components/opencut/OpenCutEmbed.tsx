@@ -13,6 +13,8 @@ type OpenCutEmbedProps = {
   className?: string;
   // Optional: height (default: 70vh)
   height?: string | number;
+  // Make desktop editor usable on small screens by scaling down
+  responsive?: boolean;
 };
 
 type OpenCutOutgoing =
@@ -38,10 +40,13 @@ export function OpenCutEmbed({
   src,
   className,
   height = '70vh',
+  responsive = true,
 }: OpenCutEmbedProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isReady, setIsReady] = useState(false);
   const [hasHandshake, setHasHandshake] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
 
   const editorSrc = useMemo(() => {
     // For embedded use, we need to point directly to the OpenCut iframe endpoint
@@ -143,18 +148,90 @@ export function OpenCutEmbed({
     return () => clearInterval(id);
   }, [hasHandshake, isReady, postToEditor]);
 
+  // Observe container width for responsive scaling
+  useEffect(() => {
+    if (!responsive) return;
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect?.width;
+      if (width) setContainerWidth(width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [responsive]);
+
+  // Desktop base size for OpenCut UI
+  const baseWidth = 1280;
+  const baseHeight = 720 + 120; // timeline + toolbars room
+  const [manualScale, setManualScale] = useState<number | null>(null);
+  const autoScale = responsive && containerWidth > 0 ? Math.min(1, containerWidth / baseWidth) : 1;
+  // Solo mode: scale to fit approx one editor column into viewport
+  const [solo, setSolo] = useState<boolean>(true);
+  const panelApprox = 360;
+  const soloScale = responsive && containerWidth > 0 ? Math.min(1.25, Math.max(0.6, containerWidth / panelApprox)) : autoScale;
+  const scale = manualScale ?? (solo ? soloScale : autoScale);
+  const scaledHeight = responsive ? Math.round(baseHeight * scale) : undefined;
+  const [section, setSection] = useState<'tools' | 'canvas' | 'props'>('canvas');
+
+  // Estimate panel centers (in editor pixels)
+  const centers = {
+    tools: 180,
+    canvas: 640,
+    props: 1100,
+  } as const;
+  const targetCenter = centers[section];
+  const desiredCenter = baseWidth / 2;
+  // translateX to bring targetCenter to desiredCenter
+  const translateLogical = (desiredCenter - targetCenter); // positive shifts content right
+  // Because translate happens after scale(), divide by scale to keep pixel-accurate pan
+  const translatePx = translateLogical / scale;
+
   return (
-    <div className={className} style={{ height }}>
+    <div ref={containerRef} className={className} style={{ height, overflow: 'hidden', position: 'relative' }}>
+      {/* Simple zoom controls for cramped layouts */}
+      {responsive && (
+        <div style={{ position: 'absolute', right: 8, top: 8, zIndex: 5 }} className="flex items-center gap-1 rounded-md border border-zinc-200 dark:border-zinc-800 bg-background/70 backdrop-blur px-1 py-0.5">
+          <button className="text-xs px-2 py-1 hover:bg-accent rounded" onClick={() => setManualScale(Math.max(0.6, (manualScale ?? autoScale) - 0.1))}>−</button>
+          <span className="text-[11px] min-w-[38px] text-center">{Math.round(scale * 100)}%</span>
+          <button className="text-xs px-2 py-1 hover:bg-accent rounded" onClick={() => setManualScale(Math.min(1.2, (manualScale ?? autoScale) + 0.1))}>+</button>
+          <button className="text-[11px] px-2 py-1 hover:bg-accent rounded" onClick={() => setManualScale(null)}>Fit</button>
+          <button className={`text-[11px] px-2 py-1 rounded ${solo ? 'bg-accent' : 'hover:bg-accent'}`} onClick={() => setSolo(s => !s)}>{solo ? 'Solo' : 'Wide'}</button>
+        </div>
+      )}
+      {responsive && (
+        <div
+          style={{ position: 'absolute', left: '50%', bottom: 10, transform: 'translateX(-50%)', zIndex: 6 }}
+          className="flex items-center gap-1 rounded-full border border-zinc-200 dark:border-zinc-800 bg-background/80 backdrop-blur px-1.5 py-1 shadow"
+        >
+          {(['tools','canvas','props'] as const).map((k) => (
+            <button
+              key={k}
+              className={`text-[12px] px-3 py-1 rounded-full ${section===k ? 'bg-accent' : 'hover:bg-accent'}`}
+              onClick={() => setSection(k)}
+            >
+              {k === 'tools' ? 'Tools' : k === 'canvas' ? 'Canvas' : 'Props'}
+            </button>
+          ))}
+        </div>
+      )}
       <iframe
         ref={iframeRef}
         src={editorSrc}
         title="OpenCut Editor"
         onLoad={handleLoad}
-        className="w-full h-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-black"
+        className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-black"
         // Allow features commonly needed for editors
         allow="clipboard-write; clipboard-read; microphone; camera; autoplay"
         // If you vendorize OpenCut under same-origin, sandbox can be reduced. Keep generous here for compatibility.
         sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+        style={{
+          width: responsive ? baseWidth : '100%',
+          height: responsive ? baseHeight : '100%',
+          transform: responsive ? `scale(${scale}) translateX(${translatePx}px)` : undefined,
+          transformOrigin: 'top left',
+          display: 'block',
+        }}
       />
     </div>
   );

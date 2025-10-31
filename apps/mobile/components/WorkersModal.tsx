@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, TextInput,
 import { useTheme } from '../hooks/useThemeColor';
 import { X, Search, Wrench, MessageCircle, Settings, Star, Globe, Download, User, ArrowRight, Plus } from 'lucide-react-native';
 import { WorkerCreationModal } from './WorkerCreationModal';
+import { CreateTaskModal } from './tasks/CreateTaskModal';
 import { AgentEditModal } from './AgentEditModal';
 import { agentService, Agent } from '../services/agentService';
 import { useSetSelectedAgent } from '../stores/ui-store';
@@ -27,6 +28,7 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose, on
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -124,6 +126,23 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose, on
     setWorkers(prev => [newWorker, ...prev]);
     setFilteredWorkers(prev => [newWorker, ...prev]);
     setShowCreateModal(false);
+    // Preselect the created agent and take user to schedule modal
+    setSelectedAgent({
+      agent_id: newWorker.agent_id,
+      name: newWorker.name,
+      description: newWorker.description,
+      system_prompt: newWorker.system_prompt,
+      icon_name: newWorker.icon_name,
+      icon_color: newWorker.icon_color,
+      icon_background: newWorker.icon_background,
+      is_default: newWorker.is_default,
+      is_public: newWorker.is_public,
+      created_at: newWorker.created_at,
+      updated_at: newWorker.updated_at,
+      version_count: newWorker.version_count,
+      current_version_name: newWorker.current_version_name,
+    } as any);
+    setShowScheduleModal(true);
   };
 
   const handleAgentUpdated = (updatedAgent: Agent) => {
@@ -619,6 +638,17 @@ export const WorkersModal: React.FC<WorkersModalProps> = ({ visible, onClose, on
         visible={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onWorkerCreated={handleWorkerCreated}
+      />
+
+      {/* After creation, immediately schedule a task for the new worker */}
+      <CreateTaskModal
+        visible={showScheduleModal}
+        type={'schedule'}
+        onClose={() => setShowScheduleModal(false)}
+        onCreated={() => {
+          setShowScheduleModal(false);
+          Alert.alert('Worker scheduled', 'A scheduled task has been created for this worker.');
+        }}
       />
 
       {/* Agent Edit Modal */}
