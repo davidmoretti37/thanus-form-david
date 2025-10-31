@@ -139,6 +139,9 @@ allow_origin_regex = None
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.LOCAL:
     allowed_origins.append("http://localhost:3000")
+    # Allow all origins in LOCAL mode for mobile app testing (development only)
+    # When allow_credentials=True, we can't use "*", so we allow all via regex
+    allow_origin_regex = r".*"
 
 # Add staging-specific origins
 if config.ENV_MODE == EnvMode.STAGING:
@@ -148,7 +151,7 @@ if config.ENV_MODE == EnvMode.STAGING:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
+    allow_origins=allowed_origins if allow_origin_regex is None else [],
     allow_origin_regex=allow_origin_regex,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

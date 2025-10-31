@@ -266,13 +266,16 @@ export const useAgentStream = (
 
             switch (jsonData.type) {
                 case 'assistant':
+                case 'llm_response_end': // Handle llm_response_end as assistant messages
                     if (parsedMetadata.stream_status === 'chunk' && parsedContent.content) {
                         setTextContent(prev => prev + parsedContent.content);
                     } else if (parsedMetadata.stream_status === 'complete') {
                         setTextContent('');
                         setToolCall(null);
-                        if (jsonData.message_id) {
-                            callbacks.onMessage(jsonData);
+                        // Ensure type is assistant for display (llm_response_end converted in polling)
+                        const messageToAdd = { ...jsonData, type: 'assistant' };
+                        if (messageToAdd.message_id) {
+                            callbacks.onMessage(messageToAdd);
                         }
                     } else if (!parsedMetadata.stream_status && parsedContent.content) {
                         setTextContent(prev => prev + parsedContent.content);

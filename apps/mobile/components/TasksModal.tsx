@@ -745,38 +745,38 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
             showsVerticalScrollIndicator={false}
             contentInsetAdjustmentBehavior="never"
           >
-            {/* Filters */}
+          {/* Filters */}
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filterContainer}
               style={styles.filterScroll}
             >
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'active', label: 'Active' },
-                { key: 'scheduled', label: 'Scheduled' },
-                { key: 'event', label: 'Event-based' },
-                { key: 'creations', label: 'Creations' },
-              ].map((filter) => (
-                <TouchableOpacity
-                  key={filter.key}
-                  style={[
-                    styles.filterButton,
-                    selectedFilter === filter.key && styles.activeFilterButton
-                  ]}
-                  onPress={() => setSelectedFilter(filter.key as any)}
-                >
-                  <Text style={[
-                    styles.filterButtonText,
-                    selectedFilter === filter.key && styles.activeFilterButtonText
+            {[
+              { key: 'all', label: 'All' },
+              { key: 'active', label: 'Active' },
+              { key: 'scheduled', label: 'Scheduled' },
+              { key: 'event', label: 'Event-based' },
+              { key: 'creations', label: 'Creations' },
+            ].map((filter) => (
+              <TouchableOpacity
+                key={filter.key}
+                style={[
+                  styles.filterButton,
+                  selectedFilter === filter.key && styles.activeFilterButton
+                ]}
+                onPress={() => setSelectedFilter(filter.key as any)}
+              >
+                <Text style={[
+                  styles.filterButtonText,
+                  selectedFilter === filter.key && styles.activeFilterButtonText
                   ]}
                   numberOfLines={1}
                   >
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                  {filter.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
             </ScrollView>
 
             {/* Create New Task Button */}
@@ -815,21 +815,21 @@ export const TasksModal: React.FC<TasksModalProps> = ({ visible, onClose }) => {
                     .filter(t => !searchQuery || t.name.toLowerCase().includes(searchQuery.toLowerCase()))
                     .map(t => renderTriggerCard(t))}
                 </View>
+            ) : (
+              filteredTasks.length === 0 ? (
+                <View style={styles.emptyState}>
+                  <View style={styles.emptyStateIcon}>
+                    <Clock size={24} color={theme.mutedForeground} />
+                  </View>
+                  <Text style={styles.emptyStateTitle}>No tasks found</Text>
+                  <Text style={styles.emptyStateText}>
+                    {searchQuery ? `No tasks match "${searchQuery}"` : 'No tasks available'}
+                  </Text>
+                </View>
               ) : (
-                filteredTasks.length === 0 ? (
-                  <View style={styles.emptyState}>
-                    <View style={styles.emptyStateIcon}>
-                      <Clock size={24} color={theme.mutedForeground} />
-                    </View>
-                    <Text style={styles.emptyStateTitle}>No tasks found</Text>
-                    <Text style={styles.emptyStateText}>
-                      {searchQuery ? `No tasks match "${searchQuery}"` : 'No tasks available'}
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={styles.tasksList}>
-                    {filteredTasks.map(task => renderTaskCard(task))}
-                  </View>
+                <View style={styles.tasksList}>
+                  {filteredTasks.map(task => renderTaskCard(task))}
+                </View>
                 )
               )
             )}

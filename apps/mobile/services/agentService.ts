@@ -64,6 +64,8 @@ class AgentService {
         throw new Error('No authentication token available');
       }
 
+      console.log(`[AgentService] Fetching agents from: ${this.baseUrl}/agents?${params}`);
+      
       const response = await fetch(`${this.baseUrl}/agents?${params}`, {
         method: 'GET',
         headers: {
@@ -72,8 +74,12 @@ class AgentService {
         },
       });
 
+      console.log(`[AgentService] Response status: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
-        throw new Error(`Failed to fetch agents: ${response.status}`);
+        const errorText = await response.text().catch(() => 'Unable to read error response');
+        console.error(`[AgentService] Error response body:`, errorText);
+        throw new Error(`Failed to fetch agents: ${response.status} - ${errorText.substring(0, 200)}`);
       }
 
       const data = await response.json();
@@ -86,7 +92,19 @@ class AgentService {
       
       return data;
     } catch (error) {
-      console.error('Error fetching agents:', error);
+      console.error('[AgentService] Error fetching agents:', error);
+      console.error('[AgentService] Base URL was:', this.baseUrl);
+      console.error('[AgentService] Error details:', {
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : 'Unknown',
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      
+      // Provide more helpful error message
+      if (error instanceof TypeError && error.message.includes('Network request failed')) {
+        throw new Error(`Cannot connect to backend at ${this.baseUrl}. Please ensure:\n1. Backend Docker container is running\n2. Device is on the same network\n3. Firewall allows connections`);
+      }
+      
       throw error;
     }
   }

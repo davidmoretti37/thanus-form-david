@@ -22,14 +22,14 @@ interface CreationsState {
 export const useCreationsStore = create<CreationsState>()(
   persist(
     (set, get) => ({
-      creations: [],
-      addCreation: (item) => set((state) => {
-        // De-duplicate by id if already present
-        if (state.creations.some((c) => c.id === item.id)) return state;
+  creations: [],
+  addCreation: (item) => set((state) => {
+    // De-duplicate by id if already present
+    if (state.creations.some((c) => c.id === item.id)) return state;
         const next = [item, ...state.creations].slice(0, 2000);
         return { creations: next };
-      }),
-      clear: () => set({ creations: [] }),
+  }),
+  clear: () => set({ creations: [] }),
     }),
     {
       name: 'creations-history',

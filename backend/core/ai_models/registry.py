@@ -2,10 +2,10 @@ from typing import Dict, List, Optional, Set
 from .ai_models import Model, ModelProvider, ModelCapability, ModelPricing, ModelConfig
 from core.utils.config import config, EnvMode
 
-FREE_MODEL_ID = "openrouter/deepseek/deepseek-chat-v3.1"
+FREE_MODEL_ID = "openrouter/openai/gpt-4o-mini"
 
-# Force premium model to a quota-friendly default to avoid 429s
-PREMIUM_MODEL_ID = "openrouter/deepseek/deepseek-chat-v3.1"
+# Premium model using OpenAI GPT-4o through OpenRouter
+PREMIUM_MODEL_ID = "openrouter/openai/gpt-4o"
 
 is_local = config.ENV_MODE == EnvMode.LOCAL
 
@@ -114,6 +114,48 @@ class ModelRegistry:
             priority=98,
             enabled=True
         ))        
+        
+        # OpenAI models via OpenRouter
+        self.register(Model(
+            id="openrouter/openai/gpt-4o",
+            name="GPT-4o (via OpenRouter)",
+            provider=ModelProvider.OPENROUTER,
+            aliases=["gpt-4o", "openai/gpt-4o"],
+            context_window=128_000,
+            capabilities=[
+                ModelCapability.CHAT,
+                ModelCapability.FUNCTION_CALLING,
+                ModelCapability.VISION,
+            ],
+            pricing=ModelPricing(
+                input_cost_per_million_tokens=2.50,
+                output_cost_per_million_tokens=10.00
+            ),
+            tier_availability=["paid"],
+            priority=100,
+            enabled=True
+        ))
+        
+        self.register(Model(
+            id="openrouter/openai/gpt-4o-mini",
+            name="GPT-4o Mini (via OpenRouter)",
+            provider=ModelProvider.OPENROUTER,
+            aliases=["gpt-4o-mini", "openai/gpt-4o-mini"],
+            context_window=128_000,
+            capabilities=[
+                ModelCapability.CHAT,
+                ModelCapability.FUNCTION_CALLING,
+                ModelCapability.VISION,
+            ],
+            pricing=ModelPricing(
+                input_cost_per_million_tokens=0.150,
+                output_cost_per_million_tokens=0.600
+            ),
+            tier_availability=["free", "paid"],
+            priority=99,
+            recommended=True,
+            enabled=True
+        ))
         
         self.register(Model(
             id="openrouter/deepseek/deepseek-chat-v3.1", # if is_local else "bedrock/converse/arn:aws:bedrock:us-west-2:935064898258:inference-profile/global.anthropic.claude-sonnet-4-5-20250929-v1:0"

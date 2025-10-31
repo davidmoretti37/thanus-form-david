@@ -135,7 +135,7 @@ export const BillingModal: React.FC<BillingModalProps> = ({ visible, onClose }) 
 
   const handlePlanSelect = async (planName: string) => {
     try {
-      setSelectedPlan(planName);
+    setSelectedPlan(planName);
       setLoadingPlan(planName);
 
       const priceId = priceIdMap[planName as keyof typeof priceIdMap]?.[billingPeriod];

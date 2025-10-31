@@ -85,12 +85,13 @@ export class BillingError extends Error {
 
 // Active streams management
 const activeStreams = new Map<string, EventSource>();
+const activePollingStreams = new Map<string, () => void>(); // Track polling cleanup functions
 const nonRunningAgentRuns = new Set<string>();
 
-// XMLHttpRequest-based streaming for React Native (better streaming support)
-const setupFetchStream = async (
-  url: string,
+// Polling-based streaming for React Native (fetch streaming doesn't work reliably)
+const setupPollingStream = async (
   agentRunId: string,
+  threadId: string,
   callbacks: {
     onMessage: (content: string) => void;
     onError: (error: Error | string) => void;
@@ -98,88 +99,310 @@ const setupFetchStream = async (
   }
 ): Promise<() => void> => {
   
-  return new Promise((resolve) => {
-    const xhr = new XMLHttpRequest();
+  return new Promise(async (resolve) => {
     let isActive = true;
-    let lastResponseLength = 0;
+    let lastMessageId: string | null = null;
+    let lastCheckedAt = Date.now();
+    let pollInterval: NodeJS.Timeout | null = null;
+    let statusCheckInterval: NodeJS.Timeout | null = null;
+    let startTime = Date.now();
+    const MAX_POLLING_DURATION = 5 * 60 * 1000; // Stop after 5 minutes
+    const STUCK_DETECTION_TIME = 30 * 1000; // Consider stuck if no NEW messages for 30 seconds after baseline
+    let lastNewMessageTime: number | null = null; // Track when we last saw a NEW message (after baseline)
     
     const cleanup = () => {
       isActive = false;
-      if (xhr.readyState !== XMLHttpRequest.DONE) {
-        xhr.abort();
+      if (pollInterval) {
+        clearInterval(pollInterval);
+        pollInterval = null;
       }
-      console.log(`[XHR-STREAM] Cleaned up stream for ${agentRunId}`);
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+        statusCheckInterval = null;
+      }
+      activePollingStreams.delete(agentRunId);
+      console.log(`[POLL-STREAM] Cleaned up polling for ${agentRunId}`);
     };
 
-    xhr.open('GET', url, true);
-    xhr.setRequestHeader('Accept', 'text/event-stream');
-    xhr.setRequestHeader('Cache-Control', 'no-cache');
+    console.log(`[POLL-STREAM] Starting polling for agent run: ${agentRunId}, thread: ${threadId}`);
     
-    xhr.onreadystatechange = () => {
-      if (!isActive) return;
-      
-      console.log(`[XHR-STREAM] ReadyState changed to: ${xhr.readyState}`);
-      
-      if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
-        console.log(`[XHR-STREAM] Status: ${xhr.status}`);
-        console.log(`[XHR-STREAM] Response headers: ${xhr.getAllResponseHeaders()}`);
-        
-        if (xhr.status !== 200) {
-          console.error(`[XHR-STREAM] HTTP Error: ${xhr.status} ${xhr.statusText}`);
-          callbacks.onError(`HTTP ${xhr.status}: ${xhr.statusText}`);
-          return;
-        }
+    const pollMessages = async () => {
+      // Double-check isActive at the very start - might have been set to false during async operations
+      if (!isActive) {
+        console.log(`[POLL-STREAM] Poll messages called but stream is inactive, ignoring`);
+        return;
       }
       
-      if (xhr.readyState === XMLHttpRequest.LOADING || xhr.readyState === XMLHttpRequest.DONE) {
-        const newData = xhr.responseText.substring(lastResponseLength);
-        lastResponseLength = xhr.responseText.length;
+      try {
+        // Fetch new messages from the thread
+        const messages = await getMessages(threadId);
         
-        if (newData) {
-          console.log(`[XHR-STREAM] Received chunk:`, newData.substring(0, 100) + '...');
+        // Check again after async operation - cleanup might have happened during fetch
+        if (!isActive) {
+          console.log(`[POLL-STREAM] Stream became inactive during message fetch, aborting`);
+          return;
+        }
+        
+        console.log(`[POLL-STREAM] Polled messages: ${messages.length}, lastMessageId: ${lastMessageId}`);
+        
+        // Find messages we haven't seen yet
+        let newMessages: typeof messages = [];
+        
+        if (!lastMessageId) {
+          // First poll - emit all existing messages to ensure UI is in sync
+          // This handles cases where optimistic updates were lost or messages exist before polling starts
+          if (messages.length > 0) {
+            console.log(`[POLL-STREAM] First poll - emitting ${messages.length} existing messages`);
+            // Emit all existing messages on first poll
+            newMessages = messages;
+            // Note: lastMessageId will be set after processing these messages in the loop below
+            // Set baseline time - after this, we'll track new messages
+            lastNewMessageTime = Date.now();
+          } else {
+            console.log(`[POLL-STREAM] First poll - no messages found`);
+            newMessages = [];
+            // No messages yet - start tracking from now
+            lastNewMessageTime = Date.now();
+          }
+        } else {
+          // Find the index of the last message we've seen
+          const lastMessageIndex = messages.findIndex(m => (m.message_id || (m as any).id) === lastMessageId);
           
-          // Process each line
-          const lines = newData.split('\n');
-          for (const line of lines) {
-            if (!isActive) break;
-            
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6).trim();
-              if (data && data !== '[DONE]') {
-                callbacks.onMessage(line);
-              }
+          if (lastMessageIndex === -1) {
+            // Last message not found - might have been cleared, get all new messages
+            console.log(`[POLL-STREAM] Last message ${lastMessageId} not found, getting all messages`);
+            newMessages = messages;
+            if (messages.length > 0) {
+              const lastMsg = messages[messages.length - 1];
+              lastMessageId = lastMsg.message_id || (lastMsg as any).id || null;
             }
+          } else {
+            // Get all messages after the last one we've seen
+            newMessages = messages.slice(lastMessageIndex + 1);
+            console.log(`[POLL-STREAM] Found ${newMessages.length} new messages after index ${lastMessageIndex}`);
           }
         }
         
-        if (xhr.readyState === XMLHttpRequest.DONE) {
-          console.log(`[XHR-STREAM] Stream completed for ${agentRunId}`);
+        // Process new messages
+        for (const message of newMessages) {
+          if (!isActive) break;
+          
+          // Update last seen message ID to the latest one we're processing
+          lastMessageId = message.message_id || (message as any).id || null;
+          lastNewMessageTime = Date.now(); // Reset stuck detection
+          
+          // Convert message to SSE format for compatibility with existing handlers
+          // The stream handler expects: content and metadata as JSON strings that parse to objects
+          try {
+            // Extract actual content text from the message
+            let contentText = '';
+            let contentObj: any = {};
+            
+            if (typeof message.content === 'string') {
+              try {
+                const parsed = JSON.parse(message.content);
+                // Handle different content structures:
+                // - {"role": "assistant", "content": "text"} (from DB)
+                // - {"content": "text"} (our format)
+                // - "text" (plain string)
+                contentText = parsed.content || parsed.text || message.content;
+                contentObj = parsed; // Preserve the structure for assistant messages
+              } catch {
+                contentText = message.content;
+                contentObj = { content: message.content };
+              }
+            } else if (typeof message.content === 'object') {
+              // Already an object - extract text and preserve structure
+              contentText = message.content.content || message.content.text || JSON.stringify(message.content);
+              contentObj = message.content;
+            } else {
+              contentText = String(message.content || '');
+              contentObj = { content: contentText };
+            }
+            
+            // Handle different message types and their content structures
+            if (message.type === 'assistant' && contentObj.role === 'assistant') {
+              // Standard assistant message: {"role": "assistant", "content": "text"}
+              contentText = contentObj.content || contentText;
+              contentObj = { content: contentText };
+            } else if (message.type === 'llm_response_end') {
+              // llm_response_end messages have nested structure: {choices: [{message: {role: "assistant", content: "text"}}]}
+              // Extract the assistant content from the nested structure
+              if (contentObj.choices && Array.isArray(contentObj.choices) && contentObj.choices.length > 0) {
+                const firstChoice = contentObj.choices[0];
+                if (firstChoice.message && firstChoice.message.content) {
+                  contentText = firstChoice.message.content;
+                  contentObj = { content: contentText };
+                  // Convert llm_response_end to assistant type for display
+                  message.type = 'assistant' as any;
+                  console.log(`[POLL-STREAM] Converted llm_response_end to assistant, extracted content: ${contentText.substring(0, 50)}...`);
+                }
+              }
+            }
+            
+            // Format content as JSON string: '{"content": "actual text"}'
+            const contentJson = JSON.stringify(contentObj);
+            
+            // Format metadata as JSON string: '{"stream_status": "complete"}'
+            const metadataObj: any = message.metadata || {};
+            // Mark as complete since we're fetching finished messages from DB
+            // All message types should be marked complete when fetched from DB
+            metadataObj.stream_status = 'complete';
+            const metadataJson = JSON.stringify(metadataObj);
+            
+            const messageData = {
+              type: message.type,
+              content: contentJson, // JSON string that parses to { content: "text" }
+              metadata: metadataJson, // JSON string that parses to { stream_status: "complete" }
+              message_id: message.message_id || (message as any).id,
+              thread_id: message.thread_id,
+              created_at: message.created_at,
+            };
+            
+            // Format as SSE data line (the handler expects the full "data: " line)
+            const sseLine = `data: ${JSON.stringify(messageData)}\n\n`;
+            console.log(`[POLL-STREAM] Sending message: ${message.message_id}, type: ${message.type}`);
+            console.log(`[POLL-STREAM] Content text (first 100 chars):`, contentText.substring(0, 100));
+            console.log(`[POLL-STREAM] Content JSON:`, contentJson);
+            console.log(`[POLL-STREAM] Full message data:`, JSON.stringify(messageData));
+            callbacks.onMessage(sseLine);
+            console.log(`[POLL-STREAM] Message sent to callback`);
+          } catch (error) {
+            console.error(`[POLL-STREAM] Error processing message:`, error);
+            console.error(`[POLL-STREAM] Message that failed:`, JSON.stringify(message).substring(0, 500));
+          }
+        }
+        
+        if (newMessages.length === 0) {
+          const timeSinceStart = Date.now() - startTime;
+          const timeSinceLastNewMessage = lastNewMessageTime ? Date.now() - lastNewMessageTime : timeSinceStart;
+          
+          // Check if the agent has already responded by looking for assistant/llm_response_end messages
+          // If any exist in the thread, the agent has responded (even if user sent another message after)
+          const hasResponse = messages.some(msg => 
+            msg.type === 'assistant' || msg.type === 'llm_response_end'
+          );
+          const lastMessage = messages.length > 0 ? messages[messages.length - 1] : null;
+          const lastMessageIsResponse = lastMessage && (
+            lastMessage.type === 'assistant' || 
+            lastMessage.type === 'llm_response_end'
+          );
+          
+          // If we have a response and no new messages for a while, consider it complete
+          if (hasResponse && lastMessageId && timeSinceLastNewMessage > 5 * 1000) {
+            // 5 seconds after the last message with no new activity - agent completed
+            console.log(`[POLL-STREAM] Agent has completed response (found ${messages.filter(m => m.type === 'assistant' || m.type === 'llm_response_end').length} response message(s)), stopping polling gracefully`);
+            cleanup();
+            callbacks.onClose();
+            return;
+          }
+          
+          // Check if we've been polling too long (absolute maximum)
+          if (timeSinceStart > MAX_POLLING_DURATION) {
+            console.log(`[POLL-STREAM] Stopping polling after ${Math.round(timeSinceStart / 1000)}s - max duration exceeded`);
+            callbacks.onError('Agent response timeout - polling stopped after 5 minutes');
+            cleanup();
+            callbacks.onClose();
+            return;
+          }
+          
+          // Check if agent appears stuck (no NEW messages for 30 seconds after baseline was set)
+          // Only check if we have a baseline (lastMessageId) and have been tracking time (lastNewMessageTime)
+          // AND we don't already have a response
+          if (!hasResponse && lastMessageId && lastNewMessageTime && timeSinceLastNewMessage > STUCK_DETECTION_TIME) {
+            // Double-check isActive before cleanup - might have been cleaned up by another path
+            if (!isActive) {
+              console.log(`[POLL-STREAM] Stream already inactive, skipping stuck detection cleanup`);
+              return;
+            }
+            
+            console.log(`[POLL-STREAM] Agent appears stuck - no new messages for ${Math.round(timeSinceLastNewMessage / 1000)}s (total polling: ${Math.round(timeSinceStart / 1000)}s)`);
+            console.log(`[POLL-STREAM] Stopping polling - agent is stuck`);
+            
+            // Set isActive to false FIRST to prevent any queued intervals from running
+            isActive = false;
+            
+            // Clear intervals immediately
+            if (pollInterval) {
+              clearInterval(pollInterval);
+              pollInterval = null;
+            }
+            if (statusCheckInterval) {
+              clearInterval(statusCheckInterval);
+              statusCheckInterval = null;
+            }
+            
+            callbacks.onError(`Agent appears stuck - no response after ${Math.round(timeSinceLastNewMessage / 1000)} seconds`);
+            activePollingStreams.delete(agentRunId);
+            console.log(`[POLL-STREAM] Cleaned up polling for ${agentRunId}`);
+            callbacks.onClose();
+            return;
+          }
+          
+          // Only log every 10 polls to reduce noise (every ~10 seconds)
+          const pollCount = Math.floor(timeSinceStart / 1000);
+          if (pollCount % 10 === 0 && pollCount > 0) {
+            console.log(`[POLL-STREAM] No new messages (total: ${messages.length}, last seen: ${lastMessageId}, polling for ${pollCount}s, last new: ${lastNewMessageTime ? Math.round(timeSinceLastNewMessage / 1000) + 's ago' : 'never'})`);
+          }
+        }
+        
+        lastCheckedAt = Date.now();
+      } catch (error) {
+        if (!isActive) return;
+        console.error(`[POLL-STREAM] Error polling messages:`, error);
+        // Don't call onError for polling errors - keep trying
+      }
+    };
+    
+    const checkAgentStatus = async () => {
+      // Double-check isActive at the very start
+      if (!isActive) {
+        console.log(`[POLL-STREAM] Status check called but stream is inactive, ignoring`);
+        return;
+      }
+      
+      try {
+        const status = await getAgentStatus(agentRunId);
+        
+        // Check again after async operation
+        if (!isActive) {
+          console.log(`[POLL-STREAM] Stream became inactive during status check, aborting`);
+          return;
+        }
+        
+        // Stuck detection is handled in pollMessages - no need to duplicate here
+        // Just check if agent completed/failed
+        
+        if (status.status === 'completed' || status.status === 'failed' || status.status === 'error') {
+          console.log(`[POLL-STREAM] Agent run ${agentRunId} finished with status: ${status.status}`);
+          
+          // Do one final poll to get any remaining messages
+          await pollMessages();
+          
+          if (status.error) {
+            callbacks.onError(status.error);
+          } else {
+            // Send completion message
+            callbacks.onMessage(`data: ${JSON.stringify({ type: 'status', status: 'completed' })}\n\n`);
+          }
+          
+          cleanup();
           callbacks.onClose();
         }
+      } catch (error) {
+        if (!isActive) return;
+        console.error(`[POLL-STREAM] Error checking agent status:`, error);
       }
     };
     
-    xhr.onerror = () => {
-      if (!isActive) return;
-      console.error(`[XHR-STREAM] Network error for ${agentRunId}`);
-      callbacks.onError('Network error occurred');
-    };
+    // Start polling immediately
+    await pollMessages();
     
-    xhr.onabort = () => {
-      if (isActive) {
-        console.log(`[XHR-STREAM] Request aborted for ${agentRunId}`);
-        callbacks.onClose();
-      }
-    };
+    // Poll for new messages every 1 second (reduced from 500ms to save resources)
+    pollInterval = setInterval(pollMessages, 1000);
     
-    xhr.ontimeout = () => {
-      if (!isActive) return;
-      console.error(`[XHR-STREAM] Request timeout for ${agentRunId}`);
-      callbacks.onError('Request timeout');
-    };
-    
-    console.log(`[XHR-STREAM] Starting request to: ${url}`);
-    xhr.send();
+    // Check agent status every 3 seconds (reduced frequency)
+    statusCheckInterval = setInterval(checkAgentStatus, 3000);
     
     resolve(cleanup);
   });
@@ -443,7 +666,16 @@ export const getMessages = async (threadId: string): Promise<Message[]> => {
       throw new Error(`Error getting messages: ${error.message}`);
     }
 
-    console.log('[API] Messages fetched:', data?.length || 0);
+    console.log(`[API] Messages fetched: ${data?.length || 0} for thread ${threadId}`);
+    if (data && data.length > 0) {
+      const messageTypes = data.map(m => m.type).join(', ');
+      console.log(`[API] Message types found: ${messageTypes}`);
+      // Log any llm_response_end messages
+      const llmMessages = data.filter(m => m.type === 'llm_response_end');
+      if (llmMessages.length > 0) {
+        console.log(`[API] Found ${llmMessages.length} llm_response_end message(s)`);
+      }
+    }
     return data || [];
   } catch (error) {
     console.error('Failed to get messages:', error);
@@ -767,11 +999,40 @@ export const streamAgent = (
     activeStreams.delete(agentRunId);
   }
 
+  // Also check for existing polling streams
+  const existingPollingStream = activePollingStreams.get(agentRunId);
+  if (existingPollingStream) {
+    console.log(`[STREAM] Polling stream already exists for ${agentRunId}, closing it first`);
+    existingPollingStream();
+    activePollingStreams.delete(agentRunId);
+  }
+
   try {
     const setupStream = async () => {
+      // Check for existing polling stream BEFORE starting (prevent duplicates)
+      const existingPollingStream = activePollingStreams.get(agentRunId);
+      if (existingPollingStream) {
+        console.log(`[STREAM] Polling stream already active for ${agentRunId}, skipping duplicate`);
+        // Return the existing cleanup function so caller can still clean up if needed
+        return existingPollingStream;
+      }
+      
+      // Set placeholder IMMEDIATELY to prevent race conditions (before any async operations)
+      let placeholderCleanup: (() => void) | null = null;
+      const placeholder = () => {
+        if (placeholderCleanup) {
+          placeholderCleanup();
+        }
+        activePollingStreams.delete(agentRunId);
+      };
+      activePollingStreams.set(agentRunId, placeholder);
+      console.log(`[STREAM] Set placeholder for ${agentRunId} to prevent duplicates`);
+      
       try {
         const status = await getAgentStatus(agentRunId);
         if (status.status !== 'running') {
+          // Clean up placeholder on error
+          activePollingStreams.delete(agentRunId);
           console.log(`[STREAM] Agent run ${agentRunId} is not running (status: ${status.status})`);
           nonRunningAgentRuns.add(agentRunId);
           callbacks.onError(`Agent run ${agentRunId} is not running (status: ${status.status})`);
@@ -788,6 +1049,8 @@ export const streamAgent = (
           nonRunningAgentRuns.add(agentRunId);
         }
 
+        // Clean up placeholder on error
+        activePollingStreams.delete(agentRunId);
         callbacks.onError(errorMessage);
         callbacks.onClose();
         return;
@@ -796,7 +1059,9 @@ export const streamAgent = (
       const supabase = createSupabaseClient();
       const { data: { session } } = await supabase.auth.getSession();
 
-      if (!session?.access_token) {
+        if (!session?.access_token) {
+        // Clean up placeholder on error
+        activePollingStreams.delete(agentRunId);
         const authError = new NoAccessTokenAvailableError();
         console.error('[STREAM] No auth token available');
         callbacks.onError(authError);
@@ -813,11 +1078,39 @@ export const streamAgent = (
       console.log(`[STREAM] Platform:`, Platform.OS);
       console.log(`[STREAM] EventSource available:`, typeof global.EventSource !== 'undefined');
       
-      // Use XHR-based streaming for React Native
+      // Use polling-based streaming for React Native (fetch streaming doesn't work reliably)
       if (Platform.OS !== 'web' && typeof global.EventSource === 'undefined') {
-        console.log(`[STREAM] Using XHR-based streaming for React Native`);
-        const xhrCleanup = await setupFetchStream(url.toString(), agentRunId, callbacks);
-        return xhrCleanup;
+        console.log(`[STREAM] Using polling-based streaming for React Native`);
+        
+        // Get thread ID from agent status (use status we already fetched)
+        let threadIdForPolling: string | null = null;
+        try {
+          // Re-use the status we already fetched, or fetch if needed
+          const agentStatus = await getAgentStatus(agentRunId);
+          threadIdForPolling = agentStatus.threadId;
+        } catch (error) {
+          // Clean up placeholder on error
+          activePollingStreams.delete(agentRunId);
+          console.error(`[STREAM] Failed to get thread ID for polling:`, error);
+          callbacks.onError('Failed to get thread ID for polling');
+          callbacks.onClose();
+          return () => {};
+        }
+        
+        if (!threadIdForPolling) {
+          // Clean up placeholder on error
+          activePollingStreams.delete(agentRunId);
+          callbacks.onError('No thread ID available for polling');
+          callbacks.onClose();
+          return () => {};
+        }
+        
+        // Placeholder already set above - now set the real cleanup function
+        const pollCleanup = await setupPollingStream(agentRunId, threadIdForPolling, callbacks);
+        placeholderCleanup = pollCleanup;
+        activePollingStreams.set(agentRunId, pollCleanup);
+        console.log(`[STREAM] Replaced placeholder with real cleanup for ${agentRunId}`);
+        return pollCleanup;
       }
       
       // Use EventSource for web or if available
