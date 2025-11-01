@@ -361,6 +361,12 @@ const setupPollingStream = async (
         return;
       }
       
+      // If agent is already marked as non-running, skip status check
+      if (nonRunningAgentRuns.has(agentRunId)) {
+        console.log(`[POLL-STREAM] Agent run ${agentRunId} is non-running, skipping status check`);
+        return;
+      }
+      
       try {
         const status = await getAgentStatus(agentRunId);
         
@@ -391,6 +397,16 @@ const setupPollingStream = async (
         }
       } catch (error) {
         if (!isActive) return;
+        
+        // Handle "agent not running" errors gracefully - this is expected when agent completes
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        if (errorMessage.includes('is not running') || errorMessage.includes('non-running')) {
+          console.log(`[POLL-STREAM] Agent run ${agentRunId} is no longer running, stopping status checks`);
+          // Mark as non-running to skip future status checks
+          nonRunningAgentRuns.add(agentRunId);
+          return;
+        }
+        
         console.error(`[POLL-STREAM] Error checking agent status:`, error);
       }
     };
